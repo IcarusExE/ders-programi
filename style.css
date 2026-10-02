@@ -1,5 +1,6 @@
 :root {
     --primary: #1a73e8;
+    --primary-dark: #1557b0;
     --primary-light: #dce3f8;
     --success: #34a853;
     --success-light: #e6f4ea;
@@ -18,6 +19,14 @@
     --accent-gold: #b54708;
     --accent-red: #7a2e21;
     --accent-purple: #5a2d84;
+
+    --day-pazartesi: #e3f2fd;
+    --day-sali: #e8f5e9;
+    --day-carsamba: #fff3e0;
+    --day-perşembe: #f1f8e9;
+    --day-cuma: #e3f2fd;
+    --day-cumartesi: #f5f5f5;
+    --day-pazar: #ffffff;
 }
 
 * {
@@ -27,7 +36,7 @@
 }
 
 body {
-    font-family -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     background: var(--background);
     color: var(--text-primary);
     min-height: 100vh;
@@ -35,7 +44,7 @@ body {
 }
 
 .container {
-    max-width: 800px;
+    max-width: 900px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -53,10 +62,18 @@ header h1 {
     display: flex;
     align-items: center;
     gap: 8px;
+    font-size: 24px;
 }
 
-header h1 .icon {
-    font-size: 28px;
+header h2 {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.controls {
+    display: flex;
+    gap: 8px;
 }
 
 .btn-primary {
@@ -65,14 +82,14 @@ header h1 .icon {
     border: none;
     padding: 8px 16px;
     border-radius: 20px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: background 0.2s;
 }
 
 .btn-primary:hover {
-    background: var(--accent-blue, #1557b0);
+    background: var(--accent-blue);
 }
 
 .btn-secondary {
@@ -81,7 +98,7 @@ header h1 .icon {
     border: 1px solid var(--primary);
     padding: 8px 16px;
     border-radius: 20px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
@@ -98,102 +115,161 @@ header h1 .icon {
     font-size: 15px;
 }
 
+/* Timetable Grid */
 .schedule-grid {
     background: var(--card);
     border-radius: 12px;
-    padding: 24px;
+    padding: 20px;
+    margin-top: 20px;
     min-height: 600px;
     position: relative;
-    margin-top: 20px;
 }
 
-/* Semester/Week info */
-.schedule-header {
-    background: var(--primary-light);
-    padding: 12px 20px;
-    border-radius: 8px;
-    margin-bottom: 24px;
-    font-size: 14px;
-    color: var(--primary);
-}
-
-/* Course Card Styles - FIXED */
-.course-card {
-    background: #f8f9fa;
-    border: 1px solid #e3e6e8;
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 16px;
-    cursor: default;
-    transition: box-shadow 0.2s;
-    position: relative;
-}
-
-.course-card:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-}
-
-.course-card .course-color-indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    position: absolute;
-    top: 12px;
-    left: 12px;
-}
-
-.course-info {
-    flex: 1;
-    margin-left: 20px;
-}
-
-.course-info .course-name {
-    font-weight: 600;
-    font-size: 15px;
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 300px;
-    color: var(--text-primary);
-}
-
-.course-info .course-details {
+/* Timetable Header */
+.timetable-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e0e0e0;
     font-size: 12px;
     color: var(--text-secondary);
+}
+
+.timetable-header span:first-child {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+/* Grid Layout */
+.timetable {
+    display: grid;
+    gap: 1px;
+    background: #e0e0e0;
+}
+
+/* Column Header Rows (Hours) */
+.timetable .hour-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px 4px 0 0;
+    padding: 4px;
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+/* Hour labels on the left side */
+.timetable .hour-label {
+    grid-column: 1;
+    width: 50px;
+    padding: 4px;
+    text-align: right;
+    color: var(--text-secondary);
+    font-size: 9px;
+    border-right: 1px solid #dee2e6;
+    background: #f8f9fa;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 300px;
 }
 
-/* Course color badges */
-.course-colors {
+/* Day header cells */
+.timetable .day-header {
+    grid-column: span 1;
+    padding: 4px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 9px;
+    font-weight: 600;
+    border: 1px solid #dee2e6;
+    background: var(--day-pazartesi);
+}
+
+/* Main grid cells */
+.timetable .grid-cell {
+    border: 1px solid #dee2e6;
+    background: white;
+    padding: 2px;
+    position: relative;
+    min-height: 50px;
     display: flex;
-    gap: 4px;
-    margin-top: 12px;
-    padding-top: 12px;
-    border-top: 1px solid #e3e6e8;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 
-.course-color {
-    width: 24px;
-    height: 24px;
+/* Course block inside grid cell */
+.timetable .course-block {
+    width: 100%;
+    height: 100%;
+    background: white;
     border-radius: 4px;
-    flex-shrink: 0;
-    border: 1px solid #e3e6e8;
+    padding: 6px 8px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: box-shadow 0.2s;
+    font-size: 10px;
 }
+
+.timetable .course-block:hover {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.timetable .course-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 30px;
+    margin-bottom: 2px;
+}
+
+.timetable .course-instructor {
+    color: var(--text-secondary);
+    font-size: 9px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 16px;
+}
+
+/* Column background coloring for days */
+.timetable .pazartesi { background: var(--day-pazartesi); }
+.timetable .sali { background: var(--day-sali); }
+.timetable .carsamba { background: var(--day-carsamba); }
+.timetable .perşembe { background: var(--day-perşembe); }
+.timetable .cuma { background: var(--day-cuma); }
+.timetable .cumartesi { background: var(--day-cumartesi); }
+.timetable .pazar { background: var(--day-pazar); }
+
+/* Hour row backgrounds */
+.timetable .hour-08 { background: white; }
+.timetable .hour-09 { background: white; }
+.timetable .hour-10 { background: white; }
+.timetable .hour-11 { background: white; }
+.timetable .hour-12 { background: white; }
+.timetable .hour-13 { background: white; }
+.timetable .hour-14 { background: white; }
+.timetable .hour-15 { background: white; }
+.timetable .hour-16 { background: white; }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
-    .course-card {
+    .timetable .course-block {
         transition: none;
     }
 }
 
 /* Responsive */
-@media (max-width: 480px) {
+@media (max-width: 600px) {
     .container {
         padding: 10px;
     }
@@ -203,29 +279,43 @@ header h1 .icon {
         gap: 12px;
     }
 
-    .course-card {
-        padding: 12px;
+    .timetable .hour-row {
+        font-size: 8px;
     }
 
-    .course-color-indicator {
-        width: 6px;
-        height: 6px;
-        top: 8px;
-        left: 8px;
+    .timetable .hour-label {
+        width: 40px;
+        font-size: 7px;
     }
 
-    .course-info .course-name {
-        font-size: 13px;
-        max-width: 150px;
+    .timetable .day-header {
+        font-size: 7px;
+        padding: 3px;
     }
 
-    .course-info .course-details {
-        font-size: 10px;
-        max-width: 150px;
+    .timetable .grid-cell {
+        padding: 1px;
     }
 
-    .course-color {
-        width: 18px;
-        height: 18px;
+    .timetable .course-block {
+        padding: 4px 6px;
+        font-size: 8px;
+    }
+}
+
+/* Print styles */
+@media print {
+    .container {
+        max-width: 100%;
+        padding: 0;
+    }
+    .btn-primary, .btn-secondary {
+        display: none;
+    }
+    .timetable {
+        box-shadow: none;
+    }
+    .timetable .grid-cell {
+        border: 1px solid #dee2e6;
     }
 }

@@ -1,0 +1,86 @@
+[
+  {
+    "ders_adi": "Programlama Temelleri",
+    "hoca_adi": "Dr. Ahmet Yılmaz",
+    "saat": "08:00-09:00",
+    "gun": "Pazartesi"
+  },
+  {
+    "ders_adi": "İşletmecilik Girişleri",
+    "hoca_adi": "Prof. Mehmet K.",
+    "saat": "08:00-09:00",
+    "gun": "Salı"
+  },
+  {
+    "ders_adi": "Veritabanı Temelleri",
+    "hoca_adi": "Dr. Ayşe Demir",
+    "saat": "09:00-10:00",
+    "gun": "Pazartesi"
+  },
+  {
+    "ders_adi": "Programlama Laboratuarı",
+    "hoca_adi": "Instructor Ahmet",
+    "saat": "09:00-10:00",
+    "gun": "Salı"
+  },
+  {
+    "ders_adi": "İletişim Bilgisi",
+    "hoca_adi": "Instructor Ayşe",
+    "saat": "10:00-11:00",
+    "gun": "Pazartesi"
+  },
+  {
+    "ders_adi": "Bilgisayar Donanımı",
+    "hoca_adi": "Prof. Mehmet K.",
+    "saat": "10:00-11:00",
+    "gun": "Çarşamba"
+  },
+  {
+    "ders_adi": "Programlama Temelleri",
+    "hoca_adi": "Dr. Ahmet Yılmaz",
+    "saat": "11:00-12:00",
+    "gun": "Pazartesi"
+  },
+  {
+    "ders_adi": "Matematik Girişleri",
+    "hoca_adi": "Instructor Ayşe",
+    "saat": "11:00-12:00",
+    "gun": "Salı"
+  },
+  {
+    "ders_adi": "Girişimcilik",
+    "hoca_adi": "Prof. Mehmet K.",
+    "saat": "13:00-14:00",
+    "gun": "Çarşamba"
+  },
+  {
+    "ders_adi": "Web Geliştirme",
+    "hoca_adi": "Dr. Ayşe Demir",
+    "saat": "13:00-14:00",
+    "gun": "Perşembe"
+  },
+  {
+    "ders_adi": "C++ Programlama",
+    "hoca_adi": "Instructor Ahmet",
+    "saat": "14:00-15:00",
+    "gun": "Pazartesi"
+  },
+  {
+    "ders_adi": "Veritabanı Tasarımı",
+    "hoca_adi": "Dr. Ayşe Demir",
+    "saat": "14:00-15:00",
+    "gun": "Salı"
+  },
+  {
+    "ders_adi": "Ağ Temelleri",
+    "hoca_adi": "Prof. Mehmet K.",
+    "saat": "15:00-16:00",
+    "gun": "Pazartesi"
+  },
+  {
+    "ders_adi": "İngilizce Teknik",
+    "hoca_adi": "Instructor Ayşe",
+    "saat": "15:00-16:00",
+    "gun": "Çarşamba"
+  }
+]
