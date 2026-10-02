@@ -1,151 +1,100 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded, initializing...');
+    console.log('DOM loaded - Fixed Schedule Mode');
 
     const coursesList = document.getElementById('coursesList');
     const addBtn = document.getElementById('addBtn');
     const courseTemplate = document.getElementById('courseTemplate');
+    const printBtn = document.getElementById('printBtn');
     const coursesKey = 'ders-programi-courses';
 
-    console.log('addBtn element:', addBtn);
+    // **SABIT DERS PROGRAMI** - Değişmez, sadece görüntülenir
+    // Bu veri localStorage'dan yüklenmez, sadece bu sitede kullanılır
+    const fixedCourses = [
+        {
+            name: "Matematik II",
+            details: "Matematik Fakültesi | 101 | 13:00-14:40",
+            color: "#1a73e8"
+        },
+        {
+            name: "Programlama Temelleri",
+            details: "Bilgisayar Mühendisliği | 202 | 09:00-10:40",
+            color: "#34a853"
+        },
+        {
+            name: "Fizik I",
+            details: "Fizik Fakültesi | 305 | 14:00-15:40",
+            color: "#fbbc05"
+        },
+        {
+            name: "Veri Yapıları",
+            details: "Bilgisayar Mühendisliği | 410 | 11:00-12:40",
+            color: "#ea4335"
+        },
+        {
+            name: "İngilizce II",
+            details: "Dil Fakültesi | 505 | 10:00-11:40",
+            color: "#6c5ce7"
+        },
+        {
+            name: "Atatürk İlkeleri",
+            details: "Tarih Fakültesi | 601 | 15:00-16:40",
+            color: "#34a853"
+        },
+        {
+            name: "Veritabanı Sistemleri",
+            details: "Bilgisayar Mühendisliği | 702 | 16:00-17:40",
+            color: "#fbbc05"
+        }
+    ];
 
-    // Load courses from localStorage or use empty array
-    let courses = JSON.parse(localStorage.getItem(coursesKey)) || [];
-
-    console.log('Loaded courses:', courses.length);
-
-    // Render courses to the DOM
+    // Render fixed courses to the DOM
     function renderCourses() {
-        console.log('renderCourses called, courses length:', courses.length);
-
-        if (courses.length === 0) {
-            coursesList.innerHTML = '<p class="empty-state">Henüz ders eklenmemiş. <br>Yukarıdaki buton ile ders ekleyebilirsiniz.</p>';
-            console.log('Showing empty state');
+        if (fixedCourses.length === 0) {
+            coursesList.innerHTML = '<p class="empty-state">Program bulunamadı.</p>';
             return;
         }
 
-        coursesList.innerHTML = courses.map((course, index) => `
-            <div class="course-card" style="--course-color: ${course.color}" draggable="true" data-index="${index}">
-                <div class="course-color-indicator"></div>
+        coursesList.innerHTML = fixedCourses.map((course, index) => `
+            <div class="course-card" style="border-left: 4px solid ${course.color};">
+                <div class="course-color-indicator" style="background: ${course.color};"></div>
                 <div class="course-info">
-                    <h3 class="course-name" contenteditable="true">${escapeHtml(course.name)}</h3>
-                    <p class="course-details" contenteditable="true">${escapeHtml(course.details)}</p>
+                    <h3 class="course-name">${course.name}</h3>
+                    <p class="course-details">${course.details}</p>
                 </div>
-                <button class="remove-btn" aria-label="Kurs sil" data-index="${index}">✕</button>
+                <div class="course-colors">
+                    <div class="course-color" style="background: ${course.color};"></div>
+                </div>
             </div>
         `).join('');
-
-        // Add event listeners after rendering
-        addEventListeners();
     }
 
-    // Escape HTML special characters
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    // Save courses to localStorage
-    function saveCourses() {
-        localStorage.setItem(coursesKey, JSON.stringify(courses));
-    }
-
-    // Add event listeners to course cards
-    function addEventListeners() {
-        console.log('Adding event listeners...');
-
-        // Remove course button
-        document.querySelectorAll('.remove-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const index = parseInt(btn.dataset.index);
-                courses.splice(index, 1);
-                saveCourses();
-                renderCourses();
-            });
-        });
-
-        // Make course cards draggable
-        initDragAndDrop();
-    }
-
-    // Drag and drop functionality
-    function initDragAndDrop() {
-        let draggedIndex = null;
-
-        document.querySelectorAll('.course-card:not(.dragging)').forEach(card => {
-            card.addEventListener('dragstart', (e) => {
-                draggedIndex = parseInt(card.dataset.index);
-                card.classList.add('dragging');
-                setTimeout(() => card.classList.add('is-dragging'), 0);
-            });
-
-            card.addEventListener('dragend', () => {
-                card.classList.remove('dragging');
-                card.classList.remove('is-dragging');
-                draggedIndex = null;
-            });
-        });
-
-        document.querySelectorAll('.course-card:not(.dragging)').forEach card => {
-            card.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                const afterElement = getDragAfterElement(coursesList, e.clientY);
-                const draggable = coursesList.querySelector('.dragging');
-                if (afterElement == null) {
-                    coursesList.appendChild(draggable);
-                } else {
-                    coursesList.insertBefore(draggable, afterElement);
-                }
-            });
-        };
-    }
-
-    // Get the element after which the draggable should be inserted
-    function getDragAfterElement(container, y) {
-        const draggableElements = [...container.querySelectorAll('.course-card:not(.dragging)')];
-
-        return draggableElements.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-
-            if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child };
-            } else {
-                return closest;
-            }
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
-
-    // Add new course
-    addBtn.addEventListener('click', () => {
-        console.log('Add button clicked!');
-
-        const defaultCourse = {
-            name: 'Yeni Ders',
-            details: 'İsim ve bilgiler eklenmedi',
-            color: getRandomColor()
-        };
-
-        courses.push(defaultCourse);
-        saveCourses();
-        renderCourses();
-    });
-
-    // Generate random color for courses
-    function getRandomColor() {
-        const colors = [
-            '#1a73e8', // mavi
-            '#34a853', // yeşil
-            '#fbbc05', // sarı
-            '#ea4335', // kırmızı
-            '#6c5ce7', // mor
-            '#34a853', // yeşil
-            '#ea4335', // kırmızı
-            '#fbbc05'  // sarı
-        ];
-        return colors[Math.floor(Math.random() * colors.length)];
-    }
-
-    // Initial render
+    // Initial render - fixed data only
     renderCourses();
+
+    // Print button functionality
+    if (printBtn) {
+        printBtn.addEventListener('click', () => {
+            window.print();
+        });
+    }
+
+    // Print styles for better output
+    const printStyle = document.createElement('style');
+    printStyle.textContent = `
+        @media print {
+            .container {
+                max-width: 100%;
+                padding: 0;
+            }
+            .course-card {
+                box-shadow: none;
+                border: 1px solid #dee2e6;
+                page-break-inside: avoid;
+            }
+            .btn-primary, .btn-secondary {
+                display: none;
+            }
+        }
+    `;
+    document.head.appendChild(printStyle);
 });
