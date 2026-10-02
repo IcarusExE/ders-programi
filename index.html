@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ders Programı Takip Sistemi</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a73e8">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span class="icon">📅</span> Ders Programı</h1>
+            <div class="controls">
+                <button id="addBtn" class="btn-primary">+ Ders Ekle</button>
+            </div>
+        </header>
+
+        <main class="schedule-grid">
+            <div id="coursesList" class="courses-list">
+                <p class="empty-state">Henüz ders eklenmemiş. <br>Yukarıdaki buton ile ders ekleyebilirsiniz.</p>
+            </div>
+        </main>
+    </div>
+
+    <template id="courseTemplate">
+        <div class="course-card" draggable="true">
+            <div class="course-color-indicator" style="background: var(--course-color);"></div>
+            <div class="course-info">
+                <h3 class="course-name" contenteditable="true"></h3>
+                <p class="course-details" contenteditable="true"></p>
+            </div>
+            <button class="remove-btn" aria-label="Kurs sil">✕</button>
+        </div>
+    </template>
+
+    <script src="script.js"></script>
+</body>
+</html>
