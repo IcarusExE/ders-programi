@@ -1,0 +1,90 @@
+{
+  "school": "Nallıhan Meslek Yüksekokulu",
+  "department": "Bilgisayar Programcılığı",
+  "classLevel": "1. Sınıf",
+  "timezone": "Europe/Istanbul",
+  "updatedAt": "8 Ekim 2026",
+  "courses": [
+    {
+      "day": 1,
+      "start": "09:00",
+      "end": "10:40",
+      "code": "BPR101",
+      "name": "Programlama Temelleri",
+      "room": "Bilgisayar Laboratuvarı",
+      "instructor": "Öğr. Gör. Ad Soyad"
+    },
+    {
+      "day": 1,
+      "start": "11:00",
+      "end": "12:40",
+      "code": "BPR103",
+      "name": "Bilgisayar Donanımı",
+      "room": "Derslik 2",
+      "instructor": "Öğr. Gör. Ad Soyad"
+    },
+    {
+      "day": 2,
+      "start": "10:00",
+      "end": "11:40",
+      "code": "MAT101",
+      "name": "Matematik",
+      "room": "Derslik 1",
+      "instructor": "Öğr. Gör. Ad Soyad"
+    },
+    {
+      "day": 2,
+      "start": "13:00",
+      "end": "15:40",
+      "code": "BPR105",
+      "name": "Ofis Yazılımları",
+      "room": "Bilgisayar Laboratuvarı",
+      "instructor": "Öğr. Gör. Ad Soyad"
+    },
+    {
+      "day": 3,
+      "start": "09:00",
+      "end": "10:40",
+      "code": "ATA101",
+      "name": "Atatürk İlkeleri ve İnkılap Tarihi",
+      "room": "Çevrim içi",
+      "instructor": "Öğr. Gör. Ad Soyad"
+    },
+    {
+      "day": 3,
+      "start": "11:00",
+      "end": "12:40",
+      "code": "TUR101",
+      "name": "Türk Dili",
+      "room": "Çevrim içi",
+      "instructor": "Öğr. Gör. Ad Soyad"
+    },
+    {
+      "day": 4,
+      "start": "09:00",
+      "end": "11:40",
+      "code": "BPR107",
+      "name": "Web Tasarımının Temelleri",
+      "room": "Bilgisayar Laboratuvarı",
+      "instructor": "Öğr. Gör. Ad Soyad"
+    },
+    {
+      "day": 4,
+      "start": "13:00",
+      "end": "14:40",
+      "code": "YDL101",
+      "name": "Yabancı Dil",
+      "room": "Derslik 3",
+      "instructor": "Öğr. Gör. Ad Soyad"
+    },
+    {
+      "day": 5,
+      "start": "10:00",
+      "end": "12:40",
+      "code": "BPR109",
+      "name": "Grafik ve Animasyon",
+      "room": "Bilgisayar Laboratuvarı",
+      "instructor": "Öğr. Gör. Ad Soyad"
+    }
+  ]
+}
