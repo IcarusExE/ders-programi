@@ -206,6 +206,9 @@ function updateNotificationButton() {
   const enabled = "Notification" in window && Notification.permission === "granted";
   elements.notificationButton.classList.toggle("enabled", enabled);
   elements.notificationLabel.textContent = enabled ? "Bildirimler açık" : "Bildirimleri aç";
+  const accessibleLabel = enabled ? "Ders bildirimleri açık" : "Ders bildirimlerini aç";
+  elements.notificationButton.setAttribute("aria-label", accessibleLabel);
+  elements.notificationButton.setAttribute("title", accessibleLabel);
 }
 
 function tick() {
