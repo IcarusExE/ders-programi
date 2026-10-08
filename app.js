@@ -244,7 +244,7 @@ function updateNotificationButton() {
 function tick() {
   const previousDay = state.now.getDay();
   state.now = new Date();
-  elements.liveClock.textContent = state.now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  //elements.liveClock.textContent = state.now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   renderFocus(state.now);
   checkNotifications(state.now);
   if (state.now.getDay() !== previousDay) renderToday(state.now);
