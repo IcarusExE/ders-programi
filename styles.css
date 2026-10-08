@@ -83,14 +83,22 @@ button { font: inherit; }
 .brand-mark {
   display: grid;
   place-items: center;
-  width: 43px;
-  height: 43px;
-  border-radius: 13px;
-  color: var(--white);
-  background: var(--wine);
-  font: 800 13px/1 "Manrope", sans-serif;
-  letter-spacing: -0.5px;
-  transform: rotate(-4deg);
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  padding: 2px;
+  border: 1px solid rgba(29, 27, 28, 0.08);
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 7px 20px rgba(61, 30, 37, 0.12);
+  overflow: hidden;
+}
+.brand-mark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: contain;
 }
 .brand strong, .brand small { display: block; }
 .brand strong { font: 800 15px/1.25 "Manrope", sans-serif; }
@@ -384,7 +392,7 @@ button { font: inherit; }
 
 @media (max-width: 380px) {
   .brand { gap: 9px; }
-  .brand-mark { width: 39px; height: 39px; border-radius: 11px; }
+  .brand-mark { width: 44px; height: 44px; }
   .brand strong { font-size: 14px; }
   .hero { gap: 11px; padding-top: 5px; }
   .hero h1 { font-size: 37px; }
