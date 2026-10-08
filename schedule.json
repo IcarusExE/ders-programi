@@ -30,7 +30,7 @@
       "code": "YDİ101",
       "name": "Temel Yabancı Dil (İngilizce)",
       "room": "Ek Bina-Derslik 6",
-      "instructor": "Öğr. Gör. Ad Soyad"
+      "instructor": "Öğr. Gör. Öznur AKHAN AŞIK"
     },
     {
       "day": 2,
@@ -39,58 +39,58 @@
       "code": "TDİ107",
       "name": "Türk Dili 1",
       "room": "Ek Bina-Derslik 6",
-      "instructor": "Öğr. Gör. Ad Soyad"
+      "instructor": "Öğr. Gör. Oğuz Kağan ŞALLI"
     },
     {
       "day": 3,
       "start": "09:00",
       "end": "12:00",
-      "code": "BPR101",
+      "code": "NBP129",
       "name": "Temel Matematik",
       "room": "Derslik 1",
-      "instructor": "Öğr. Gör. Ad Soyad"
+      "instructor": "Öğr. Gör. Esra YILDIRIM"
     },
     {
       "day": 3,
       "start": "13:30",
       "end": "17:30",
-      "code": "BPR101",
+      "code": "NBP127",
       "name": "Bilgisayar Donanımı ve Ağ",
       "room": "Bilgisayar Laboratuvarı 2",
-      "instructor": "Öğr. Gör. Ad Soyad"
+      "instructor": "Öğr. Gör. Salih ERDURUCAN"
     },
     {
       "day": 4,
       "start": "13:30",
       "end": "17:30",
-      "code": "BPR101",
+      "code": "NBP131",
       "name": "Bilgisayar Programlama 1",
       "room": "Bilgisayar Laboratuvarı 1",
-      "instructor": "Öğr. Gör. Ad Soyad"
+      "instructor": "Öğr. Gör. Güney UĞURLU"
     },
     {
       "day": 5,
       "start": "09:00",
       "end": "11:00",
-      "code": "BPR101",
+      "code": "ATA115",
       "name": "Atatürk İlkeleri ve İnkılap Tarihi 1",
       "room": "Ek Bina-Derslik 6",
-      "instructor": "Öğr. Gör. Ad Soyad"
+      "instructor": "Öğr. Gör. Miraç DEMİRBAŞ"
     },
     {
       "day": 5,
       "start": "11:00",
       "end": "13:00",
-      "code": "BPR101",
+      "code": "NBP133",
       "name": "Grafik ve Animasyon",
       "room": "Bilgisayar Laboratuvarı 1",
-      "instructor": "Öğr. Gör. Ad Soyad"
+      "instructor": "Öğr. Gör. Salih ERDURUCAN"
     },
     {
       "day": 5,
       "start": "13:30",
       "end": "14:30",
-      "code": "BPR101",
+      "code": "NBP133",
       "name": "Grafik ve Animasyon",
       "room": "Bilgisayar Laboratuvarı 1",
       "instructor": "Öğr. Gör. Ad Soyad"
