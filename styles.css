@@ -339,10 +339,14 @@ button { font: inherit; }
     padding: 0;
   }
   .notification-button span:last-child { display: none; }
-  .hero { align-content: center; gap: 17px; padding: 10px 0 18px; }
-  .hero h1 { display: none; }
+  .hero { align-content: center; gap: 14px; padding: 8px 0 16px; }
+  .hero h1 {
+    display: block;
+    font-size: clamp(38px, 11vw, 52px);
+    line-height: 0.95;
+  }
   .hero .eyebrow { margin-bottom: 5px; }
-  .hero-description { max-width: 290px; margin: 0 auto; line-height: 1.45; font-size: 13px; }
+  .hero-description { max-width: 290px; margin: 10px auto 0; line-height: 1.4; font-size: 13px; }
   .focus-card { min-height: 330px; padding: 22px; border-radius: 25px; }
   .focus-content { margin-top: 47px; max-width: 100%; }
   .focus-meta { line-height: 1.45; }
@@ -368,6 +372,9 @@ button { font: inherit; }
   .brand { gap: 9px; }
   .brand-mark { width: 39px; height: 39px; border-radius: 11px; }
   .brand strong { font-size: 14px; }
+  .hero { gap: 11px; padding-top: 5px; }
+  .hero h1 { font-size: 37px; }
+  .hero-description { margin-top: 8px; font-size: 12px; }
   .focus-card { min-height: 315px; padding: 18px; }
   .status-pill { padding: 7px 9px; font-size: 9px; }
   .live-clock { font-size: 13px; }
