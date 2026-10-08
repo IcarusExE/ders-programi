@@ -24,7 +24,7 @@
     <div class="ambient ambient-two" aria-hidden="true"></div>
 
     <header class="site-header shell">
-      <a class="brand" href="#top" aria-label="Ders Pusulası ana sayfa">
+      <a class="brand" href="#home" id="brandHomeLink" aria-label="Ders Pusulası ana sayfa">
         <span class="brand-mark" aria-hidden="true">DP</span>
         <span>
           <strong>Ders Pusulası</strong>
@@ -48,42 +48,57 @@
       </button>
     </header>
 
-    <main id="top" class="shell">
-      <section class="hero" aria-labelledby="heroTitle">
-        <div class="hero-copy">
-          <p class="eyebrow" id="todayLabel">BUGÜN</p>
-          <h1 id="heroTitle">Derslerin,<br /><em>tek bakışta.</em></h1>
-          <p class="hero-description">
-            Bilgisayar Programcılığı · 1. Sınıf
-          </p>
-        </div>
+    <main id="top" class="app-main shell">
+      <section
+        class="view-panel view-panel-home"
+        id="homeView"
+        role="tabpanel"
+        aria-labelledby="homeNavButton"
+        tabindex="0"
+      >
+        <div class="hero" aria-labelledby="heroTitle">
+          <div class="hero-copy">
+            <p class="eyebrow" id="todayLabel">BUGÜN</p>
+            <h1 id="heroTitle">Derslerin,<br /><em>tek bakışta.</em></h1>
+            <p class="hero-description">
+              Bilgisayar Programcılığı · 1. Sınıf
+            </p>
+          </div>
 
-        <div class="focus-card" id="focusCard" aria-live="polite">
-          <div class="focus-topline">
-            <span class="status-pill" id="statusPill">Program yükleniyor</span>
-            <span class="live-clock" id="liveClock">--:--</span>
-          </div>
-          <div class="focus-content">
-            <p class="focus-kicker" id="focusKicker">Biraz bekle</p>
-            <h2 id="focusTitle">Ders programın hazırlanıyor…</h2>
-            <p class="focus-meta" id="focusMeta"></p>
-          </div>
-          <div class="countdown" id="countdown" aria-label="Geri sayım">
-            <div><strong id="daysValue">00</strong><span>gün</span></div>
-            <i>:</i>
-            <div><strong id="hoursValue">00</strong><span>saat</span></div>
-            <i>:</i>
-            <div><strong id="minutesValue">00</strong><span>dk</span></div>
-            <i>:</i>
-            <div><strong id="secondsValue">00</strong><span>sn</span></div>
-          </div>
-          <div class="progress-track" aria-hidden="true">
-            <span id="progressBar"></span>
+          <div class="focus-card" id="focusCard" aria-live="polite">
+            <div class="focus-topline">
+              <span class="status-pill" id="statusPill">Program yükleniyor</span>
+              <span class="live-clock" id="liveClock">--:--</span>
+            </div>
+            <div class="focus-content">
+              <p class="focus-kicker" id="focusKicker">Biraz bekle</p>
+              <h2 id="focusTitle">Ders programın hazırlanıyor…</h2>
+              <p class="focus-meta" id="focusMeta"></p>
+            </div>
+            <div class="countdown" id="countdown" aria-label="Geri sayım">
+              <div><strong id="daysValue">00</strong><span>gün</span></div>
+              <i>:</i>
+              <div><strong id="hoursValue">00</strong><span>saat</span></div>
+              <i>:</i>
+              <div><strong id="minutesValue">00</strong><span>dk</span></div>
+              <i>:</i>
+              <div><strong id="secondsValue">00</strong><span>sn</span></div>
+            </div>
+            <div class="progress-track" aria-hidden="true">
+              <span id="progressBar"></span>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="today-section" aria-labelledby="todayTitle">
+      <section
+        class="view-panel today-section"
+        id="todayView"
+        role="tabpanel"
+        aria-labelledby="todayNavButton"
+        tabindex="0"
+        hidden
+      >
         <div class="section-heading">
           <div>
             <p class="section-overline">GÜNÜN AKIŞI</p>
@@ -96,7 +111,14 @@
         </div>
       </section>
 
-      <section class="week-section" aria-labelledby="weekTitle">
+      <section
+        class="view-panel week-section"
+        id="weekView"
+        role="tabpanel"
+        aria-labelledby="weekNavButton"
+        tabindex="0"
+        hidden
+      >
         <div class="section-heading">
           <div>
             <p class="section-overline">HAFTALIK GÖRÜNÜM</p>
@@ -109,10 +131,54 @@
       </section>
     </main>
 
-    <footer class="site-footer shell">
-      <p>Bir sonraki derse değil, hedeflerine yetiş.</p>
-      <span>ANKARA · NALLIHAN</span>
-    </footer>
+    <nav class="bottom-nav" aria-label="Ana menü">
+      <div class="bottom-nav-list" id="bottomNav" role="tablist" data-active="0">
+        <button
+          class="bottom-nav-button active"
+          id="homeNavButton"
+          type="button"
+          role="tab"
+          aria-selected="true"
+          aria-controls="homeView"
+          data-view="home"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1V10Z" />
+          </svg>
+          <span>Ana Sayfa</span>
+        </button>
+        <button
+          class="bottom-nav-button"
+          id="todayNavButton"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="todayView"
+          data-view="today"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="2" />
+            <path d="M8 3v4M16 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" />
+          </svg>
+          <span>Bugün</span>
+        </button>
+        <button
+          class="bottom-nav-button"
+          id="weekNavButton"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="weekView"
+          data-view="week"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 6h13M8 12h13M8 18h13" />
+            <path d="M3 6h.01M3 12h.01M3 18h.01" />
+          </svg>
+          <span>Tüm Program</span>
+        </button>
+      </div>
+    </nav>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="app.js" defer></script>
