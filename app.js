@@ -23,6 +23,9 @@ const elements = {
   updatedAt: document.querySelector("#updatedAt"),
   notificationButton: document.querySelector("#notificationButton"),
   notificationLabel: document.querySelector("#notificationLabel"),
+  themeButton: document.querySelector("#themeButton"),
+  themeLabel: document.querySelector("#themeLabel"),
+  themeColorMeta: document.querySelector("#themeColorMeta"),
   toast: document.querySelector("#toast"),
   days: document.querySelector("#daysValue"),
   hours: document.querySelector("#hoursValue"),
@@ -35,6 +38,29 @@ const elements = {
 };
 
 const VIEW_INDEX = { home: 0, today: 1, week: 2 };
+const THEME_KEY = "ders-pusulasi-theme";
+
+function applyTheme(theme, remember = true) {
+  const selectedTheme = theme === "dark" ? "dark" : "light";
+  const isDark = selectedTheme === "dark";
+  document.documentElement.dataset.theme = selectedTheme;
+  document.documentElement.style.colorScheme = selectedTheme;
+  elements.themeColorMeta.content = isDark ? "#07172d" : "#134383";
+  elements.themeLabel.textContent = isDark ? "Aydınlık mod" : "Koyu mod";
+  elements.themeButton.setAttribute("aria-label", isDark ? "Aydınlık moda geç" : "Koyu moda geç");
+  elements.themeButton.setAttribute("title", isDark ? "Aydınlık moda geç" : "Koyu moda geç");
+  elements.themeButton.setAttribute("aria-pressed", String(isDark));
+  if (remember) {
+    try {
+      localStorage.setItem(THEME_KEY, selectedTheme);
+    } catch (_) {}
+  }
+}
+
+function toggleTheme() {
+  const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  applyTheme(nextTheme);
+}
 
 function switchView(view, updateHistory = true) {
   if (!(view in VIEW_INDEX)) view = "home";
@@ -277,6 +303,7 @@ async function init() {
 }
 
 elements.notificationButton.addEventListener("click", enableNotifications);
+elements.themeButton.addEventListener("click", toggleTheme);
 elements.navButtons.forEach((button) => {
   button.addEventListener("click", () => switchView(button.dataset.view));
   button.addEventListener("keydown", (event) => {
@@ -300,6 +327,7 @@ window.addEventListener("popstate", () => switchView(location.hash.slice(1), fal
 
 const initialView = location.hash.slice(1);
 switchView(initialView in VIEW_INDEX ? initialView : "home", false);
+applyTheme(document.documentElement.dataset.theme, false);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js").catch(console.error));
