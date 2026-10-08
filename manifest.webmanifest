@@ -4,8 +4,8 @@
   "description": "Ders programı ve canlı geri sayım.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f4f0e9",
-  "theme_color": "#761d32",
+  "background_color": "#f5f2e9",
+  "theme_color": "#134383",
   "icons": [
     {
       "src": "assets/favicon.svg",
