@@ -37,6 +37,12 @@ Gün numaraları: `1` Pazartesi, `2` Salı, `3` Çarşamba, `4` Perşembe, `5` C
 - Bu tamamen statik sürüm, sayfa açıkken yaklaşan dersi kontrol eder ve 15 dakika önce bildirim gönderir.
 - Sayfa/tarayıcı tamamen kapalıyken güvenilir bildirim için ayrıca bir push bildirim sunucusu gerekir.
 
+## Ödev listesi
+
+**Ödevler** sekmesinden başlık, ders, açıklama, son teslim tarihi ve öncelik bilgisiyle manuel ödev eklenebilir. Ödevler tamamlandı olarak işaretlenebilir, düzenlenebilir, silinebilir ve durumlarına göre filtrelenebilir.
+
+Ödevler tarayıcının yerel depolama alanında (`localStorage`) saklanır. Aynı cihaz ve tarayıcıyla tekrar girildiğinde korunur; tarayıcı verileri temizlenirse veya farklı bir cihazdan girilirse görünmez.
+
 ## Yerelde çalıştırma
 
 `fetch()` ile JSON okunduğu için `index.html` dosyasını doğrudan açmak yerine basit bir sunucu kullan:
