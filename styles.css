@@ -361,6 +361,20 @@ button { font: inherit; }
   .course-code { grid-column: 2; justify-self: start; margin-top: -3px; }
   .section-heading { align-items: flex-start; }
   .updated-at { display: none; }
+  .day-tabs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 5px;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+  .day-tab {
+    min-width: 0;
+    width: 100%;
+    padding: 9px 2px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
   .bottom-nav { padding: 8px 12px max(8px, env(safe-area-inset-bottom)); }
   .bottom-nav-list { width: 100%; }
   .bottom-nav-button { min-height: 50px; padding: 7px 5px; }
@@ -387,6 +401,8 @@ button { font: inherit; }
   .course-row, .week-list .course-row { grid-template-columns: 70px 1fr; padding: 15px; }
   .course-time { font-size: 15px; }
   .section-heading h2 { font-size: 27px; }
+  .day-tabs { gap: 3px; }
+  .day-tab { padding-inline: 1px; font-size: 9px; }
   .bottom-nav-button { gap: 5px; font-size: 10px; }
   .bottom-nav-button svg { width: 17px; height: 17px; }
 }
