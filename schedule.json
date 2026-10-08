@@ -9,25 +9,25 @@
       "day": 1,
       "start": "10:00",
       "end": "12:00",
-      "code": "BPR101",
+      "code": "NBP119",
       "name": "Web Tasarım Temelleri",
       "room": "Bilgisayar Laboratuvarı 1",
-      "instructor": "Öğr. Gör. Ufuk Soyad"
+      "instructor": "Öğr. Gör. Dr. Ufuk TANYERİ"
     },
     {
       "day": 1,
       "start": "13:30",
       "end": "15:30",
-      "code": "BPR101",
+      "code": "NBP119",
       "name": "Web Tasarım Temelleri",
       "room": "Bilgisayar Laboratuvarı 1",
-      "instructor": "Öğr. Gör. Ufuk Soyad"
+      "instructor": "Öğr. Gör. Dr. Ufuk TANYERİ"
     },
     {
       "day": 2,
       "start": "13:30",
       "end": "17:30",
-      "code": "BPR101",
+      "code": "YDİ101",
       "name": "Temel Yabancı Dil (İngilizce)",
       "room": "Ek Bina-Derslik 6",
       "instructor": "Öğr. Gör. Ad Soyad"
@@ -36,7 +36,7 @@
       "day": 2,
       "start": "17:30",
       "end": "19:30",
-      "code": "BPR101",
+      "code": "TDİ107",
       "name": "Türk Dili 1",
       "room": "Ek Bina-Derslik 6",
       "instructor": "Öğr. Gör. Ad Soyad"
