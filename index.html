@@ -178,6 +178,40 @@
         <div class="day-tabs" id="dayTabs" role="tablist" aria-label="Haftanın günleri"></div>
         <div class="week-list" id="weekList"></div>
       </section>
+
+      <section
+        class="view-panel assignments-section"
+        id="assignmentsView"
+        role="tabpanel"
+        aria-labelledby="assignmentsNavButton"
+        tabindex="0"
+        hidden
+      >
+        <div class="section-heading assignments-heading">
+          <div>
+            <p class="section-overline">GÖREV TAKİBİ</p>
+            <h2 id="assignmentsTitle">Ödevlerim</h2>
+          </div>
+          <button class="primary-button" id="addAssignmentButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            <span>Yeni ödev</span>
+          </button>
+        </div>
+
+        <div class="assignment-stats" aria-label="Ödev özeti">
+          <div><strong id="assignmentTotal">0</strong><span>Toplam</span></div>
+          <div><strong id="assignmentPending">0</strong><span>Bekleyen</span></div>
+          <div><strong id="assignmentCompleted">0</strong><span>Tamamlanan</span></div>
+        </div>
+
+        <div class="assignment-toolbar" role="group" aria-label="Ödevleri filtrele">
+          <button class="assignment-filter active" type="button" data-filter="all" aria-pressed="true">Tümü</button>
+          <button class="assignment-filter" type="button" data-filter="pending" aria-pressed="false">Bekleyen</button>
+          <button class="assignment-filter" type="button" data-filter="completed" aria-pressed="false">Tamamlanan</button>
+        </div>
+
+        <div class="assignment-list" id="assignmentList" aria-live="polite"></div>
+      </section>
     </main>
 
     <nav class="bottom-nav" aria-label="Ana menü">
@@ -226,8 +260,78 @@
           </svg>
           <span>Tüm Program</span>
         </button>
+        <button
+          class="bottom-nav-button"
+          id="assignmentsNavButton"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="assignmentsView"
+          data-view="assignments"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 5h11M9 12h11M9 19h11" />
+            <path d="m3 5 1.5 1.5L7 4M3 12l1.5 1.5L7 11M3 19l1.5 1.5L7 18" />
+          </svg>
+          <span>Ödevler</span>
+        </button>
       </div>
     </nav>
+
+    <dialog class="assignment-dialog" id="assignmentDialog" aria-labelledby="assignmentDialogTitle">
+      <form class="assignment-form" id="assignmentForm">
+        <div class="dialog-heading">
+          <div>
+            <p class="section-overline">ÖDEV DETAYI</p>
+            <h2 id="assignmentDialogTitle">Yeni ödev</h2>
+          </div>
+          <button class="dialog-close" id="closeAssignmentDialog" type="button" aria-label="Pencereyi kapat">×</button>
+        </div>
+
+        <input id="assignmentId" type="hidden" />
+        <label class="form-field">
+          <span>Ödev başlığı *</span>
+          <input id="assignmentName" type="text" maxlength="100" placeholder="Örn. Veritabanı proje raporu" required />
+        </label>
+        <label class="form-field">
+          <span>Ders</span>
+          <input id="assignmentCourse" type="text" maxlength="80" list="courseOptions" placeholder="Ders seç veya yaz" />
+          <datalist id="courseOptions"></datalist>
+        </label>
+        <label class="form-field">
+          <span>Açıklama</span>
+          <textarea id="assignmentDescription" maxlength="3000" rows="4" placeholder="Yapılacakları ve önemli notları yaz…"></textarea>
+        </label>
+        <div class="form-row">
+          <label class="form-field">
+            <span>Son teslim tarihi *</span>
+            <input
+              id="assignmentDueDate"
+              type="text"
+              inputmode="numeric"
+              maxlength="16"
+              pattern="[0-9]{2}\.[0-9]{2}\.[0-9]{4} [0-9]{2}:[0-9]{2}"
+              placeholder="GG.AA.YYYY SS:DD"
+              aria-describedby="assignmentDueDateHint"
+              required
+            />
+            <small class="form-hint" id="assignmentDueDateHint">Örnek: 09.10.2026 23:59</small>
+          </label>
+          <label class="form-field">
+            <span>Öncelik</span>
+            <select id="assignmentPriority">
+              <option value="low">Düşük</option>
+              <option value="medium" selected>Orta</option>
+              <option value="high">Yüksek</option>
+            </select>
+          </label>
+        </div>
+        <div class="dialog-actions">
+          <button class="secondary-button" id="cancelAssignmentButton" type="button">Vazgeç</button>
+          <button class="primary-button" type="submit">Ödevi kaydet</button>
+        </div>
+      </form>
+    </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="app.js" defer></script>
