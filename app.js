@@ -6,6 +6,8 @@ const state = {
   selectedDay: new Date().getDay() || 1,
   now: new Date(),
   activeView: "home",
+  assignments: [],
+  assignmentFilter: "all",
 };
 
 const elements = {
@@ -35,10 +37,29 @@ const elements = {
   navButtons: [...document.querySelectorAll(".bottom-nav-button")],
   viewPanels: [...document.querySelectorAll(".view-panel")],
   brandHomeLink: document.querySelector("#brandHomeLink"),
+  assignmentList: document.querySelector("#assignmentList"),
+  assignmentTotal: document.querySelector("#assignmentTotal"),
+  assignmentPending: document.querySelector("#assignmentPending"),
+  assignmentCompleted: document.querySelector("#assignmentCompleted"),
+  assignmentFilters: [...document.querySelectorAll(".assignment-filter")],
+  addAssignmentButton: document.querySelector("#addAssignmentButton"),
+  assignmentDialog: document.querySelector("#assignmentDialog"),
+  assignmentDialogTitle: document.querySelector("#assignmentDialogTitle"),
+  assignmentForm: document.querySelector("#assignmentForm"),
+  assignmentId: document.querySelector("#assignmentId"),
+  assignmentName: document.querySelector("#assignmentName"),
+  assignmentCourse: document.querySelector("#assignmentCourse"),
+  assignmentDescription: document.querySelector("#assignmentDescription"),
+  assignmentDueDate: document.querySelector("#assignmentDueDate"),
+  assignmentPriority: document.querySelector("#assignmentPriority"),
+  courseOptions: document.querySelector("#courseOptions"),
+  closeAssignmentDialog: document.querySelector("#closeAssignmentDialog"),
+  cancelAssignmentButton: document.querySelector("#cancelAssignmentButton"),
 };
 
-const VIEW_INDEX = { home: 0, today: 1, week: 2 };
+const VIEW_INDEX = { home: 0, today: 1, week: 2, assignments: 3 };
 const THEME_KEY = "ders-pusulasi-theme";
+const ASSIGNMENTS_KEY = "ders-pusulasi-assignments";
 
 function applyTheme(theme, remember = true) {
   const selectedTheme = theme === "dark" ? "dark" : "light";
@@ -80,6 +101,7 @@ function switchView(view, updateHistory = true) {
   });
 
   elements.bottomNav.dataset.active = VIEW_INDEX[view];
+  if (view === "assignments") renderAssignments();
   if (updateHistory && location.hash !== `#${view}`) {
     history.pushState({ view }, "", `#${view}`);
   }
@@ -90,6 +112,11 @@ function parseTime(date, time) {
   const result = new Date(date);
   result.setHours(hours, minutes, 0, 0);
   return result;
+}
+
+function formatClockTime(time) {
+  const [hours, minutes] = time.split(":").map(Number);
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
 }
 
 function dateForWeekday(baseDate, weekday, weekOffset = 0) {
@@ -153,7 +180,7 @@ function renderFocus(now) {
   elements.statusPill.classList.toggle("live", type === "active");
   elements.focusKicker.textContent = type === "active" ? "Bitmesine kalan süre" : "Başlamasına kalan süre";
   elements.focusTitle.textContent = course.name;
-  elements.focusMeta.textContent = `${DAY_NAMES[course.day]} · ${course.start}–${course.end}${courseMeta(course) ? ` · ${courseMeta(course)}` : ""}`;
+  elements.focusMeta.textContent = `${DAY_NAMES[course.day]} · ${formatClockTime(course.start)}–${formatClockTime(course.end)}${courseMeta(course) ? ` · ${courseMeta(course)}` : ""}`;
   setCountdown(target, now);
 
   if (type === "active") {
@@ -168,7 +195,7 @@ function renderFocus(now) {
 function courseRow(course, active = false) {
   return `
     <article class="course-row${active ? " active" : ""}">
-      <div class="course-time">${course.start}<small>${course.end}'e kadar</small></div>
+      <div class="course-time">${formatClockTime(course.start)}<small>${formatClockTime(course.end)}'e kadar</small></div>
       <div class="course-main">
         <h3>${course.name}</h3>
         <p>${courseMeta(course) || "Derslik bilgisi eklenmedi"}</p>
@@ -215,6 +242,258 @@ function renderWeek() {
     : '<div class="empty-state">Bu güne ait ders yok.</div>';
 }
 
+function loadAssignments() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(ASSIGNMENTS_KEY) || "[]");
+    state.assignments = Array.isArray(saved)
+      ? saved.filter((assignment) => assignment && assignment.id && assignment.title && assignment.dueDate && !Number.isNaN(new Date(assignment.dueDate).getTime()))
+      : [];
+  } catch (_) {
+    state.assignments = [];
+  }
+}
+
+function saveAssignments() {
+  try {
+    localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(state.assignments));
+  } catch (_) {
+    showToast("Ödevler tarayıcıya kaydedilemedi.");
+  }
+}
+
+function localDateTimeValue(date) {
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function dateTimeInputValue(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  const pad = (part) => String(part).padStart(2, "0");
+  return `${pad(date.getDate())}.${pad(date.getMonth() + 1)}.${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function parseDateTimeInput(value) {
+  const match = value.match(/^(\d{2})\.(\d{2})\.(\d{4}) (\d{2}):(\d{2})$/);
+  if (!match) return null;
+  const [, day, month, year, hours, minutes] = match.map(Number);
+  const date = new Date(year, month - 1, day, hours, minutes, 0, 0);
+  const valid = date.getFullYear() === year
+    && date.getMonth() === month - 1
+    && date.getDate() === day
+    && date.getHours() === hours
+    && date.getMinutes() === minutes;
+  return valid ? date : null;
+}
+
+function maskDateTimeInput(event) {
+  const digits = event.target.value.replace(/\D/g, "").slice(0, 12);
+  let formatted = digits.slice(0, 2);
+  if (digits.length > 2) formatted += `.${digits.slice(2, 4)}`;
+  if (digits.length > 4) formatted += `.${digits.slice(4, 8)}`;
+  if (digits.length > 8) formatted += ` ${digits.slice(8, 10)}`;
+  if (digits.length > 10) formatted += `:${digits.slice(10, 12)}`;
+  event.target.value = formatted;
+  event.target.setCustomValidity("");
+}
+
+function dueStatus(assignment) {
+  if (assignment.completed) return { label: "Tamamlandı", className: "completed" };
+  const difference = new Date(assignment.dueDate) - new Date();
+  if (difference <= 0) return { label: "Süresi geçti", className: "overdue" };
+  const minutes = Math.ceil(difference / 60000);
+  if (minutes < 60) return { label: `${minutes} dk kaldı`, className: "soon" };
+  const hours = Math.ceil(difference / 3600000);
+  if (hours < 24) return { label: `${hours} saat kaldı`, className: hours <= 6 ? "soon" : "upcoming" };
+  const days = Math.ceil(difference / 86400000);
+  return { label: `${days} gün kaldı`, className: days <= 2 ? "soon" : "upcoming" };
+}
+
+function formatAssignmentDate(value) {
+  return dateTimeInputValue(value);
+}
+
+function createAssignmentCard(assignment) {
+  const status = dueStatus(assignment);
+  const priorityLabels = { low: "Düşük", medium: "Orta", high: "Yüksek" };
+  const article = document.createElement("article");
+  article.className = `assignment-card ${assignment.completed ? "is-completed" : ""} ${status.className === "overdue" ? "is-overdue" : ""}`.trim();
+
+  const checkLabel = document.createElement("label");
+  checkLabel.className = "assignment-check";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = Boolean(assignment.completed);
+  checkbox.setAttribute("aria-label", `${assignment.title} ödevini tamamlandı olarak işaretle`);
+  checkbox.addEventListener("change", () => toggleAssignment(assignment.id, checkbox.checked));
+  const checkmark = document.createElement("span");
+  checkmark.setAttribute("aria-hidden", "true");
+  checkLabel.append(checkbox, checkmark);
+
+  const content = document.createElement("div");
+  content.className = "assignment-content";
+  const badges = document.createElement("div");
+  badges.className = "assignment-badges";
+  const priority = document.createElement("span");
+  priority.className = `priority-badge priority-${assignment.priority || "medium"}`;
+  priority.textContent = `${priorityLabels[assignment.priority] || "Orta"} öncelik`;
+  const deadline = document.createElement("span");
+  deadline.className = `deadline-badge ${status.className}`;
+  deadline.textContent = status.label;
+  badges.append(priority, deadline);
+
+  const title = document.createElement("h3");
+  title.textContent = assignment.title;
+  content.append(badges, title);
+
+  if (assignment.course) {
+    const course = document.createElement("p");
+    course.className = "assignment-course";
+    course.textContent = assignment.course;
+    content.append(course);
+  }
+  if (assignment.description) {
+    const description = document.createElement("p");
+    description.className = "assignment-description";
+    description.textContent = assignment.description;
+    content.append(description);
+  }
+  const exactDate = document.createElement("p");
+  exactDate.className = "assignment-date";
+  exactDate.textContent = `Son teslim: ${formatAssignmentDate(assignment.dueDate)}`;
+  content.append(exactDate);
+
+  const actions = document.createElement("div");
+  actions.className = "assignment-actions";
+  const editButton = document.createElement("button");
+  editButton.type = "button";
+  editButton.textContent = "Düzenle";
+  editButton.addEventListener("click", () => openAssignmentDialog(assignment));
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.className = "danger-action";
+  deleteButton.textContent = "Sil";
+  deleteButton.addEventListener("click", () => deleteAssignment(assignment.id));
+  actions.append(editButton, deleteButton);
+
+  article.append(checkLabel, content, actions);
+  return article;
+}
+
+function renderAssignments() {
+  const completedCount = state.assignments.filter((assignment) => assignment.completed).length;
+  elements.assignmentTotal.textContent = state.assignments.length;
+  elements.assignmentPending.textContent = state.assignments.length - completedCount;
+  elements.assignmentCompleted.textContent = completedCount;
+
+  elements.assignmentFilters.forEach((button) => {
+    const active = button.dataset.filter === state.assignmentFilter;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+
+  const visible = state.assignments
+    .filter((assignment) => state.assignmentFilter === "all" || (state.assignmentFilter === "completed" ? assignment.completed : !assignment.completed))
+    .sort((a, b) => Number(a.completed) - Number(b.completed) || new Date(a.dueDate) - new Date(b.dueDate));
+
+  elements.assignmentList.replaceChildren();
+  if (!visible.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state assignment-empty";
+    empty.textContent = state.assignments.length ? "Bu filtrede gösterilecek ödev yok." : "Henüz ödev eklemedin. İlk ödevini ekleyerek başlayabilirsin.";
+    elements.assignmentList.append(empty);
+    return;
+  }
+  visible.forEach((assignment) => elements.assignmentList.append(createAssignmentCard(assignment)));
+}
+
+function openAssignmentDialog(assignment = null) {
+  elements.assignmentForm.reset();
+  elements.assignmentId.value = assignment?.id || "";
+  elements.assignmentDialogTitle.textContent = assignment ? "Ödevi düzenle" : "Yeni ödev";
+  elements.assignmentName.value = assignment?.title || "";
+  elements.assignmentCourse.value = assignment?.course || "";
+  elements.assignmentDescription.value = assignment?.description || "";
+  elements.assignmentPriority.value = assignment?.priority || "medium";
+  if (assignment) {
+    elements.assignmentDueDate.value = dateTimeInputValue(assignment.dueDate);
+  } else {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(23, 59, 0, 0);
+    elements.assignmentDueDate.value = dateTimeInputValue(tomorrow);
+  }
+  elements.assignmentDialog.showModal();
+  elements.assignmentName.focus();
+}
+
+function closeAssignmentDialog() {
+  elements.assignmentDialog.close();
+}
+
+function handleAssignmentSubmit(event) {
+  event.preventDefault();
+  const title = elements.assignmentName.value.trim();
+  const parsedDueDate = parseDateTimeInput(elements.assignmentDueDate.value);
+  if (!parsedDueDate) {
+    elements.assignmentDueDate.setCustomValidity("Tarihi GG.AA.YYYY SS:DD biçiminde ve geçerli bir değer olarak gir.");
+    elements.assignmentDueDate.reportValidity();
+    return;
+  }
+  elements.assignmentDueDate.setCustomValidity("");
+  const dueDate = localDateTimeValue(parsedDueDate);
+  if (!title) return;
+
+  const existingIndex = state.assignments.findIndex((assignment) => assignment.id === elements.assignmentId.value);
+  const existing = existingIndex >= 0 ? state.assignments[existingIndex] : null;
+  const assignment = {
+    id: existing?.id || globalThis.crypto?.randomUUID?.() || `assignment-${Date.now()}`,
+    title,
+    course: elements.assignmentCourse.value.trim(),
+    description: elements.assignmentDescription.value.trim(),
+    dueDate,
+    priority: elements.assignmentPriority.value,
+    completed: existing?.completed || false,
+    completedAt: existing?.completedAt || null,
+    createdAt: existing?.createdAt || new Date().toISOString(),
+  };
+
+  if (existingIndex >= 0) state.assignments[existingIndex] = assignment;
+  else state.assignments.push(assignment);
+  saveAssignments();
+  renderAssignments();
+  closeAssignmentDialog();
+  showToast(existing ? "Ödev güncellendi." : "Ödev eklendi.");
+}
+
+function toggleAssignment(id, completed) {
+  const assignment = state.assignments.find((item) => item.id === id);
+  if (!assignment) return;
+  assignment.completed = completed;
+  assignment.completedAt = completed ? new Date().toISOString() : null;
+  saveAssignments();
+  renderAssignments();
+  showToast(completed ? "Ödev tamamlandı. Harika!" : "Ödev yeniden bekleyenlere alındı.");
+}
+
+function deleteAssignment(id) {
+  const assignment = state.assignments.find((item) => item.id === id);
+  if (!assignment || !window.confirm(`“${assignment.title}” ödevini silmek istiyor musun?`)) return;
+  state.assignments = state.assignments.filter((item) => item.id !== id);
+  saveAssignments();
+  renderAssignments();
+  showToast("Ödev silindi.");
+}
+
+function populateCourseOptions() {
+  const names = [...new Set(state.schedule.courses.map((course) => course.name))].sort((a, b) => a.localeCompare(b, "tr"));
+  elements.courseOptions.replaceChildren();
+  names.forEach((name) => {
+    const option = document.createElement("option");
+    option.value = name;
+    elements.courseOptions.append(option);
+  });
+}
+
 function showToast(message) {
   elements.toast.textContent = message;
   elements.toast.classList.add("show");
@@ -234,7 +513,7 @@ function checkNotifications(now) {
   });
   if (!soon) return;
   new Notification(`${soon.name} 15 dakika içinde`, {
-    body: `${soon.start} · ${soon.room || "Derslik bilgisini kontrol et"}`,
+    body: `${formatClockTime(soon.start)} · ${soon.room || "Derslik bilgisini kontrol et"}`,
     icon: "assets/favicon.svg",
     tag: notificationKey(soon),
   });
@@ -270,13 +549,21 @@ function updateNotificationButton() {
 function tick() {
   const previousDay = state.now.getDay();
   state.now = new Date();
-  elements.liveClock.textContent = state.now.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  elements.liveClock.textContent = state.now.toLocaleTimeString("tr-TR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  });
   renderFocus(state.now);
   checkNotifications(state.now);
   if (state.now.getDay() !== previousDay) renderToday(state.now);
+  if (state.activeView === "assignments" && state.now.getSeconds() === 0) renderAssignments();
 }
 
 async function init() {
+  loadAssignments();
+  renderAssignments();
   try {
     const response = await fetch("schedule.json", { cache: "no-store" });
     if (!response.ok) throw new Error("Program dosyası okunamadı");
@@ -290,6 +577,7 @@ async function init() {
     renderToday(state.now);
     renderTabs();
     renderWeek();
+    populateCourseOptions();
     updateNotificationButton();
     tick();
     window.setInterval(tick, 1000);
@@ -304,6 +592,20 @@ async function init() {
 
 elements.notificationButton.addEventListener("click", enableNotifications);
 elements.themeButton.addEventListener("click", toggleTheme);
+elements.addAssignmentButton.addEventListener("click", () => openAssignmentDialog());
+elements.closeAssignmentDialog.addEventListener("click", closeAssignmentDialog);
+elements.cancelAssignmentButton.addEventListener("click", closeAssignmentDialog);
+elements.assignmentForm.addEventListener("submit", handleAssignmentSubmit);
+elements.assignmentDueDate.addEventListener("input", maskDateTimeInput);
+elements.assignmentDialog.addEventListener("click", (event) => {
+  if (event.target === elements.assignmentDialog) closeAssignmentDialog();
+});
+elements.assignmentFilters.forEach((button) => {
+  button.addEventListener("click", () => {
+    state.assignmentFilter = button.dataset.filter;
+    renderAssignments();
+  });
+});
 elements.navButtons.forEach((button) => {
   button.addEventListener("click", () => switchView(button.dataset.view));
   button.addEventListener("keydown", (event) => {
