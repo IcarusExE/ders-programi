@@ -7,84 +7,93 @@
   "courses": [
     {
       "day": 1,
-      "start": "09:00",
-      "end": "10:40",
+      "start": "10:00",
+      "end": "12:00",
       "code": "BPR101",
-      "name": "Programlama Temelleri",
-      "room": "Bilgisayar Laboratuvarı",
-      "instructor": "Öğr. Gör. Ad Soyad"
+      "name": "Web Tasarım Temelleri",
+      "room": "Bilgisayar Laboratuvarı 1",
+      "instructor": "Öğr. Gör. Ufuk Soyad"
     },
     {
       "day": 1,
-      "start": "11:00",
-      "end": "12:40",
-      "code": "BPR103",
-      "name": "Bilgisayar Donanımı",
-      "room": "Derslik 2",
+      "start": "13:30",
+      "end": "15:30",
+      "code": "BPR101",
+      "name": "Web Tasarım Temelleri",
+      "room": "Bilgisayar Laboratuvarı 1",
+      "instructor": "Öğr. Gör. Ufuk Soyad"
+    },
+    {
+      "day": 2,
+      "start": "13:30",
+      "end": "17:30",
+      "code": "BPR101",
+      "name": "Temel Yabancı Dil (İngilizce)",
+      "room": "Ek Bina-Derslik 6",
       "instructor": "Öğr. Gör. Ad Soyad"
     },
     {
       "day": 2,
-      "start": "10:00",
-      "end": "11:40",
-      "code": "MAT101",
-      "name": "Matematik",
+      "start": "17:30",
+      "end": "19:30",
+      "code": "BPR101",
+      "name": "Türk Dili 1",
+      "room": "Ek Bina-Derslik 6",
+      "instructor": "Öğr. Gör. Ad Soyad"
+    },
+    {
+      "day": 3,
+      "start": "09:00",
+      "end": "12:00",
+      "code": "BPR101",
+      "name": "Temel Matematik",
       "room": "Derslik 1",
       "instructor": "Öğr. Gör. Ad Soyad"
     },
     {
-      "day": 2,
-      "start": "13:00",
-      "end": "15:40",
-      "code": "BPR105",
-      "name": "Ofis Yazılımları",
-      "room": "Bilgisayar Laboratuvarı",
-      "instructor": "Öğr. Gör. Ad Soyad"
-    },
-    {
       "day": 3,
-      "start": "09:00",
-      "end": "10:40",
-      "code": "ATA101",
-      "name": "Atatürk İlkeleri ve İnkılap Tarihi",
-      "room": "Çevrim içi",
-      "instructor": "Öğr. Gör. Ad Soyad"
-    },
-    {
-      "day": 3,
-      "start": "11:00",
-      "end": "12:40",
-      "code": "TUR101",
-      "name": "Türk Dili",
-      "room": "Çevrim içi",
+      "start": "13:30",
+      "end": "17:30",
+      "code": "BPR101",
+      "name": "Bilgisayar Donanımı ve Ağ",
+      "room": "Bilgisayar Laboratuvarı 2",
       "instructor": "Öğr. Gör. Ad Soyad"
     },
     {
       "day": 4,
-      "start": "09:00",
-      "end": "11:40",
-      "code": "BPR107",
-      "name": "Web Tasarımının Temelleri",
-      "room": "Bilgisayar Laboratuvarı",
-      "instructor": "Öğr. Gör. Ad Soyad"
-    },
-    {
-      "day": 4,
-      "start": "13:00",
-      "end": "14:40",
-      "code": "YDL101",
-      "name": "Yabancı Dil",
-      "room": "Derslik 3",
+      "start": "13:30",
+      "end": "17:30",
+      "code": "BPR101",
+      "name": "Bilgisayar Programlama 1",
+      "room": "Bilgisayar Laboratuvarı 1",
       "instructor": "Öğr. Gör. Ad Soyad"
     },
     {
       "day": 5,
-      "start": "10:00",
-      "end": "12:40",
-      "code": "BPR109",
-      "name": "Grafik ve Animasyon",
-      "room": "Bilgisayar Laboratuvarı",
+      "start": "09:00",
+      "end": "11:00",
+      "code": "BPR101",
+      "name": "Atatürk İlkeleri ve İnkılap Tarihi 1",
+      "room": "Ek Bina-Derslik 6",
       "instructor": "Öğr. Gör. Ad Soyad"
-    }
+    },
+    {
+      "day": 5,
+      "start": "01:00",
+      "end": "13:00",
+      "code": "BPR101",
+      "name": "Grafik ve Animasyon",
+      "room": "Bilgisayar Laboratuvarı 1",
+      "instructor": "Öğr. Gör. Ad Soyad"
+    },
+    {
+      "day": 5,
+      "start": "13:30",
+      "end": "14:30",
+      "code": "BPR101",
+      "name": "Grafik ve Animasyon",
+      "room": "Bilgisayar Laboratuvarı 1",
+      "instructor": "Öğr. Gör. Ad Soyad"
+    },
   ]
 }
