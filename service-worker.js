@@ -1,5 +1,14 @@
-const CACHE_NAME = "ders-pusulasi-v1";
-const ASSETS = ["./", "./index.html", "./styles.css", "./app.js", "./schedule.json", "./manifest.webmanifest", "./assets/favicon.svg"];
+const CACHE_NAME = "ders-pusulasi-v2";
+const ASSETS = [
+  "./",
+  "./index.html",
+  "./styles.css",
+  "./app.js",
+  "./schedule.json",
+  "./manifest.webmanifest",
+  "./assets/favicon.svg",
+  "./assets/nallihan-myo-logo.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
