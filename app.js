@@ -5,6 +5,7 @@ const state = {
   schedule: null,
   selectedDay: new Date().getDay() || 1,
   now: new Date(),
+  activeView: "home",
 };
 
 const elements = {
@@ -27,7 +28,36 @@ const elements = {
   hours: document.querySelector("#hoursValue"),
   minutes: document.querySelector("#minutesValue"),
   seconds: document.querySelector("#secondsValue"),
+  bottomNav: document.querySelector("#bottomNav"),
+  navButtons: [...document.querySelectorAll(".bottom-nav-button")],
+  viewPanels: [...document.querySelectorAll(".view-panel")],
+  brandHomeLink: document.querySelector("#brandHomeLink"),
 };
+
+const VIEW_INDEX = { home: 0, today: 1, week: 2 };
+
+function switchView(view, updateHistory = true) {
+  if (!(view in VIEW_INDEX)) view = "home";
+  state.activeView = view;
+
+  elements.viewPanels.forEach((panel) => {
+    const isActive = panel.id === `${view}View`;
+    panel.hidden = !isActive;
+    if (isActive) panel.scrollTop = 0;
+  });
+
+  elements.navButtons.forEach((button) => {
+    const isActive = button.dataset.view === view;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", String(isActive));
+    button.tabIndex = isActive ? 0 : -1;
+  });
+
+  elements.bottomNav.dataset.active = VIEW_INDEX[view];
+  if (updateHistory && location.hash !== `#${view}`) {
+    history.pushState({ view }, "", `#${view}`);
+  }
+}
 
 function parseTime(date, time) {
   const [hours, minutes] = time.split(":").map(Number);
@@ -247,6 +277,29 @@ async function init() {
 }
 
 elements.notificationButton.addEventListener("click", enableNotifications);
+elements.navButtons.forEach((button) => {
+  button.addEventListener("click", () => switchView(button.dataset.view));
+  button.addEventListener("keydown", (event) => {
+    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const currentIndex = elements.navButtons.indexOf(button);
+    let nextIndex = currentIndex;
+    if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + elements.navButtons.length) % elements.navButtons.length;
+    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % elements.navButtons.length;
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = elements.navButtons.length - 1;
+    elements.navButtons[nextIndex].focus();
+    switchView(elements.navButtons[nextIndex].dataset.view);
+  });
+});
+elements.brandHomeLink.addEventListener("click", (event) => {
+  event.preventDefault();
+  switchView("home");
+});
+window.addEventListener("popstate", () => switchView(location.hash.slice(1), false));
+
+const initialView = location.hash.slice(1);
+switchView(initialView in VIEW_INDEX ? initialView : "home", false);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js").catch(console.error));
