@@ -8,6 +8,17 @@ const state = {
   activeView: "home",
   assignments: [],
   assignmentFilter: "all",
+  assignmentSearch: "",
+  calendarViewDate: null,
+  calendarSelectedDate: null,
+  gradeRecords: [],
+  gradeLog: [],
+  gradeSearch: "",
+  gradeStatusFilter: "all",
+  attendanceRecords: [],
+  attendanceSearch: "",
+  activeTrackingPanel: "attendance",
+  installPrompt: null,
 };
 
 const elements = {
@@ -28,6 +39,9 @@ const elements = {
   themeButton: document.querySelector("#themeButton"),
   themeLabel: document.querySelector("#themeLabel"),
   themeColorMeta: document.querySelector("#themeColorMeta"),
+  settingsButton: document.querySelector("#settingsButton"),
+  settingsDialog: document.querySelector("#settingsDialog"),
+  closeSettingsDialog: document.querySelector("#closeSettingsDialog"),
   toast: document.querySelector("#toast"),
   days: document.querySelector("#daysValue"),
   hours: document.querySelector("#hoursValue"),
@@ -42,6 +56,7 @@ const elements = {
   assignmentPending: document.querySelector("#assignmentPending"),
   assignmentCompleted: document.querySelector("#assignmentCompleted"),
   assignmentFilters: [...document.querySelectorAll(".assignment-filter")],
+  assignmentSearch: document.querySelector("#assignmentSearch"),
   addAssignmentButton: document.querySelector("#addAssignmentButton"),
   assignmentDialog: document.querySelector("#assignmentDialog"),
   assignmentDialogTitle: document.querySelector("#assignmentDialogTitle"),
@@ -52,14 +67,91 @@ const elements = {
   assignmentDescription: document.querySelector("#assignmentDescription"),
   assignmentDueDate: document.querySelector("#assignmentDueDate"),
   assignmentPriority: document.querySelector("#assignmentPriority"),
-  courseOptions: document.querySelector("#courseOptions"),
+  openDatePickerButton: document.querySelector("#openDatePickerButton"),
+  datePicker: document.querySelector("#datePicker"),
+  calendarMonthLabel: document.querySelector("#calendarMonthLabel"),
+  calendarDays: document.querySelector("#calendarDays"),
+  calendarHour: document.querySelector("#calendarHour"),
+  calendarMinute: document.querySelector("#calendarMinute"),
+  previousMonthButton: document.querySelector("#previousMonthButton"),
+  nextMonthButton: document.querySelector("#nextMonthButton"),
+  calendarTodayButton: document.querySelector("#calendarTodayButton"),
+  applyDateButton: document.querySelector("#applyDateButton"),
   closeAssignmentDialog: document.querySelector("#closeAssignmentDialog"),
   cancelAssignmentButton: document.querySelector("#cancelAssignmentButton"),
+  gradeList: document.querySelector("#gradeList"),
+  gradeTotal: document.querySelector("#gradeTotal"),
+  gradePassed: document.querySelector("#gradePassed"),
+  gradeFailed: document.querySelector("#gradeFailed"),
+  gradeSuccessRate: document.querySelector("#gradeSuccessRate"),
+  gradeLogList: document.querySelector("#gradeLogList"),
+  gradeLogCount: document.querySelector("#gradeLogCount"),
+  addGradeButton: document.querySelector("#addGradeButton"),
+  gradeDialog: document.querySelector("#gradeDialog"),
+  gradeDialogTitle: document.querySelector("#gradeDialogTitle"),
+  gradeForm: document.querySelector("#gradeForm"),
+  gradeId: document.querySelector("#gradeId"),
+  gradeCourse: document.querySelector("#gradeCourse"),
+  midtermGrade: document.querySelector("#midtermGrade"),
+  midtermWeight: document.querySelector("#midtermWeight"),
+  finalGrade: document.querySelector("#finalGrade"),
+  finalWeight: document.querySelector("#finalWeight"),
+  passingGrade: document.querySelector("#passingGrade"),
+  minimumFinal: document.querySelector("#minimumFinal"),
+  gradePreview: document.querySelector("#gradePreview"),
+  closeGradeDialog: document.querySelector("#closeGradeDialog"),
+  cancelGradeButton: document.querySelector("#cancelGradeButton"),
+  gradeSearch: document.querySelector("#gradeSearch"),
+  gradeStatusFilter: document.querySelector("#gradeStatusFilter"),
+  trackingTabs: [...document.querySelectorAll(".tracking-tab")],
+  trackingPanels: [...document.querySelectorAll("[data-tracking-content]")],
+  attendanceCourseCount: document.querySelector("#attendanceCourseCount"),
+  attendanceUsed: document.querySelector("#attendanceUsed"),
+  attendanceRisk: document.querySelector("#attendanceRisk"),
+  attendanceSearch: document.querySelector("#attendanceSearch"),
+  attendanceList: document.querySelector("#attendanceList"),
+  attendanceDialog: document.querySelector("#attendanceDialog"),
+  attendanceForm: document.querySelector("#attendanceForm"),
+  attendanceDialogTitle: document.querySelector("#attendanceDialogTitle"),
+  attendanceDialogCourse: document.querySelector("#attendanceDialogCourse"),
+  attendanceCourse: document.querySelector("#attendanceCourse"),
+  attendanceAbsent: document.querySelector("#attendanceAbsent"),
+  attendanceLimit: document.querySelector("#attendanceLimit"),
+  attendanceNote: document.querySelector("#attendanceNote"),
+  closeAttendanceDialog: document.querySelector("#closeAttendanceDialog"),
+  cancelAttendanceButton: document.querySelector("#cancelAttendanceButton"),
+  statisticsOverview: document.querySelector("#statisticsOverview"),
+  courseStatistics: document.querySelector("#courseStatistics"),
+  exportDataButton: document.querySelector("#exportDataButton"),
+  importDataButton: document.querySelector("#importDataButton"),
+  importDataInput: document.querySelector("#importDataInput"),
+  installAppButton: document.querySelector("#installAppButton"),
+  installDescription: document.querySelector("#installDescription"),
 };
 
-const VIEW_INDEX = { home: 0, today: 1, week: 2, assignments: 3 };
+const VIEW_INDEX = { home: 0, today: 1, week: 2, assignments: 3, grades: 4, tracking: 5 };
 const THEME_KEY = "ders-pusulasi-theme";
 const ASSIGNMENTS_KEY = "ders-pusulasi-assignments";
+const GRADES_KEY = "ders-pusulasi-grades";
+const GRADE_LOG_KEY = "ders-pusulasi-grade-log";
+const ATTENDANCE_KEY = "ders-pusulasi-attendance";
+const LOCAL_NOTIFICATIONS_KEY = "ders-pusulasi-local-notifications";
+const PUSH_NOTIFICATIONS_KEY = "ders-pusulasi-push-notifications";
+
+function pushApiUrl() {
+  return String(window.DERS_PUSULASI_PUSH?.apiUrl || "").trim().replace(/\/$/, "");
+}
+
+function supportsWebPush() {
+  return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+}
+
+function urlBase64ToUint8Array(value) {
+  const padding = "=".repeat((4 - (value.length % 4)) % 4);
+  const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const decoded = window.atob(base64);
+  return Uint8Array.from(decoded, (character) => character.charCodeAt(0));
+}
 
 function applyTheme(theme, remember = true) {
   const selectedTheme = theme === "dark" ? "dark" : "light";
@@ -102,6 +194,8 @@ function switchView(view, updateHistory = true) {
 
   elements.bottomNav.dataset.active = VIEW_INDEX[view];
   if (view === "assignments") renderAssignments();
+  if (view === "grades") renderGrades();
+  if (view === "tracking") renderTracking();
   if (updateHistory && location.hash !== `#${view}`) {
     history.pushState({ view }, "", `#${view}`);
   }
@@ -296,6 +390,102 @@ function maskDateTimeInput(event) {
   event.target.setCustomValidity("");
 }
 
+function isSameDay(first, second) {
+  return first.getFullYear() === second.getFullYear()
+    && first.getMonth() === second.getMonth()
+    && first.getDate() === second.getDate();
+}
+
+function renderCalendar() {
+  const viewDate = state.calendarViewDate;
+  if (!viewDate) return;
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  elements.calendarMonthLabel.textContent = new Intl.DateTimeFormat("tr-TR", {
+    month: "long",
+    year: "numeric",
+  }).format(viewDate);
+
+  elements.calendarDays.replaceChildren();
+  const mondayBasedFirstDay = (new Date(year, month, 1).getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  for (let index = 0; index < mondayBasedFirstDay; index += 1) {
+    const spacer = document.createElement("span");
+    spacer.className = "calendar-spacer";
+    elements.calendarDays.append(spacer);
+  }
+
+  const today = new Date();
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const date = new Date(year, month, day);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = day;
+    button.setAttribute("role", "gridcell");
+    button.setAttribute("aria-label", new Intl.DateTimeFormat("tr-TR", { dateStyle: "long" }).format(date));
+    if (isSameDay(date, today)) button.classList.add("is-today");
+    if (state.calendarSelectedDate && isSameDay(date, state.calendarSelectedDate)) {
+      button.classList.add("is-selected");
+      button.setAttribute("aria-selected", "true");
+    }
+    button.addEventListener("click", () => {
+      const selected = state.calendarSelectedDate || new Date();
+      state.calendarSelectedDate = new Date(year, month, day, selected.getHours(), selected.getMinutes());
+      renderCalendar();
+    });
+    elements.calendarDays.append(button);
+  }
+}
+
+function openDatePicker() {
+  const parsed = parseDateTimeInput(elements.assignmentDueDate.value);
+  const fallback = new Date();
+  fallback.setDate(fallback.getDate() + 1);
+  fallback.setHours(23, 59, 0, 0);
+  state.calendarSelectedDate = parsed || fallback;
+  state.calendarViewDate = new Date(state.calendarSelectedDate.getFullYear(), state.calendarSelectedDate.getMonth(), 1);
+  elements.calendarHour.value = String(state.calendarSelectedDate.getHours()).padStart(2, "0");
+  elements.calendarMinute.value = String(state.calendarSelectedDate.getMinutes()).padStart(2, "0");
+  elements.datePicker.hidden = false;
+  elements.openDatePickerButton.setAttribute("aria-expanded", "true");
+  renderCalendar();
+}
+
+function closeDatePicker() {
+  elements.datePicker.hidden = true;
+  elements.openDatePickerButton.setAttribute("aria-expanded", "false");
+}
+
+function changeCalendarMonth(amount) {
+  state.calendarViewDate.setMonth(state.calendarViewDate.getMonth() + amount);
+  renderCalendar();
+}
+
+function selectTodayInCalendar() {
+  state.calendarSelectedDate = new Date();
+  state.calendarViewDate = new Date(state.calendarSelectedDate.getFullYear(), state.calendarSelectedDate.getMonth(), 1);
+  elements.calendarHour.value = String(state.calendarSelectedDate.getHours()).padStart(2, "0");
+  elements.calendarMinute.value = String(state.calendarSelectedDate.getMinutes()).padStart(2, "0");
+  renderCalendar();
+}
+
+function applyCalendarDate() {
+  const hours = Number(elements.calendarHour.value);
+  const minutes = Number(elements.calendarMinute.value);
+  if (!state.calendarSelectedDate || !Number.isInteger(hours) || hours < 0 || hours > 23) {
+    elements.calendarHour.focus();
+    return;
+  }
+  if (!Number.isInteger(minutes) || minutes < 0 || minutes > 59) {
+    elements.calendarMinute.focus();
+    return;
+  }
+  state.calendarSelectedDate.setHours(hours, minutes, 0, 0);
+  elements.assignmentDueDate.value = dateTimeInputValue(state.calendarSelectedDate);
+  elements.assignmentDueDate.setCustomValidity("");
+  closeDatePicker();
+}
+
 function dueStatus(assignment) {
   if (assignment.completed) return { label: "Tamamlandı", className: "completed" };
   const difference = new Date(assignment.dueDate) - new Date();
@@ -310,6 +500,10 @@ function dueStatus(assignment) {
 
 function formatAssignmentDate(value) {
   return dateTimeInputValue(value);
+}
+
+function normalizeSearch(value) {
+  return String(value || "").toLocaleLowerCase("tr-TR").trim();
 }
 
 function createAssignmentCard(assignment) {
@@ -393,13 +587,17 @@ function renderAssignments() {
 
   const visible = state.assignments
     .filter((assignment) => state.assignmentFilter === "all" || (state.assignmentFilter === "completed" ? assignment.completed : !assignment.completed))
+    .filter((assignment) => {
+      const query = normalizeSearch(state.assignmentSearch);
+      return !query || normalizeSearch([assignment.title, assignment.course, assignment.description].join(" ")).includes(query);
+    })
     .sort((a, b) => Number(a.completed) - Number(b.completed) || new Date(a.dueDate) - new Date(b.dueDate));
 
   elements.assignmentList.replaceChildren();
   if (!visible.length) {
     const empty = document.createElement("div");
     empty.className = "empty-state assignment-empty";
-    empty.textContent = state.assignments.length ? "Bu filtrede gösterilecek ödev yok." : "Henüz ödev eklemedin. İlk ödevini ekleyerek başlayabilirsin.";
+    empty.textContent = state.assignments.length ? "Arama veya filtreyle eşleşen ödev yok." : "Henüz ödev eklemedin. İlk ödevini ekleyerek başlayabilirsin.";
     elements.assignmentList.append(empty);
     return;
   }
@@ -408,9 +606,11 @@ function renderAssignments() {
 
 function openAssignmentDialog(assignment = null) {
   elements.assignmentForm.reset();
+  closeDatePicker();
   elements.assignmentId.value = assignment?.id || "";
   elements.assignmentDialogTitle.textContent = assignment ? "Ödevi düzenle" : "Yeni ödev";
   elements.assignmentName.value = assignment?.title || "";
+  ensureCourseOption(assignment?.course || "");
   elements.assignmentCourse.value = assignment?.course || "";
   elements.assignmentDescription.value = assignment?.description || "";
   elements.assignmentPriority.value = assignment?.priority || "medium";
@@ -427,6 +627,7 @@ function openAssignmentDialog(assignment = null) {
 }
 
 function closeAssignmentDialog() {
+  closeDatePicker();
   elements.assignmentDialog.close();
 }
 
@@ -485,13 +686,704 @@ function deleteAssignment(id) {
 }
 
 function populateCourseOptions() {
-  const names = [...new Set(state.schedule.courses.map((course) => course.name))].sort((a, b) => a.localeCompare(b, "tr"));
-  elements.courseOptions.replaceChildren();
-  names.forEach((name) => {
+  const selectedCourse = elements.assignmentCourse.value;
+  const selectedGradeCourse = elements.gradeCourse.value;
+  const courses = [...new Map(state.schedule.courses.map((course) => [course.name, course])).values()]
+    .sort((a, b) => a.name.localeCompare(b.name, "tr"));
+  fillCourseSelect(elements.assignmentCourse, courses);
+  fillCourseSelect(elements.gradeCourse, courses);
+  ensureCourseOption(selectedCourse);
+  ensureGradeCourseOption(selectedGradeCourse);
+  elements.assignmentCourse.value = selectedCourse;
+  elements.gradeCourse.value = selectedGradeCourse;
+}
+
+function fillCourseSelect(select, courses) {
+  select.replaceChildren();
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Programdan ders seç";
+  select.append(placeholder);
+  courses.forEach((course) => {
     const option = document.createElement("option");
-    option.value = name;
-    elements.courseOptions.append(option);
+    option.value = course.name;
+    option.textContent = course.code ? `${course.code} · ${course.name}` : course.name;
+    select.append(option);
   });
+}
+
+function ensureCourseOption(courseName) {
+  ensureSelectOption(elements.assignmentCourse, courseName);
+}
+
+function ensureGradeCourseOption(courseName) {
+  ensureSelectOption(elements.gradeCourse, courseName);
+}
+
+function ensureSelectOption(select, courseName) {
+  if (!courseName || [...select.options].some((option) => option.value === courseName)) return;
+  const option = document.createElement("option");
+  option.value = courseName;
+  option.textContent = courseName;
+  select.append(option);
+}
+
+function loadGrades() {
+  try {
+    const savedGrades = JSON.parse(localStorage.getItem(GRADES_KEY) || "[]");
+    const savedLog = JSON.parse(localStorage.getItem(GRADE_LOG_KEY) || "[]");
+    state.gradeRecords = Array.isArray(savedGrades)
+      ? savedGrades.filter((record) => record && record.id && record.course)
+      : [];
+    state.gradeLog = Array.isArray(savedLog) ? savedLog.slice(0, 50) : [];
+  } catch (_) {
+    state.gradeRecords = [];
+    state.gradeLog = [];
+  }
+}
+
+function saveGrades() {
+  try {
+    localStorage.setItem(GRADES_KEY, JSON.stringify(state.gradeRecords));
+    localStorage.setItem(GRADE_LOG_KEY, JSON.stringify(state.gradeLog));
+  } catch (_) {
+    showToast("Not kayıtları tarayıcıya kaydedilemedi.");
+  }
+}
+
+function addGradeLog(message) {
+  state.gradeLog.unshift({
+    id: globalThis.crypto?.randomUUID?.() || `grade-log-${Date.now()}`,
+    message,
+    createdAt: new Date().toISOString(),
+  });
+  state.gradeLog = state.gradeLog.slice(0, 50);
+}
+
+function calculateGrade(record) {
+  const midterm = Number(record.midtermGrade);
+  const midtermWeight = Number(record.midtermWeight);
+  const finalWeight = Number(record.finalWeight);
+  const passingGrade = Number(record.passingGrade);
+  const minimumFinal = Number(record.minimumFinal);
+  const hasFinal = record.finalGrade !== null && record.finalGrade !== "" && Number.isFinite(Number(record.finalGrade));
+  const finalGrade = hasFinal ? Number(record.finalGrade) : null;
+  const weightsValid = midtermWeight + finalWeight === 100 && finalWeight > 0;
+  const midtermContribution = midterm * (midtermWeight / 100);
+  const rawRequiredFinal = (passingGrade - midtermContribution) / (finalWeight / 100);
+  const requiredFinal = Math.max(minimumFinal, Math.ceil(rawRequiredFinal * 100) / 100);
+  const average = hasFinal ? midtermContribution + finalGrade * (finalWeight / 100) : null;
+  const passed = hasFinal && weightsValid && finalGrade >= minimumFinal && average >= passingGrade;
+  return {
+    hasFinal,
+    weightsValid,
+    midtermContribution,
+    requiredFinal,
+    average,
+    passed,
+    failed: hasFinal && weightsValid && !passed,
+  };
+}
+
+function formatScore(value) {
+  if (!Number.isFinite(value)) return "—";
+  return value.toLocaleString("tr-TR", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+}
+
+function gradeDraftFromForm() {
+  return {
+    course: elements.gradeCourse.value,
+    midtermGrade: elements.midtermGrade.value === "" ? null : Number(elements.midtermGrade.value),
+    midtermWeight: Number(elements.midtermWeight.value),
+    finalGrade: elements.finalGrade.value === "" ? null : Number(elements.finalGrade.value),
+    finalWeight: Number(elements.finalWeight.value),
+    passingGrade: Number(elements.passingGrade.value),
+    minimumFinal: Number(elements.minimumFinal.value),
+  };
+}
+
+function updateGradePreview() {
+  const draft = gradeDraftFromForm();
+  elements.gradePreview.className = "grade-preview";
+  if (draft.midtermGrade === null || !Number.isFinite(draft.midtermGrade)) {
+    elements.gradePreview.textContent = "Vize notunu girerek hesabı başlatabilirsin.";
+    return;
+  }
+  const result = calculateGrade(draft);
+  if (!result.weightsValid) {
+    elements.gradePreview.classList.add("warning");
+    elements.gradePreview.textContent = "Vize ve final ağırlıklarının toplamı %100 olmalı.";
+    return;
+  }
+  if (!result.hasFinal) {
+    elements.gradePreview.classList.add(result.requiredFinal > 100 ? "failed" : "pending");
+    elements.gradePreview.textContent = result.requiredFinal > 100
+      ? "Bu değerlere göre finalden 100 alsan bile geçme notuna ulaşılamıyor."
+      : `Geçmek için finalden en az ${formatScore(result.requiredFinal)} almalısın.`;
+    return;
+  }
+  elements.gradePreview.classList.add(result.passed ? "passed" : "failed");
+  elements.gradePreview.textContent = result.passed
+    ? `Ağırlıklı ortalaman ${formatScore(result.average)} — geçiyorsun.`
+    : `Ağırlıklı ortalaman ${formatScore(result.average)} — şu an kalıyorsun.`;
+}
+
+function createGradeCard(record) {
+  const result = calculateGrade(record);
+  const article = document.createElement("article");
+  article.className = `grade-card ${result.hasFinal ? (result.passed ? "is-passed" : "is-failed") : "is-pending"}`;
+
+  const heading = document.createElement("div");
+  heading.className = "grade-card-heading";
+  const titleGroup = document.createElement("div");
+  const overline = document.createElement("span");
+  overline.textContent = result.hasFinal ? "SINAV SONUCU" : "FİNAL HEDEFİ";
+  const title = document.createElement("h3");
+  title.textContent = record.course;
+  titleGroup.append(overline, title);
+  const status = document.createElement("strong");
+  status.className = "grade-status";
+  status.textContent = result.hasFinal ? (result.passed ? "GEÇTİ" : "KALDI") : "BEKLİYOR";
+  heading.append(titleGroup, status);
+
+  const resultBox = document.createElement("div");
+  resultBox.className = "grade-result-box";
+  const resultValue = document.createElement("strong");
+  const resultLabel = document.createElement("span");
+  if (result.hasFinal) {
+    resultValue.textContent = formatScore(result.average);
+    resultLabel.textContent = "Ağırlıklı ortalama";
+  } else if (result.requiredFinal > 100) {
+    resultValue.textContent = ">100";
+    resultLabel.textContent = "Gerekli final — geçmek mümkün görünmüyor";
+  } else {
+    resultValue.textContent = formatScore(result.requiredFinal);
+    resultLabel.textContent = "Finalden alman gereken en düşük not";
+  }
+  resultBox.append(resultValue, resultLabel);
+
+  const details = document.createElement("div");
+  details.className = "grade-details";
+  const detailItems = [
+    ["Vize", `${formatScore(Number(record.midtermGrade))} · %${record.midtermWeight}`],
+    ["Final", result.hasFinal ? `${formatScore(Number(record.finalGrade))} · %${record.finalWeight}` : `Bekleniyor · %${record.finalWeight}`],
+    ["Geçme notu", formatScore(Number(record.passingGrade))],
+    ["Final barajı", formatScore(Number(record.minimumFinal))],
+  ];
+  detailItems.forEach(([label, value]) => {
+    const item = document.createElement("div");
+    const labelElement = document.createElement("span");
+    const valueElement = document.createElement("strong");
+    labelElement.textContent = label;
+    valueElement.textContent = value;
+    item.append(labelElement, valueElement);
+    details.append(item);
+  });
+
+  const actions = document.createElement("div");
+  actions.className = "grade-actions assignment-actions";
+  const editButton = document.createElement("button");
+  editButton.type = "button";
+  editButton.textContent = "Düzenle";
+  editButton.addEventListener("click", () => openGradeDialog(record));
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.className = "danger-action";
+  deleteButton.textContent = "Sil";
+  deleteButton.addEventListener("click", () => deleteGradeRecord(record.id));
+  actions.append(editButton, deleteButton);
+  article.append(heading, resultBox, details, actions);
+  return article;
+}
+
+function renderGradeLog() {
+  elements.gradeLogCount.textContent = `${state.gradeLog.length} kayıt`;
+  elements.gradeLogList.replaceChildren();
+  if (!state.gradeLog.length) {
+    const empty = document.createElement("p");
+    empty.className = "grade-log-empty";
+    empty.textContent = "Henüz hesaplama kaydı yok.";
+    elements.gradeLogList.append(empty);
+    return;
+  }
+  state.gradeLog.forEach((entry) => {
+    const item = document.createElement("div");
+    const message = document.createElement("p");
+    const time = document.createElement("time");
+    message.textContent = entry.message;
+    time.dateTime = entry.createdAt;
+    time.textContent = dateTimeInputValue(entry.createdAt);
+    item.append(message, time);
+    elements.gradeLogList.append(item);
+  });
+}
+
+function renderGrades() {
+  const results = state.gradeRecords.map((record) => calculateGrade(record));
+  const finalised = results.filter((result) => result.hasFinal && result.weightsValid);
+  const passed = finalised.filter((result) => result.passed).length;
+  const failed = finalised.length - passed;
+  elements.gradeTotal.textContent = state.gradeRecords.length;
+  elements.gradePassed.textContent = passed;
+  elements.gradeFailed.textContent = failed;
+  elements.gradeSuccessRate.textContent = finalised.length ? `%${Math.round((passed / finalised.length) * 100)}` : "—";
+  elements.gradeList.replaceChildren();
+  const visible = state.gradeRecords
+    .filter((record) => !normalizeSearch(state.gradeSearch) || normalizeSearch(record.course).includes(normalizeSearch(state.gradeSearch)))
+    .filter((record) => {
+      if (state.gradeStatusFilter === "all") return true;
+      const result = calculateGrade(record);
+      if (state.gradeStatusFilter === "pending") return !result.hasFinal;
+      if (state.gradeStatusFilter === "passed") return result.passed;
+      return result.failed;
+    });
+  if (!visible.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = state.gradeRecords.length
+      ? "Arama veya filtreyle eşleşen not kaydı yok."
+      : "Henüz sınav sonucu eklemedin. Bir ders ekleyerek final hedefini hesaplayabilirsin.";
+    elements.gradeList.append(empty);
+  } else {
+    [...visible]
+      .sort((a, b) => a.course.localeCompare(b.course, "tr"))
+      .forEach((record) => elements.gradeList.append(createGradeCard(record)));
+  }
+  renderGradeLog();
+}
+
+function openGradeDialog(record = null) {
+  elements.gradeForm.reset();
+  elements.gradeId.value = record?.id || "";
+  elements.gradeDialogTitle.textContent = record ? "Ders sonucunu düzenle" : "Ders sonucu ekle";
+  ensureGradeCourseOption(record?.course || "");
+  elements.gradeCourse.value = record?.course || "";
+  elements.midtermGrade.value = record?.midtermGrade ?? "";
+  elements.midtermWeight.value = record?.midtermWeight ?? 40;
+  elements.finalGrade.value = record?.finalGrade ?? "";
+  elements.finalWeight.value = record?.finalWeight ?? 60;
+  elements.passingGrade.value = record?.passingGrade ?? 60;
+  elements.minimumFinal.value = record?.minimumFinal ?? 50;
+  elements.gradeCourse.setCustomValidity("");
+  elements.finalWeight.setCustomValidity("");
+  updateGradePreview();
+  elements.gradeDialog.showModal();
+  elements.gradeCourse.focus();
+}
+
+function closeGradeDialog() {
+  elements.gradeDialog.close();
+}
+
+function handleGradeSubmit(event) {
+  event.preventDefault();
+  const draft = gradeDraftFromForm();
+  const result = calculateGrade(draft);
+  if (!result.weightsValid) {
+    elements.finalWeight.setCustomValidity("Vize ve final ağırlıklarının toplamı %100 olmalı.");
+    elements.finalWeight.reportValidity();
+    return;
+  }
+  elements.finalWeight.setCustomValidity("");
+  const duplicate = state.gradeRecords.find((record) => record.course === draft.course && record.id !== elements.gradeId.value);
+  if (duplicate) {
+    elements.gradeCourse.setCustomValidity("Bu ders için zaten bir not kaydı bulunuyor.");
+    elements.gradeCourse.reportValidity();
+    return;
+  }
+  elements.gradeCourse.setCustomValidity("");
+  const existingIndex = state.gradeRecords.findIndex((record) => record.id === elements.gradeId.value);
+  const existing = existingIndex >= 0 ? state.gradeRecords[existingIndex] : null;
+  const record = {
+    id: existing?.id || globalThis.crypto?.randomUUID?.() || `grade-${Date.now()}`,
+    ...draft,
+    createdAt: existing?.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  if (existingIndex >= 0) state.gradeRecords[existingIndex] = record;
+  else state.gradeRecords.push(record);
+  const savedResult = calculateGrade(record);
+  const logResult = savedResult.hasFinal
+    ? `${formatScore(savedResult.average)} ortalama ile ${savedResult.passed ? "geçti" : "kaldı"}`
+    : savedResult.requiredFinal > 100 ? "geçme hedefi 100'ün üzerinde" : `gerekli final ${formatScore(savedResult.requiredFinal)}`;
+  addGradeLog(`${record.course}: ${logResult}.`);
+  saveGrades();
+  renderGrades();
+  closeGradeDialog();
+  showToast(existing ? "Not hesabı güncellendi." : "Not hesabı kaydedildi.");
+}
+
+function deleteGradeRecord(id) {
+  const record = state.gradeRecords.find((item) => item.id === id);
+  if (!record || !window.confirm(`“${record.course}” not kaydını silmek istiyor musun?`)) return;
+  state.gradeRecords = state.gradeRecords.filter((item) => item.id !== id);
+  addGradeLog(`${record.course}: not kaydı silindi.`);
+  saveGrades();
+  renderGrades();
+  showToast("Not kaydı silindi.");
+}
+
+function loadAttendance() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(ATTENDANCE_KEY) || "[]");
+    state.attendanceRecords = Array.isArray(saved)
+      ? saved.filter((record) => record && record.course).map((record) => ({
+          ...record,
+          course: String(record.course),
+          code: String(record.code || ""),
+          absent: Math.max(0, Number(record.absent) || 0),
+          limit: Math.max(1, Number(record.limit) || 4),
+          note: String(record.note || ""),
+        }))
+      : [];
+  } catch (_) {
+    state.attendanceRecords = [];
+  }
+}
+
+function saveAttendance() {
+  try {
+    localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(state.attendanceRecords));
+  } catch (_) {
+    showToast("Devamsızlık kayıtları tarayıcıya kaydedilemedi.");
+  }
+}
+
+function uniqueScheduleCourses() {
+  if (!state.schedule?.courses) return [];
+  return [...new Map(state.schedule.courses.map((course) => [course.name, course])).values()]
+    .sort((a, b) => a.name.localeCompare(b.name, "tr"));
+}
+
+function synchroniseAttendance() {
+  uniqueScheduleCourses().forEach((course) => {
+    const existing = state.attendanceRecords.find((record) => record.course === course.name);
+    if (existing) {
+      existing.code = course.code || existing.code || "";
+      return;
+    }
+    state.attendanceRecords.push({
+      course: course.name,
+      code: course.code || "",
+      absent: 0,
+      limit: 4,
+      note: "",
+      updatedAt: new Date().toISOString(),
+    });
+  });
+  saveAttendance();
+}
+
+function attendanceStatus(record) {
+  const absent = Math.max(0, Number(record.absent) || 0);
+  const limit = Math.max(1, Number(record.limit) || 1);
+  const ratio = absent / limit;
+  if (ratio >= 1) return { label: "Sınırda", className: "danger", ratio };
+  if (ratio >= 0.75) return { label: "Riskli", className: "warning", ratio };
+  return { label: "Güvenli", className: "safe", ratio };
+}
+
+function updateAttendance(course, change) {
+  const record = state.attendanceRecords.find((item) => item.course === course);
+  if (!record) return;
+  record.absent = Math.max(0, (Number(record.absent) || 0) + change);
+  record.updatedAt = new Date().toISOString();
+  saveAttendance();
+  renderAttendance();
+  renderStatistics();
+  showToast(change > 0 ? "Devamsızlık eklendi." : "Devamsızlık azaltıldı.");
+}
+
+function createAttendanceCard(record) {
+  const status = attendanceStatus(record);
+  const remaining = Math.max(0, Number(record.limit) - Number(record.absent));
+  const article = document.createElement("article");
+  article.className = `attendance-card ${status.className}`;
+
+  const heading = document.createElement("div");
+  heading.className = "attendance-card-heading";
+  const titleGroup = document.createElement("div");
+  const code = document.createElement("span");
+  code.textContent = record.code || "DERS";
+  const title = document.createElement("h3");
+  title.textContent = record.course;
+  titleGroup.append(code, title);
+  const badge = document.createElement("strong");
+  badge.textContent = status.label;
+  badge.className = "attendance-status";
+  heading.append(titleGroup, badge);
+
+  const numbers = document.createElement("div");
+  numbers.className = "attendance-numbers";
+  const used = document.createElement("div");
+  used.innerHTML = `<strong>${Number(record.absent) || 0}</strong><span>Kullanılan</span>`;
+  const left = document.createElement("div");
+  left.innerHTML = `<strong>${remaining}</strong><span>Kalan hak</span>`;
+  const total = document.createElement("div");
+  total.innerHTML = `<strong>${Number(record.limit) || 0}</strong><span>Sınır</span>`;
+  numbers.append(used, left, total);
+
+  const progress = document.createElement("div");
+  progress.className = "attendance-progress";
+  const progressBar = document.createElement("span");
+  progressBar.style.width = `${Math.min(100, status.ratio * 100)}%`;
+  progress.append(progressBar);
+
+  const footer = document.createElement("div");
+  footer.className = "attendance-card-footer";
+  const controls = document.createElement("div");
+  controls.className = "attendance-stepper";
+  const minus = document.createElement("button");
+  minus.type = "button";
+  minus.textContent = "−";
+  minus.disabled = Number(record.absent) <= 0;
+  minus.setAttribute("aria-label", `${record.course} devamsızlığını azalt`);
+  minus.addEventListener("click", () => updateAttendance(record.course, -1));
+  const plus = document.createElement("button");
+  plus.type = "button";
+  plus.textContent = "+ Devamsızlık";
+  plus.addEventListener("click", () => updateAttendance(record.course, 1));
+  controls.append(minus, plus);
+  const edit = document.createElement("button");
+  edit.type = "button";
+  edit.className = "attendance-edit";
+  edit.textContent = "Düzenle";
+  edit.addEventListener("click", () => openAttendanceDialog(record));
+  footer.append(controls, edit);
+
+  article.append(heading, numbers, progress);
+  if (record.note) {
+    const note = document.createElement("p");
+    note.className = "attendance-note";
+    note.textContent = record.note;
+    article.append(note);
+  }
+  article.append(footer);
+  return article;
+}
+
+function renderAttendance() {
+  const records = state.attendanceRecords;
+  const risky = records.filter((record) => attendanceStatus(record).ratio >= 0.75).length;
+  elements.attendanceCourseCount.textContent = records.length;
+  elements.attendanceUsed.textContent = records.reduce((sum, record) => sum + (Number(record.absent) || 0), 0);
+  elements.attendanceRisk.textContent = risky;
+  const query = normalizeSearch(state.attendanceSearch);
+  const visible = records
+    .filter((record) => !query || normalizeSearch(`${record.course} ${record.code}`).includes(query))
+    .sort((a, b) => a.course.localeCompare(b.course, "tr"));
+  elements.attendanceList.replaceChildren();
+  if (!visible.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = records.length ? "Aramayla eşleşen ders yok." : "Ders programı yüklendiğinde devamsızlık takibi burada başlayacak.";
+    elements.attendanceList.append(empty);
+    return;
+  }
+  visible.forEach((record) => elements.attendanceList.append(createAttendanceCard(record)));
+}
+
+function openAttendanceDialog(record) {
+  elements.attendanceDialogTitle.textContent = "Devamsızlığı düzenle";
+  elements.attendanceDialogCourse.textContent = record.code ? `${record.code} · ${record.course}` : record.course;
+  elements.attendanceCourse.value = record.course;
+  elements.attendanceAbsent.value = Number(record.absent) || 0;
+  elements.attendanceLimit.value = Number(record.limit) || 4;
+  elements.attendanceNote.value = record.note || "";
+  elements.attendanceDialog.showModal();
+  elements.attendanceAbsent.focus();
+}
+
+function closeAttendanceDialog() {
+  elements.attendanceDialog.close();
+}
+
+function handleAttendanceSubmit(event) {
+  event.preventDefault();
+  const record = state.attendanceRecords.find((item) => item.course === elements.attendanceCourse.value);
+  if (!record) return;
+  record.absent = Math.max(0, Number(elements.attendanceAbsent.value));
+  record.limit = Math.max(1, Number(elements.attendanceLimit.value));
+  record.note = elements.attendanceNote.value.trim();
+  record.updatedAt = new Date().toISOString();
+  saveAttendance();
+  renderAttendance();
+  renderStatistics();
+  closeAttendanceDialog();
+  showToast("Devamsızlık bilgisi güncellendi.");
+}
+
+function createMetricCard(value, label, detail, tone = "") {
+  const card = document.createElement("article");
+  card.className = `metric-card ${tone}`.trim();
+  const strong = document.createElement("strong");
+  strong.textContent = value;
+  const title = document.createElement("span");
+  title.textContent = label;
+  const small = document.createElement("small");
+  small.textContent = detail;
+  card.append(strong, title, small);
+  return card;
+}
+
+function renderStatistics() {
+  const assignmentCompleted = state.assignments.filter((item) => item.completed).length;
+  const assignmentRate = state.assignments.length ? Math.round((assignmentCompleted / state.assignments.length) * 100) : 0;
+  const gradeResults = state.gradeRecords.map((record) => calculateGrade(record)).filter((result) => result.hasFinal && result.weightsValid);
+  const gradeAverage = gradeResults.length
+    ? gradeResults.reduce((sum, result) => sum + result.average, 0) / gradeResults.length
+    : null;
+  const passed = gradeResults.filter((result) => result.passed).length;
+  const attendanceUsed = state.attendanceRecords.reduce((sum, record) => sum + (Number(record.absent) || 0), 0);
+  const attendanceLimit = state.attendanceRecords.reduce((sum, record) => sum + (Number(record.limit) || 0), 0);
+  const attendanceRate = attendanceLimit ? Math.round((attendanceUsed / attendanceLimit) * 100) : 0;
+  const overdue = state.assignments.filter((item) => !item.completed && new Date(item.dueDate) < new Date()).length;
+
+  elements.statisticsOverview.replaceChildren(
+    createMetricCard(`%${assignmentRate}`, "Ödev tamamlama", `${assignmentCompleted}/${state.assignments.length} ödev tamamlandı`, assignmentRate >= 75 ? "positive" : ""),
+    createMetricCard(gradeAverage === null ? "—" : formatScore(gradeAverage), "Not ortalaması", `${passed}/${gradeResults.length} ders geçildi`, gradeAverage !== null && gradeAverage >= 60 ? "positive" : ""),
+    createMetricCard(`%${attendanceRate}`, "Devamsızlık kullanımı", `${attendanceUsed}/${attendanceLimit || 0} oturum kullanıldı`, attendanceRate >= 75 ? "negative" : ""),
+    createMetricCard(String(overdue), "Geciken ödev", overdue ? "İlgilenmen gereken görev var" : "Geciken görevin yok", overdue ? "negative" : "positive"),
+  );
+
+  const courseNames = new Set([
+    ...uniqueScheduleCourses().map((course) => course.name),
+    ...state.gradeRecords.map((record) => record.course),
+    ...state.attendanceRecords.map((record) => record.course),
+  ]);
+  elements.courseStatistics.replaceChildren();
+  if (!courseNames.size) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = "İstatistik oluşturmak için henüz yeterli veri yok.";
+    elements.courseStatistics.append(empty);
+    return;
+  }
+  [...courseNames].sort((a, b) => a.localeCompare(b, "tr")).forEach((courseName) => {
+    const grade = state.gradeRecords.find((record) => record.course === courseName);
+    const gradeResult = grade ? calculateGrade(grade) : null;
+    const attendance = state.attendanceRecords.find((record) => record.course === courseName);
+    const assignments = state.assignments.filter((item) => item.course === courseName);
+    const completed = assignments.filter((item) => item.completed).length;
+    const score = gradeResult?.hasFinal ? Math.max(0, Math.min(100, gradeResult.average)) : null;
+    const row = document.createElement("article");
+    row.className = "course-stat-row";
+    const heading = document.createElement("div");
+    const title = document.createElement("h4");
+    title.textContent = courseName;
+    const detail = document.createElement("p");
+    detail.textContent = `Ödev ${completed}/${assignments.length} · Devamsızlık ${attendance?.absent || 0}/${attendance?.limit || 0}`;
+    heading.append(title, detail);
+    const gradeText = document.createElement("strong");
+    gradeText.textContent = score === null ? "Not yok" : formatScore(score);
+    const bar = document.createElement("div");
+    bar.className = "course-stat-bar";
+    const fill = document.createElement("span");
+    fill.style.width = `${score || 0}%`;
+    bar.append(fill);
+    row.append(heading, gradeText, bar);
+    elements.courseStatistics.append(row);
+  });
+}
+
+function switchTrackingPanel(panelName) {
+  state.activeTrackingPanel = panelName;
+  elements.trackingTabs.forEach((button) => {
+    const active = button.dataset.trackingPanel === panelName;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+  elements.trackingPanels.forEach((panel) => {
+    panel.hidden = panel.dataset.trackingContent !== panelName;
+  });
+  if (panelName === "statistics") renderStatistics();
+  if (panelName === "attendance") renderAttendance();
+}
+
+function renderTracking() {
+  switchTrackingPanel(state.activeTrackingPanel);
+}
+
+function exportAppData() {
+  const backup = {
+    app: "Ders Pusulası",
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    data: {
+      assignments: state.assignments,
+      grades: state.gradeRecords,
+      gradeLog: state.gradeLog,
+      attendance: state.attendanceRecords,
+      theme: document.documentElement.dataset.theme || "light",
+    },
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  const date = new Date().toISOString().slice(0, 10);
+  link.href = url;
+  link.download = `ders-pusulasi-yedek-${date}.json`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  showToast("Yedek dosyası indirildi.");
+}
+
+async function importAppData(file) {
+  if (!file) return;
+  try {
+    const backup = JSON.parse(await file.text());
+    if (backup?.app !== "Ders Pusulası" || backup?.version !== 1 || !backup.data) {
+      throw new Error("Bu dosya geçerli bir Ders Pusulası yedeği değil.");
+    }
+    const { assignments, grades, gradeLog, attendance, theme } = backup.data;
+    if (![assignments, grades, gradeLog, attendance].every(Array.isArray)) {
+      throw new Error("Yedek dosyasındaki kayıt yapısı geçersiz.");
+    }
+    if (!window.confirm("Bu yedek mevcut ödev, not ve devamsızlık kayıtlarının üzerine yazacak. Devam edilsin mi?")) return;
+    localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(assignments));
+    localStorage.setItem(GRADES_KEY, JSON.stringify(grades));
+    localStorage.setItem(GRADE_LOG_KEY, JSON.stringify(gradeLog));
+    localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(attendance));
+    if (theme === "dark" || theme === "light") localStorage.setItem(THEME_KEY, theme);
+    showToast("Yedek geri yüklendi. Sayfa yenileniyor…");
+    window.setTimeout(() => location.reload(), 700);
+  } catch (error) {
+    showToast(error.message || "Yedek dosyası okunamadı.");
+  } finally {
+    elements.importDataInput.value = "";
+  }
+}
+
+function isAppInstalled() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
+
+function updateInstallButton() {
+  if (isAppInstalled()) {
+    elements.installAppButton.disabled = true;
+    elements.installAppButton.textContent = "Uygulama kurulu";
+    elements.installDescription.textContent = "Ders Pusulası bu cihazda uygulama olarak çalışıyor.";
+    return;
+  }
+  if (state.installPrompt) {
+    elements.installAppButton.disabled = false;
+    elements.installAppButton.textContent = "Uygulamayı kur";
+    elements.installDescription.textContent = "Ders Pusulası'nı ana ekranına ekleyip uygulama gibi aç.";
+    return;
+  }
+  elements.installAppButton.disabled = true;
+  elements.installAppButton.textContent = "Tarayıcı menüsünden ekle";
+  elements.installDescription.textContent = "Kurulum düğmesi görünmüyorsa tarayıcı menüsündeki “Ana ekrana ekle” seçeneğini kullan.";
+}
+
+async function installApp() {
+  if (!state.installPrompt) return;
+  const prompt = state.installPrompt;
+  state.installPrompt = null;
+  await prompt.prompt();
+  updateInstallButton();
 }
 
 function showToast(message) {
@@ -506,7 +1398,12 @@ function notificationKey(course) {
 }
 
 function checkNotifications(now) {
-  if (!("Notification" in window) || Notification.permission !== "granted") return;
+  if (
+    !("Notification" in window)
+    || Notification.permission !== "granted"
+    || localStorage.getItem(LOCAL_NOTIFICATIONS_KEY) !== "1"
+    || localStorage.getItem(PUSH_NOTIFICATIONS_KEY) === "1"
+  ) return;
   const soon = getOccurrences(now).find((course) => {
     const difference = course.startDate - now;
     return difference > 0 && difference <= 15 * 60 * 1000 && !localStorage.getItem(notificationKey(course));
@@ -520,7 +1417,66 @@ function checkNotifications(now) {
   localStorage.setItem(notificationKey(soon), "1");
 }
 
-async function enableNotifications() {
+async function getPushSubscription() {
+  if (!supportsWebPush()) return null;
+  const registration = await navigator.serviceWorker.ready;
+  return registration.pushManager.getSubscription();
+}
+
+async function syncPushSubscription(subscription) {
+  const apiUrl = pushApiUrl();
+  if (!apiUrl || !subscription || !state.schedule?.courses) return;
+  const response = await fetch(`${apiUrl}/subscriptions`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      subscription: subscription.toJSON(),
+      schedule: state.schedule.courses,
+      timezone: state.schedule.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
+    }),
+  });
+  if (!response.ok) throw new Error("Bildirim aboneliği sunucuya kaydedilemedi.");
+}
+
+async function enablePushNotifications() {
+  if (!supportsWebPush()) throw new Error("Bu tarayıcı arka plan bildirimlerini desteklemiyor.");
+  const apiUrl = pushApiUrl();
+  const configResponse = await fetch(`${apiUrl}/config`, { cache: "no-store" });
+  if (!configResponse.ok) throw new Error("Bildirim sunucusuna ulaşılamadı.");
+  const { vapidPublicKey } = await configResponse.json();
+  if (!vapidPublicKey) throw new Error("Bildirim sunucusu henüz yapılandırılmamış.");
+
+  const registration = await navigator.serviceWorker.ready;
+  let subscription = await registration.pushManager.getSubscription();
+  if (!subscription) {
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+    });
+  }
+  await syncPushSubscription(subscription);
+  localStorage.setItem(PUSH_NOTIFICATIONS_KEY, "1");
+  localStorage.removeItem(LOCAL_NOTIFICATIONS_KEY);
+}
+
+async function disablePushNotifications(subscription) {
+  const apiUrl = pushApiUrl();
+  if (apiUrl) {
+    try {
+      await fetch(`${apiUrl}/subscriptions`, {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ endpoint: subscription.endpoint }),
+      });
+    } catch (error) {
+      console.warn("Bildirim kaydı sunucudan kaldırılamadı.", error);
+    }
+  }
+  await subscription.unsubscribe();
+  localStorage.removeItem(PUSH_NOTIFICATIONS_KEY);
+}
+
+async function handleNotificationButton() {
   if (!("Notification" in window)) {
     showToast("Bu tarayıcı bildirimleri desteklemiyor.");
     return;
@@ -529,16 +1485,56 @@ async function enableNotifications() {
     showToast("Bildirimler tarayıcı ayarlarından engellenmiş.");
     return;
   }
-  const permission = await Notification.requestPermission();
-  updateNotificationButton();
-  if (permission === "granted") {
-    showToast("Bildirimler açık. Sayfa açıkken 15 dakika önce haber vereceğim.");
-    checkNotifications(new Date());
+  try {
+    if (pushApiUrl()) {
+      const existing = await getPushSubscription();
+      if (existing && localStorage.getItem(PUSH_NOTIFICATIONS_KEY) === "1") {
+        await disablePushNotifications(existing);
+        showToast("Arka plan bildirimleri kapatıldı.");
+        await updateNotificationButton();
+        return;
+      }
+    } else if (localStorage.getItem(LOCAL_NOTIFICATIONS_KEY) === "1") {
+      localStorage.removeItem(LOCAL_NOTIFICATIONS_KEY);
+      showToast("Bildirimler kapatıldı.");
+      await updateNotificationButton();
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      await updateNotificationButton();
+      return;
+    }
+    if (pushApiUrl()) {
+      await enablePushNotifications();
+      showToast("Bildirimler açık. Site kapalıyken de 15 dakika önce haber vereceğim.");
+    } else {
+      localStorage.setItem(LOCAL_NOTIFICATIONS_KEY, "1");
+      showToast("Bildirimler açık. Sunucu kurulana kadar sayfa açıkken haber vereceğim.");
+      checkNotifications(new Date());
+    }
+  } catch (error) {
+    console.error(error);
+    showToast(error.message || "Bildirimler açılamadı.");
+  } finally {
+    await updateNotificationButton();
   }
 }
 
-function updateNotificationButton() {
-  const enabled = "Notification" in window && Notification.permission === "granted";
+async function updateNotificationButton() {
+  let enabled = false;
+  if ("Notification" in window && Notification.permission === "granted") {
+    if (pushApiUrl()) {
+      try {
+        enabled = Boolean(await getPushSubscription()) && localStorage.getItem(PUSH_NOTIFICATIONS_KEY) === "1";
+      } catch (_) {
+        enabled = false;
+      }
+    } else {
+      enabled = localStorage.getItem(LOCAL_NOTIFICATIONS_KEY) === "1";
+    }
+  }
   elements.notificationButton.classList.toggle("enabled", enabled);
   elements.notificationLabel.textContent = enabled ? "Bildirimler açık" : "Bildirimleri aç";
   const accessibleLabel = enabled ? "Ders bildirimleri açık" : "Ders bildirimlerini aç";
@@ -564,6 +1560,12 @@ function tick() {
 async function init() {
   loadAssignments();
   renderAssignments();
+  loadGrades();
+  renderGrades();
+  loadAttendance();
+  renderAttendance();
+  renderStatistics();
+  updateInstallButton();
   try {
     const response = await fetch("schedule.json", { cache: "no-store" });
     if (!response.ok) throw new Error("Program dosyası okunamadı");
@@ -578,7 +1580,18 @@ async function init() {
     renderTabs();
     renderWeek();
     populateCourseOptions();
-    updateNotificationButton();
+    synchroniseAttendance();
+    renderAttendance();
+    renderStatistics();
+    await updateNotificationButton();
+    if (pushApiUrl() && localStorage.getItem(PUSH_NOTIFICATIONS_KEY) === "1") {
+      try {
+        const subscription = await getPushSubscription();
+        if (subscription) await syncPushSubscription(subscription);
+      } catch (error) {
+        console.warn("Ders programı bildirim sunucusuyla eşitlenemedi.", error);
+      }
+    }
     tick();
     window.setInterval(tick, 1000);
   } catch (error) {
@@ -590,15 +1603,82 @@ async function init() {
   }
 }
 
-elements.notificationButton.addEventListener("click", enableNotifications);
+elements.notificationButton.addEventListener("click", handleNotificationButton);
 elements.themeButton.addEventListener("click", toggleTheme);
+elements.settingsButton.addEventListener("click", () => {
+  updateInstallButton();
+  elements.settingsDialog.showModal();
+});
+elements.closeSettingsDialog.addEventListener("click", () => elements.settingsDialog.close());
+elements.settingsDialog.addEventListener("click", (event) => {
+  if (event.target === elements.settingsDialog) elements.settingsDialog.close();
+});
 elements.addAssignmentButton.addEventListener("click", () => openAssignmentDialog());
 elements.closeAssignmentDialog.addEventListener("click", closeAssignmentDialog);
 elements.cancelAssignmentButton.addEventListener("click", closeAssignmentDialog);
 elements.assignmentForm.addEventListener("submit", handleAssignmentSubmit);
+elements.assignmentSearch.addEventListener("input", () => {
+  state.assignmentSearch = elements.assignmentSearch.value;
+  renderAssignments();
+});
+elements.addGradeButton.addEventListener("click", () => openGradeDialog());
+elements.closeGradeDialog.addEventListener("click", closeGradeDialog);
+elements.cancelGradeButton.addEventListener("click", closeGradeDialog);
+elements.gradeForm.addEventListener("submit", handleGradeSubmit);
+[
+  elements.midtermGrade,
+  elements.midtermWeight,
+  elements.finalGrade,
+  elements.finalWeight,
+  elements.passingGrade,
+  elements.minimumFinal,
+].forEach((input) => {
+  input.addEventListener("input", () => {
+    elements.finalWeight.setCustomValidity("");
+    updateGradePreview();
+  });
+});
+elements.gradeCourse.addEventListener("change", () => elements.gradeCourse.setCustomValidity(""));
+elements.gradeDialog.addEventListener("click", (event) => {
+  if (event.target === elements.gradeDialog) closeGradeDialog();
+});
+elements.gradeSearch.addEventListener("input", () => {
+  state.gradeSearch = elements.gradeSearch.value;
+  renderGrades();
+});
+elements.gradeStatusFilter.addEventListener("change", () => {
+  state.gradeStatusFilter = elements.gradeStatusFilter.value;
+  renderGrades();
+});
+elements.attendanceSearch.addEventListener("input", () => {
+  state.attendanceSearch = elements.attendanceSearch.value;
+  renderAttendance();
+});
+elements.attendanceForm.addEventListener("submit", handleAttendanceSubmit);
+elements.closeAttendanceDialog.addEventListener("click", closeAttendanceDialog);
+elements.cancelAttendanceButton.addEventListener("click", closeAttendanceDialog);
+elements.attendanceDialog.addEventListener("click", (event) => {
+  if (event.target === elements.attendanceDialog) closeAttendanceDialog();
+});
+elements.trackingTabs.forEach((button) => {
+  button.addEventListener("click", () => switchTrackingPanel(button.dataset.trackingPanel));
+});
+elements.exportDataButton.addEventListener("click", exportAppData);
+elements.importDataButton.addEventListener("click", () => elements.importDataInput.click());
+elements.importDataInput.addEventListener("change", () => importAppData(elements.importDataInput.files[0]));
+elements.installAppButton.addEventListener("click", installApp);
 elements.assignmentDueDate.addEventListener("input", maskDateTimeInput);
+elements.openDatePickerButton.addEventListener("click", () => {
+  if (elements.datePicker.hidden) openDatePicker();
+  else closeDatePicker();
+});
+elements.previousMonthButton.addEventListener("click", () => changeCalendarMonth(-1));
+elements.nextMonthButton.addEventListener("click", () => changeCalendarMonth(1));
+elements.calendarTodayButton.addEventListener("click", selectTodayInCalendar);
+elements.applyDateButton.addEventListener("click", applyCalendarDate);
 elements.assignmentDialog.addEventListener("click", (event) => {
   if (event.target === elements.assignmentDialog) closeAssignmentDialog();
+  else if (!event.target.closest(".date-field")) closeDatePicker();
 });
 elements.assignmentFilters.forEach((button) => {
   button.addEventListener("click", () => {
@@ -626,6 +1706,16 @@ elements.brandHomeLink.addEventListener("click", (event) => {
   switchView("home");
 });
 window.addEventListener("popstate", () => switchView(location.hash.slice(1), false));
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  state.installPrompt = event;
+  updateInstallButton();
+});
+window.addEventListener("appinstalled", () => {
+  state.installPrompt = null;
+  updateInstallButton();
+  showToast("Ders Pusulası uygulama olarak kuruldu.");
+});
 
 const initialView = location.hash.slice(1);
 switchView(initialView in VIEW_INDEX ? initialView : "home", false);

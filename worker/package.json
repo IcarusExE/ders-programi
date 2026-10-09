@@ -1,0 +1,19 @@
+{
+  "name": "ders-pusulasi-push-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate:local": "wrangler d1 execute ders-pusulasi-push --local --file=./schema.sql",
+    "db:migrate:remote": "wrangler d1 execute ders-pusulasi-push --remote --file=./schema.sql",
+    "vapid": "node ./scripts/generate-vapid.mjs"
+  },
+  "dependencies": {
+    "@block65/webcrypto-web-push": "2.0.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}

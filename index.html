@@ -6,8 +6,10 @@
     <meta name="theme-color" content="#134383" id="themeColorMeta" />
     <meta
       name="description"
-      content="Ankara Üniversitesi Nallıhan MYO Bilgisayar Programcılığı ders programı ve canlı ders sayacı."
+      content="Nallıhan MYO ders programı, ödev, sınav sonucu, devamsızlık ve akademik takip uygulaması."
     />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Ders Pusulası" />
     <title>Ders Pusulası</title>
     <script>
       (() => {
@@ -23,6 +25,7 @@
       })();
     </script>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/icon-192.png" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -52,6 +55,21 @@
         </span>
       </a>
       <div class="header-actions">
+        <button
+          class="settings-button"
+          id="settingsButton"
+          type="button"
+          aria-label="Ayarları aç"
+          title="Ayarları aç"
+        >
+          <span class="settings-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" />
+            </svg>
+          </span>
+          <span>Ayarlar</span>
+        </button>
         <button
           class="theme-button"
           id="themeButton"
@@ -205,12 +223,113 @@
         </div>
 
         <div class="assignment-toolbar" role="group" aria-label="Ödevleri filtrele">
+          <label class="search-control">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+            <input id="assignmentSearch" type="search" placeholder="Ödev veya ders ara" aria-label="Ödevlerde ara" />
+          </label>
           <button class="assignment-filter active" type="button" data-filter="all" aria-pressed="true">Tümü</button>
           <button class="assignment-filter" type="button" data-filter="pending" aria-pressed="false">Bekleyen</button>
           <button class="assignment-filter" type="button" data-filter="completed" aria-pressed="false">Tamamlanan</button>
         </div>
 
         <div class="assignment-list" id="assignmentList" aria-live="polite"></div>
+      </section>
+
+      <section
+        class="view-panel grades-section"
+        id="gradesView"
+        role="tabpanel"
+        aria-labelledby="gradesNavButton"
+        tabindex="0"
+        hidden
+      >
+        <div class="section-heading grades-heading">
+          <div>
+            <p class="section-overline">NOT HESAPLAMA</p>
+            <h2 id="gradesTitle">Sınav sonuçlarım</h2>
+          </div>
+          <button class="primary-button" id="addGradeButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            <span>Ders ekle</span>
+          </button>
+        </div>
+
+        <div class="grade-stats" aria-label="Not özeti">
+          <div><strong id="gradeTotal">0</strong><span>Ders</span></div>
+          <div><strong id="gradePassed">0</strong><span>Geçen</span></div>
+          <div><strong id="gradeFailed">0</strong><span>Kalan</span></div>
+          <div><strong id="gradeSuccessRate">—</strong><span>Başarı oranı</span></div>
+        </div>
+
+        <div class="list-toolbar" aria-label="Notları ara ve filtrele">
+          <label class="search-control">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+            <input id="gradeSearch" type="search" placeholder="Ders ara" aria-label="Notlarda ders ara" />
+          </label>
+          <span class="select-control compact-select">
+            <select id="gradeStatusFilter" aria-label="Not durumuna göre filtrele">
+              <option value="all">Tüm durumlar</option>
+              <option value="pending">Final bekleyen</option>
+              <option value="passed">Geçen</option>
+              <option value="failed">Kalan</option>
+            </select>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5" /></svg>
+          </span>
+        </div>
+
+        <div class="grade-list" id="gradeList" aria-live="polite"></div>
+
+        <details class="grade-log-panel">
+          <summary>Hesaplama geçmişi <span id="gradeLogCount">0 kayıt</span></summary>
+          <div class="grade-log-list" id="gradeLogList"></div>
+        </details>
+      </section>
+
+      <section
+        class="view-panel tracking-section"
+        id="trackingView"
+        role="tabpanel"
+        aria-labelledby="trackingNavButton"
+        tabindex="0"
+        hidden
+      >
+        <div class="section-heading tracking-heading">
+          <div>
+            <p class="section-overline">AKADEMİK TAKİP</p>
+            <h2>Kontrol merkezi</h2>
+          </div>
+        </div>
+
+        <div class="tracking-tabs" role="tablist" aria-label="Takip araçları">
+          <button class="tracking-tab active" type="button" role="tab" aria-selected="true" data-tracking-panel="attendance">Devamsızlık</button>
+          <button class="tracking-tab" type="button" role="tab" aria-selected="false" data-tracking-panel="statistics">İstatistikler</button>
+        </div>
+
+        <div class="tracking-panel" id="attendancePanel" data-tracking-content="attendance">
+          <div class="attendance-summary" aria-label="Devamsızlık özeti">
+            <div><strong id="attendanceCourseCount">0</strong><span>Takip edilen ders</span></div>
+            <div><strong id="attendanceUsed">0</strong><span>Toplam devamsızlık</span></div>
+            <div><strong id="attendanceRisk">0</strong><span>Riskli ders</span></div>
+          </div>
+          <div class="list-toolbar">
+            <label class="search-control">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+              <input id="attendanceSearch" type="search" placeholder="Ders ara" aria-label="Devamsızlık derslerinde ara" />
+            </label>
+          </div>
+          <div class="attendance-list" id="attendanceList" aria-live="polite"></div>
+        </div>
+
+        <div class="tracking-panel" id="statisticsPanel" data-tracking-content="statistics" hidden>
+          <div class="statistics-grid" id="statisticsOverview"></div>
+          <div class="statistics-card">
+            <div class="statistics-heading">
+              <div><span>DERS BAZINDA</span><h3>Akademik görünüm</h3></div>
+            </div>
+            <div class="course-stat-list" id="courseStatistics"></div>
+          </div>
+        </div>
+
       </section>
     </main>
 
@@ -275,6 +394,38 @@
           </svg>
           <span>Ödevler</span>
         </button>
+        <button
+          class="bottom-nav-button"
+          id="gradesNavButton"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="gradesView"
+          data-view="grades"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 19V9M10 19V5M16 19v-7M22 19V3" />
+            <path d="M2 19h22" />
+          </svg>
+          <span>Notlar</span>
+        </button>
+        <button
+          class="bottom-nav-button"
+          id="trackingNavButton"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="trackingView"
+          data-view="tracking"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="3" width="7" height="7" rx="2" />
+            <rect x="14" y="3" width="7" height="7" rx="2" />
+            <rect x="3" y="14" width="7" height="7" rx="2" />
+            <rect x="14" y="14" width="7" height="7" rx="2" />
+          </svg>
+          <span>Kontrol Merkezi</span>
+        </button>
       </div>
     </nav>
 
@@ -291,39 +442,76 @@
         <input id="assignmentId" type="hidden" />
         <label class="form-field">
           <span>Ödev başlığı *</span>
-          <input id="assignmentName" type="text" maxlength="100" placeholder="Örn. Veritabanı proje raporu" required />
+          <input id="assignmentName" type="text" maxlength="100" placeholder="Ödev başlığını yaz" required />
         </label>
         <label class="form-field">
           <span>Ders</span>
-          <input id="assignmentCourse" type="text" maxlength="80" list="courseOptions" placeholder="Ders seç veya yaz" />
-          <datalist id="courseOptions"></datalist>
+          <span class="select-control">
+            <select id="assignmentCourse">
+              <option value="">Programdan ders seç</option>
+            </select>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5" /></svg>
+          </span>
         </label>
         <label class="form-field">
           <span>Açıklama</span>
           <textarea id="assignmentDescription" maxlength="3000" rows="4" placeholder="Yapılacakları ve önemli notları yaz…"></textarea>
         </label>
         <div class="form-row">
-          <label class="form-field">
-            <span>Son teslim tarihi *</span>
-            <input
-              id="assignmentDueDate"
-              type="text"
-              inputmode="numeric"
-              maxlength="16"
-              pattern="[0-9]{2}\.[0-9]{2}\.[0-9]{4} [0-9]{2}:[0-9]{2}"
-              placeholder="GG.AA.YYYY SS:DD"
-              aria-describedby="assignmentDueDateHint"
-              required
-            />
+          <div class="form-field date-field">
+            <label class="form-label" for="assignmentDueDate">Son teslim tarihi *</label>
+            <div class="date-input-control">
+              <input
+                id="assignmentDueDate"
+                type="text"
+                inputmode="numeric"
+                maxlength="16"
+                pattern="[0-9]{2}\.[0-9]{2}\.[0-9]{4} [0-9]{2}:[0-9]{2}"
+                placeholder="GG.AA.YYYY SS:DD"
+                aria-describedby="assignmentDueDateHint"
+                required
+              />
+              <button id="openDatePickerButton" type="button" aria-label="Takvimden tarih seç" aria-expanded="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <rect x="3" y="5" width="18" height="16" rx="2" />
+                  <path d="M8 3v4M16 3v4M3 10h18" />
+                </svg>
+              </button>
+            </div>
             <small class="form-hint" id="assignmentDueDateHint">Örnek: 09.10.2026 23:59</small>
-          </label>
+
+            <div class="date-picker" id="datePicker" hidden>
+              <div class="calendar-header">
+                <button id="previousMonthButton" type="button" aria-label="Önceki ay">‹</button>
+                <strong id="calendarMonthLabel"></strong>
+                <button id="nextMonthButton" type="button" aria-label="Sonraki ay">›</button>
+              </div>
+              <div class="calendar-weekdays" aria-hidden="true">
+                <span>Pzt</span><span>Sal</span><span>Çar</span><span>Per</span><span>Cum</span><span>Cmt</span><span>Paz</span>
+              </div>
+              <div class="calendar-days" id="calendarDays" role="grid" aria-label="Tarih seç"></div>
+              <div class="calendar-time">
+                <span>Saat</span>
+                <input id="calendarHour" type="number" min="0" max="23" inputmode="numeric" aria-label="Saat" />
+                <i>:</i>
+                <input id="calendarMinute" type="number" min="0" max="59" inputmode="numeric" aria-label="Dakika" />
+              </div>
+              <div class="calendar-actions">
+                <button class="secondary-button" id="calendarTodayButton" type="button">Bugün</button>
+                <button class="primary-button" id="applyDateButton" type="button">Tarihi uygula</button>
+              </div>
+            </div>
+          </div>
           <label class="form-field">
             <span>Öncelik</span>
-            <select id="assignmentPriority">
-              <option value="low">Düşük</option>
-              <option value="medium" selected>Orta</option>
-              <option value="high">Yüksek</option>
-            </select>
+            <span class="select-control">
+              <select id="assignmentPriority">
+                <option value="low">Düşük</option>
+                <option value="medium" selected>Orta</option>
+                <option value="high">Yüksek</option>
+              </select>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5" /></svg>
+            </span>
           </label>
         </div>
         <div class="dialog-actions">
@@ -333,7 +521,134 @@
       </form>
     </dialog>
 
+    <dialog class="assignment-dialog grade-dialog" id="gradeDialog" aria-labelledby="gradeDialogTitle">
+      <form class="assignment-form grade-form" id="gradeForm">
+        <div class="dialog-heading">
+          <div>
+            <p class="section-overline">SINAV HESABI</p>
+            <h2 id="gradeDialogTitle">Ders sonucu ekle</h2>
+          </div>
+          <button class="dialog-close" id="closeGradeDialog" type="button" aria-label="Pencereyi kapat">×</button>
+        </div>
+
+        <input id="gradeId" type="hidden" />
+        <label class="form-field">
+          <span>Ders *</span>
+          <span class="select-control">
+            <select id="gradeCourse" required>
+              <option value="">Programdan ders seç</option>
+            </select>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5" /></svg>
+          </span>
+        </label>
+
+        <div class="grade-form-grid">
+          <label class="form-field">
+            <span>Vize notu *</span>
+            <input id="midtermGrade" type="number" min="0" max="100" step="0.01" inputmode="decimal" placeholder="0–100" required />
+          </label>
+          <label class="form-field">
+            <span>Vize ağırlığı (%)</span>
+            <input id="midtermWeight" type="number" min="0" max="100" step="1" value="40" required />
+          </label>
+          <label class="form-field">
+            <span>Final notu</span>
+            <input id="finalGrade" type="number" min="0" max="100" step="0.01" inputmode="decimal" placeholder="Henüz belli değil" />
+          </label>
+          <label class="form-field">
+            <span>Final ağırlığı (%)</span>
+            <input id="finalWeight" type="number" min="1" max="100" step="1" value="60" required />
+          </label>
+          <label class="form-field">
+            <span>Geçme notu</span>
+            <input id="passingGrade" type="number" min="0" max="100" step="0.01" value="60" required />
+          </label>
+          <label class="form-field">
+            <span>Final barajı</span>
+            <input id="minimumFinal" type="number" min="0" max="100" step="0.01" value="50" required />
+          </label>
+        </div>
+
+        <div class="grade-preview" id="gradePreview" aria-live="polite">
+          Notları girerek sonucu önceden görebilirsin.
+        </div>
+        <p class="grade-disclaimer">Hesaplama, girdiğin ağırlık ve barajlara göre yapılır. Üniversitenin bağıl değerlendirme veya özel ders kuralları farklı olabilir.</p>
+        <div class="dialog-actions">
+          <button class="secondary-button" id="cancelGradeButton" type="button">Vazgeç</button>
+          <button class="primary-button" type="submit">Hesabı kaydet</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="assignment-dialog attendance-dialog" id="attendanceDialog" aria-labelledby="attendanceDialogTitle">
+      <form class="assignment-form" id="attendanceForm">
+        <div class="dialog-heading">
+          <div>
+            <p class="section-overline">DEVAMSIZLIK AYARI</p>
+            <h2 id="attendanceDialogTitle">Dersi düzenle</h2>
+          </div>
+          <button class="dialog-close" id="closeAttendanceDialog" type="button" aria-label="Pencereyi kapat">×</button>
+        </div>
+        <input id="attendanceCourse" type="hidden" />
+        <div class="attendance-dialog-course" id="attendanceDialogCourse"></div>
+        <div class="form-row attendance-form-row">
+          <label class="form-field">
+            <span>Kullanılan devamsızlık</span>
+            <input id="attendanceAbsent" type="number" min="0" max="999" step="1" required />
+          </label>
+          <label class="form-field">
+            <span>Devamsızlık sınırı</span>
+            <input id="attendanceLimit" type="number" min="1" max="999" step="1" required />
+          </label>
+        </div>
+        <label class="form-field">
+          <span>Not</span>
+          <textarea id="attendanceNote" maxlength="500" rows="3" placeholder="İstersen açıklama ekleyebilirsin"></textarea>
+        </label>
+        <p class="grade-disclaimer">Değerler ders oturumu cinsindendir. Kesin devamsızlık hakkını dersin öğretim elemanından veya yönetmelikten kontrol et.</p>
+        <div class="dialog-actions">
+          <button class="secondary-button" id="cancelAttendanceButton" type="button">Vazgeç</button>
+          <button class="primary-button" type="submit">Kaydet</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="assignment-dialog settings-dialog" id="settingsDialog" aria-labelledby="settingsDialogTitle">
+      <div class="assignment-form settings-content">
+        <div class="dialog-heading">
+          <div>
+            <p class="section-overline">VERİ VE UYGULAMA</p>
+            <h2 id="settingsDialogTitle">Ayarlar</h2>
+          </div>
+          <button class="dialog-close" id="closeSettingsDialog" type="button" aria-label="Ayarları kapat">×</button>
+        </div>
+        <div class="tool-grid settings-tool-grid">
+          <article class="tool-card">
+            <span class="tool-icon" aria-hidden="true">↓</span>
+            <h3>Verilerini yedekle</h3>
+            <p>Ödev, not, devamsızlık ve tercihlerini tek JSON dosyasında indir.</p>
+            <button class="primary-button" id="exportDataButton" type="button">Yedeği indir</button>
+          </article>
+          <article class="tool-card">
+            <span class="tool-icon" aria-hidden="true">↑</span>
+            <h3>Yedeği geri yükle</h3>
+            <p>Daha önce indirdiğin Ders Pusulası yedeğini bu tarayıcıya aktar.</p>
+            <button class="secondary-button" id="importDataButton" type="button">Dosya seç</button>
+            <input id="importDataInput" type="file" accept="application/json,.json" hidden />
+          </article>
+          <article class="tool-card install-card">
+            <span class="tool-icon" aria-hidden="true">＋</span>
+            <h3>Uygulama olarak kur</h3>
+            <p id="installDescription">Ders Pusulası'nı ana ekranına ekleyip uygulama gibi aç.</p>
+            <button class="primary-button" id="installAppButton" type="button" disabled>Kurulum hazırlanıyor</button>
+          </article>
+        </div>
+        <p class="data-note">Kayıtların yalnızca bu cihaz ve tarayıcıda tutulur. Düzenli yedek almak veri kaybını önler.</p>
+      </div>
+    </dialog>
+
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="push-config.js"></script>
     <script src="app.js" defer></script>
   </body>
 </html>
