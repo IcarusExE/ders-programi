@@ -1,3 +1,3 @@
 window.DERS_PUSULASI_PUSH = {
-  apiUrl: "",
+  apiUrl: "https://ders-pusulasi-push.kenankuscu.workers.dev",
 };
