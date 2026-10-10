@@ -9,6 +9,15 @@ const state = {
   assignments: [],
   assignmentFilter: "all",
   assignmentSearch: "",
+  notes: [],
+  noteSearch: "",
+  noteCourseFilter: "all",
+  notificationPreferences: {
+    lessonEnabled: true,
+    lessonMinutes: 15,
+    assignmentEnabled: true,
+    assignmentMinutes: 1440,
+  },
   calendarViewDate: null,
   calendarSelectedDate: null,
   gradeRecords: [],
@@ -17,7 +26,6 @@ const state = {
   gradeStatusFilter: "all",
   attendanceRecords: [],
   attendanceSearch: "",
-  activeTrackingPanel: "attendance",
   installPrompt: null,
 };
 
@@ -47,6 +55,8 @@ const elements = {
   hours: document.querySelector("#hoursValue"),
   minutes: document.querySelector("#minutesValue"),
   seconds: document.querySelector("#secondsValue"),
+  sidebarNav: document.querySelector("#sidebarNav"),
+  sidebarToggle: document.querySelector("#sidebarToggle"),
   bottomNav: document.querySelector("#bottomNav"),
   navButtons: [...document.querySelectorAll(".bottom-nav-button")],
   viewPanels: [...document.querySelectorAll(".view-panel")],
@@ -79,6 +89,20 @@ const elements = {
   applyDateButton: document.querySelector("#applyDateButton"),
   closeAssignmentDialog: document.querySelector("#closeAssignmentDialog"),
   cancelAssignmentButton: document.querySelector("#cancelAssignmentButton"),
+  noteList: document.querySelector("#noteList"),
+  noteSearch: document.querySelector("#noteSearch"),
+  noteCourseFilter: document.querySelector("#noteCourseFilter"),
+  addNoteButton: document.querySelector("#addNoteButton"),
+  noteDialog: document.querySelector("#noteDialog"),
+  noteDialogTitle: document.querySelector("#noteDialogTitle"),
+  noteForm: document.querySelector("#noteForm"),
+  noteId: document.querySelector("#noteId"),
+  noteCourse: document.querySelector("#noteCourse"),
+  noteTitle: document.querySelector("#noteTitle"),
+  noteContent: document.querySelector("#noteContent"),
+  noteLink: document.querySelector("#noteLink"),
+  closeNoteDialog: document.querySelector("#closeNoteDialog"),
+  cancelNoteButton: document.querySelector("#cancelNoteButton"),
   gradeList: document.querySelector("#gradeList"),
   gradeTotal: document.querySelector("#gradeTotal"),
   gradePassed: document.querySelector("#gradePassed"),
@@ -103,8 +127,6 @@ const elements = {
   cancelGradeButton: document.querySelector("#cancelGradeButton"),
   gradeSearch: document.querySelector("#gradeSearch"),
   gradeStatusFilter: document.querySelector("#gradeStatusFilter"),
-  trackingTabs: [...document.querySelectorAll(".tracking-tab")],
-  trackingPanels: [...document.querySelectorAll("[data-tracking-content]")],
   attendanceCourseCount: document.querySelector("#attendanceCourseCount"),
   attendanceUsed: document.querySelector("#attendanceUsed"),
   attendanceRisk: document.querySelector("#attendanceRisk"),
@@ -127,14 +149,21 @@ const elements = {
   importDataInput: document.querySelector("#importDataInput"),
   installAppButton: document.querySelector("#installAppButton"),
   installDescription: document.querySelector("#installDescription"),
+  lessonRemindersEnabled: document.querySelector("#lessonRemindersEnabled"),
+  lessonReminderMinutes: document.querySelector("#lessonReminderMinutes"),
+  assignmentRemindersEnabled: document.querySelector("#assignmentRemindersEnabled"),
+  assignmentReminderMinutes: document.querySelector("#assignmentReminderMinutes"),
 };
 
-const VIEW_INDEX = { home: 0, today: 1, week: 2, assignments: 3, grades: 4, tracking: 5 };
+const VIEW_INDEX = { home: 0, today: 1, week: 2, assignments: 3, notes: 4, grades: 5, attendance: 6, statistics: 7 };
 const THEME_KEY = "ders-pusulasi-theme";
+const SIDEBAR_KEY = "ders-pusulasi-sidebar-collapsed";
 const ASSIGNMENTS_KEY = "ders-pusulasi-assignments";
 const GRADES_KEY = "ders-pusulasi-grades";
 const GRADE_LOG_KEY = "ders-pusulasi-grade-log";
 const ATTENDANCE_KEY = "ders-pusulasi-attendance";
+const NOTES_KEY = "ders-pusulasi-course-notes";
+const NOTIFICATION_PREFERENCES_KEY = "ders-pusulasi-notification-preferences";
 const LOCAL_NOTIFICATIONS_KEY = "ders-pusulasi-local-notifications";
 const PUSH_NOTIFICATIONS_KEY = "ders-pusulasi-push-notifications";
 
@@ -151,6 +180,51 @@ function urlBase64ToUint8Array(value) {
   const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
   const decoded = window.atob(base64);
   return Uint8Array.from(decoded, (character) => character.charCodeAt(0));
+}
+
+function loadNotificationPreferences() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(NOTIFICATION_PREFERENCES_KEY) || "null");
+    if (saved && typeof saved === "object") {
+      state.notificationPreferences = {
+        lessonEnabled: saved.lessonEnabled !== false,
+        lessonMinutes: [5, 10, 15, 30, 60].includes(Number(saved.lessonMinutes)) ? Number(saved.lessonMinutes) : 15,
+        assignmentEnabled: saved.assignmentEnabled !== false,
+        assignmentMinutes: [60, 360, 720, 1440, 2880].includes(Number(saved.assignmentMinutes)) ? Number(saved.assignmentMinutes) : 1440,
+      };
+    }
+  } catch (_) {}
+}
+
+function renderNotificationPreferences() {
+  const preferences = state.notificationPreferences;
+  elements.lessonRemindersEnabled.checked = preferences.lessonEnabled;
+  elements.lessonReminderMinutes.value = String(preferences.lessonMinutes);
+  elements.lessonReminderMinutes.disabled = !preferences.lessonEnabled;
+  elements.assignmentRemindersEnabled.checked = preferences.assignmentEnabled;
+  elements.assignmentReminderMinutes.value = String(preferences.assignmentMinutes);
+  elements.assignmentReminderMinutes.disabled = !preferences.assignmentEnabled;
+}
+
+function saveNotificationPreferences() {
+  try {
+    localStorage.setItem(NOTIFICATION_PREFERENCES_KEY, JSON.stringify(state.notificationPreferences));
+  } catch (_) {
+    showToast("Bildirim tercihleri kaydedilemedi.");
+  }
+}
+
+async function handleNotificationPreferenceChange() {
+  state.notificationPreferences = {
+    lessonEnabled: elements.lessonRemindersEnabled.checked,
+    lessonMinutes: Number(elements.lessonReminderMinutes.value),
+    assignmentEnabled: elements.assignmentRemindersEnabled.checked,
+    assignmentMinutes: Number(elements.assignmentReminderMinutes.value),
+  };
+  saveNotificationPreferences();
+  renderNotificationPreferences();
+  await refreshPushSchedule();
+  showToast("Bildirim tercihleri güncellendi.");
 }
 
 function applyTheme(theme, remember = true) {
@@ -175,7 +249,31 @@ function toggleTheme() {
   applyTheme(nextTheme);
 }
 
+function applySidebarState(collapsed, remember = true) {
+  elements.sidebarNav.classList.toggle("collapsed", collapsed);
+  document.body.classList.toggle("sidebar-collapsed", collapsed);
+  elements.navButtons.forEach((button) => {
+    const buttonLabel = button.querySelector("span")?.textContent.trim() || "";
+    button.title = collapsed ? buttonLabel : "";
+  });
+  elements.sidebarToggle.setAttribute("aria-expanded", String(!collapsed));
+  const label = collapsed ? "Menüyü genişlet" : "Menüyü daralt";
+  elements.sidebarToggle.setAttribute("aria-label", label);
+  elements.sidebarToggle.setAttribute("title", label);
+  elements.sidebarToggle.querySelector("span").textContent = label;
+  if (remember) {
+    try {
+      localStorage.setItem(SIDEBAR_KEY, collapsed ? "1" : "0");
+    } catch (_) {}
+  }
+}
+
+function toggleSidebar() {
+  applySidebarState(!elements.sidebarNav.classList.contains("collapsed"));
+}
+
 function switchView(view, updateHistory = true) {
+  if (view === "tracking") view = "attendance";
   if (!(view in VIEW_INDEX)) view = "home";
   state.activeView = view;
 
@@ -193,9 +291,22 @@ function switchView(view, updateHistory = true) {
   });
 
   elements.bottomNav.dataset.active = VIEW_INDEX[view];
+  if (window.matchMedia("(max-width: 1050px)").matches) {
+    const activeButton = elements.navButtons.find((button) => button.dataset.view === view);
+    window.requestAnimationFrame(() => {
+      if (!activeButton) return;
+      const centeredPosition = activeButton.offsetLeft - (elements.bottomNav.clientWidth - activeButton.offsetWidth) / 2;
+      elements.bottomNav.scrollTo({
+        left: Math.max(0, centeredPosition),
+        behavior: updateHistory ? "smooth" : "auto",
+      });
+    });
+  }
   if (view === "assignments") renderAssignments();
+  if (view === "notes") renderNotes();
   if (view === "grades") renderGrades();
-  if (view === "tracking") renderTracking();
+  if (view === "attendance") renderAttendance();
+  if (view === "statistics") renderStatistics();
   if (updateHistory && location.hash !== `#${view}`) {
     history.pushState({ view }, "", `#${view}`);
   }
@@ -662,6 +773,7 @@ function handleAssignmentSubmit(event) {
   else state.assignments.push(assignment);
   saveAssignments();
   renderAssignments();
+  refreshPushSchedule();
   closeAssignmentDialog();
   showToast(existing ? "Ödev güncellendi." : "Ödev eklendi.");
 }
@@ -673,6 +785,7 @@ function toggleAssignment(id, completed) {
   assignment.completedAt = completed ? new Date().toISOString() : null;
   saveAssignments();
   renderAssignments();
+  refreshPushSchedule();
   showToast(completed ? "Ödev tamamlandı. Harika!" : "Ödev yeniden bekleyenlere alındı.");
 }
 
@@ -682,20 +795,199 @@ function deleteAssignment(id) {
   state.assignments = state.assignments.filter((item) => item.id !== id);
   saveAssignments();
   renderAssignments();
+  refreshPushSchedule();
   showToast("Ödev silindi.");
+}
+
+function loadNotes() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(NOTES_KEY) || "[]");
+    state.notes = Array.isArray(saved)
+      ? saved.filter((note) => note && note.id && note.course && note.title && note.content)
+      : [];
+  } catch (_) {
+    state.notes = [];
+  }
+}
+
+function saveNotes() {
+  try {
+    localStorage.setItem(NOTES_KEY, JSON.stringify(state.notes));
+  } catch (_) {
+    showToast("Ders notları tarayıcıya kaydedilemedi.");
+  }
+}
+
+function safeNoteUrl(value) {
+  if (!value) return "";
+  try {
+    const url = new URL(value);
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch (_) {
+    return "";
+  }
+}
+
+function createNoteCard(note) {
+  const article = document.createElement("article");
+  article.className = "note-card";
+
+  const heading = document.createElement("div");
+  heading.className = "note-card-heading";
+  const titleGroup = document.createElement("div");
+  const course = document.createElement("span");
+  course.textContent = note.course;
+  const title = document.createElement("h3");
+  title.textContent = note.title;
+  titleGroup.append(course, title);
+  const updated = document.createElement("time");
+  updated.dateTime = note.updatedAt || note.createdAt;
+  updated.textContent = note.updatedAt || note.createdAt
+    ? dateTimeInputValue(note.updatedAt || note.createdAt)
+    : "";
+  heading.append(titleGroup, updated);
+
+  const content = document.createElement("p");
+  content.className = "note-content";
+  content.textContent = note.content;
+  article.append(heading, content);
+
+  const footer = document.createElement("div");
+  footer.className = "note-card-footer";
+  const link = safeNoteUrl(note.link);
+  if (link) {
+    const resource = document.createElement("a");
+    resource.href = link;
+    resource.target = "_blank";
+    resource.rel = "noopener noreferrer";
+    resource.textContent = "Kaynağı aç ↗";
+    footer.append(resource);
+  } else {
+    const spacer = document.createElement("span");
+    footer.append(spacer);
+  }
+  const actions = document.createElement("div");
+  actions.className = "assignment-actions";
+  const edit = document.createElement("button");
+  edit.type = "button";
+  edit.textContent = "Düzenle";
+  edit.addEventListener("click", () => openNoteDialog(note));
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "danger-action";
+  remove.textContent = "Sil";
+  remove.addEventListener("click", () => deleteNote(note.id));
+  actions.append(edit, remove);
+  footer.append(actions);
+  article.append(footer);
+  return article;
+}
+
+function renderNotes() {
+  const query = normalizeSearch(state.noteSearch);
+  const visible = state.notes
+    .filter((note) => state.noteCourseFilter === "all" || note.course === state.noteCourseFilter)
+    .filter((note) => !query || normalizeSearch(`${note.course} ${note.title} ${note.content}`).includes(query))
+    .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+  elements.noteList.replaceChildren();
+  if (!visible.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = state.notes.length
+      ? "Arama veya ders filtresiyle eşleşen not yok."
+      : "Henüz ders notu eklemedin. İlk notunu ekleyerek arşivini oluşturabilirsin.";
+    elements.noteList.append(empty);
+    return;
+  }
+  visible.forEach((note) => elements.noteList.append(createNoteCard(note)));
+}
+
+function openNoteDialog(note = null) {
+  elements.noteForm.reset();
+  elements.noteId.value = note?.id || "";
+  elements.noteDialogTitle.textContent = note ? "Ders notunu düzenle" : "Yeni ders notu";
+  ensureSelectOption(elements.noteCourse, note?.course || "");
+  elements.noteCourse.value = note?.course || "";
+  elements.noteTitle.value = note?.title || "";
+  elements.noteContent.value = note?.content || "";
+  elements.noteLink.value = note?.link || "";
+  elements.noteDialog.showModal();
+  (note ? elements.noteTitle : elements.noteCourse).focus();
+}
+
+function closeNoteDialog() {
+  elements.noteDialog.close();
+}
+
+function handleNoteSubmit(event) {
+  event.preventDefault();
+  const link = elements.noteLink.value.trim();
+  if (link && !safeNoteUrl(link)) {
+    elements.noteLink.setCustomValidity("http:// veya https:// ile başlayan geçerli bir bağlantı gir.");
+    elements.noteLink.reportValidity();
+    return;
+  }
+  elements.noteLink.setCustomValidity("");
+  const existingIndex = state.notes.findIndex((note) => note.id === elements.noteId.value);
+  const existing = existingIndex >= 0 ? state.notes[existingIndex] : null;
+  const note = {
+    id: existing?.id || globalThis.crypto?.randomUUID?.() || `note-${Date.now()}`,
+    course: elements.noteCourse.value,
+    title: elements.noteTitle.value.trim(),
+    content: elements.noteContent.value.trim(),
+    link: safeNoteUrl(link),
+    createdAt: existing?.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  if (!note.course || !note.title || !note.content) return;
+  if (existingIndex >= 0) state.notes[existingIndex] = note;
+  else state.notes.push(note);
+  saveNotes();
+  renderNotes();
+  closeNoteDialog();
+  showToast(existing ? "Ders notu güncellendi." : "Ders notu eklendi.");
+}
+
+function deleteNote(id) {
+  const note = state.notes.find((item) => item.id === id);
+  if (!note || !window.confirm(`“${note.title}” notunu silmek istiyor musun?`)) return;
+  state.notes = state.notes.filter((item) => item.id !== id);
+  saveNotes();
+  renderNotes();
+  showToast("Ders notu silindi.");
 }
 
 function populateCourseOptions() {
   const selectedCourse = elements.assignmentCourse.value;
   const selectedGradeCourse = elements.gradeCourse.value;
+  const selectedNoteCourse = elements.noteCourse.value;
+  const selectedNoteFilter = elements.noteCourseFilter.value;
   const courses = [...new Map(state.schedule.courses.map((course) => [course.name, course])).values()]
     .sort((a, b) => a.name.localeCompare(b.name, "tr"));
   fillCourseSelect(elements.assignmentCourse, courses);
   fillCourseSelect(elements.gradeCourse, courses);
+  fillCourseSelect(elements.noteCourse, courses);
+  elements.noteCourseFilter.replaceChildren();
+  const allCourses = document.createElement("option");
+  allCourses.value = "all";
+  allCourses.textContent = "Tüm dersler";
+  elements.noteCourseFilter.append(allCourses);
+  courses.forEach((course) => {
+    const option = document.createElement("option");
+    option.value = course.name;
+    option.textContent = course.code ? `${course.code} · ${course.name}` : course.name;
+    elements.noteCourseFilter.append(option);
+  });
   ensureCourseOption(selectedCourse);
   ensureGradeCourseOption(selectedGradeCourse);
+  ensureSelectOption(elements.noteCourse, selectedNoteCourse);
   elements.assignmentCourse.value = selectedCourse;
   elements.gradeCourse.value = selectedGradeCourse;
+  elements.noteCourse.value = selectedNoteCourse;
+  elements.noteCourseFilter.value = [...elements.noteCourseFilter.options].some((option) => option.value === selectedNoteFilter)
+    ? selectedNoteFilter
+    : "all";
+  state.noteCourseFilter = elements.noteCourseFilter.value;
 }
 
 function fillCourseSelect(select, courses) {
@@ -771,7 +1063,7 @@ function calculateGrade(record) {
   const weightsValid = midtermWeight + finalWeight === 100 && finalWeight > 0;
   const midtermContribution = midterm * (midtermWeight / 100);
   const rawRequiredFinal = (passingGrade - midtermContribution) / (finalWeight / 100);
-  const requiredFinal = Math.max(minimumFinal, Math.ceil(rawRequiredFinal * 100) / 100);
+  const requiredFinal = Math.max(minimumFinal, Math.ceil(rawRequiredFinal));
   const average = hasFinal ? midtermContribution + finalGrade * (finalWeight / 100) : null;
   const passed = hasFinal && weightsValid && finalGrade >= minimumFinal && average >= passingGrade;
   return {
@@ -800,6 +1092,17 @@ function gradeDraftFromForm() {
     passingGrade: Number(elements.passingGrade.value),
     minimumFinal: Number(elements.minimumFinal.value),
   };
+}
+
+function validateIntegerGradeInputs() {
+  const inputs = [elements.midtermGrade, elements.finalGrade, elements.passingGrade, elements.minimumFinal];
+  let valid = true;
+  inputs.forEach((input) => {
+    const isInteger = input.value === "" || Number.isInteger(Number(input.value));
+    input.setCustomValidity(isInteger ? "" : "Notlar tam sayı olmalı.");
+    valid = valid && isInteger;
+  });
+  return valid;
 }
 
 function updateGradePreview() {
@@ -966,6 +1269,7 @@ function openGradeDialog(record = null) {
   elements.minimumFinal.value = record?.minimumFinal ?? 50;
   elements.gradeCourse.setCustomValidity("");
   elements.finalWeight.setCustomValidity("");
+  validateIntegerGradeInputs();
   updateGradePreview();
   elements.gradeDialog.showModal();
   elements.gradeCourse.focus();
@@ -977,6 +1281,10 @@ function closeGradeDialog() {
 
 function handleGradeSubmit(event) {
   event.preventDefault();
+  if (!validateIntegerGradeInputs()) {
+    elements.gradeForm.reportValidity();
+    return;
+  }
   const draft = gradeDraftFromForm();
   const result = calculateGrade(draft);
   if (!result.weightsValid) {
@@ -1078,9 +1386,10 @@ function attendanceStatus(record) {
   const absent = Math.max(0, Number(record.absent) || 0);
   const limit = Math.max(1, Number(record.limit) || 1);
   const ratio = absent / limit;
-  if (ratio >= 1) return { label: "Sınırda", className: "danger", ratio };
-  if (ratio >= 0.75) return { label: "Riskli", className: "warning", ratio };
-  return { label: "Güvenli", className: "safe", ratio };
+  if (absent > limit) return { label: "KALDI", className: "over-limit", ratio, failed: true };
+  if (absent === limit) return { label: "Sınırda", className: "danger", ratio, failed: false };
+  if (ratio >= 0.75) return { label: "Riskli", className: "warning", ratio, failed: false };
+  return { label: "Güvenli", className: "safe", ratio, failed: false };
 }
 
 function updateAttendance(course, change) {
@@ -1091,7 +1400,10 @@ function updateAttendance(course, change) {
   saveAttendance();
   renderAttendance();
   renderStatistics();
-  showToast(change > 0 ? "Devamsızlık eklendi." : "Devamsızlık azaltıldı.");
+  const status = attendanceStatus(record);
+  showToast(status.failed && change > 0
+    ? "Devamsızlık sınırı aşıldı: dersten kaldın."
+    : change > 0 ? "Devamsızlık eklendi." : "Devamsızlık azaltıldı.");
 }
 
 function createAttendanceCard(record) {
@@ -1272,7 +1584,8 @@ function renderStatistics() {
     const title = document.createElement("h4");
     title.textContent = courseName;
     const detail = document.createElement("p");
-    detail.textContent = `Ödev ${completed}/${assignments.length} · Devamsızlık ${attendance?.absent || 0}/${attendance?.limit || 0}`;
+    const attendanceResult = attendance ? attendanceStatus(attendance) : null;
+    detail.textContent = `Ödev ${completed}/${assignments.length} · Devamsızlık ${attendance?.absent || 0}/${attendance?.limit || 0}${attendanceResult?.failed ? " · KALDI" : ""}`;
     heading.append(title, detail);
     const gradeText = document.createElement("strong");
     gradeText.textContent = score === null ? "Not yok" : formatScore(score);
@@ -1286,24 +1599,6 @@ function renderStatistics() {
   });
 }
 
-function switchTrackingPanel(panelName) {
-  state.activeTrackingPanel = panelName;
-  elements.trackingTabs.forEach((button) => {
-    const active = button.dataset.trackingPanel === panelName;
-    button.classList.toggle("active", active);
-    button.setAttribute("aria-selected", String(active));
-  });
-  elements.trackingPanels.forEach((panel) => {
-    panel.hidden = panel.dataset.trackingContent !== panelName;
-  });
-  if (panelName === "statistics") renderStatistics();
-  if (panelName === "attendance") renderAttendance();
-}
-
-function renderTracking() {
-  switchTrackingPanel(state.activeTrackingPanel);
-}
-
 function exportAppData() {
   const backup = {
     app: "Ders Pusulası",
@@ -1314,6 +1609,8 @@ function exportAppData() {
       grades: state.gradeRecords,
       gradeLog: state.gradeLog,
       attendance: state.attendanceRecords,
+      courseNotes: state.notes,
+      notificationPreferences: state.notificationPreferences,
       theme: document.documentElement.dataset.theme || "light",
     },
   };
@@ -1337,15 +1634,20 @@ async function importAppData(file) {
     if (backup?.app !== "Ders Pusulası" || backup?.version !== 1 || !backup.data) {
       throw new Error("Bu dosya geçerli bir Ders Pusulası yedeği değil.");
     }
-    const { assignments, grades, gradeLog, attendance, theme } = backup.data;
+    const { assignments, grades, gradeLog, attendance, courseNotes = [], notificationPreferences = null, theme } = backup.data;
     if (![assignments, grades, gradeLog, attendance].every(Array.isArray)) {
       throw new Error("Yedek dosyasındaki kayıt yapısı geçersiz.");
     }
-    if (!window.confirm("Bu yedek mevcut ödev, not ve devamsızlık kayıtlarının üzerine yazacak. Devam edilsin mi?")) return;
+    if (!Array.isArray(courseNotes)) throw new Error("Yedekteki ders notları geçersiz.");
+    if (!window.confirm("Bu yedek mevcut ödev, ders notu, sınav ve devamsızlık kayıtlarının üzerine yazacak. Devam edilsin mi?")) return;
     localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(assignments));
     localStorage.setItem(GRADES_KEY, JSON.stringify(grades));
     localStorage.setItem(GRADE_LOG_KEY, JSON.stringify(gradeLog));
     localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(attendance));
+    localStorage.setItem(NOTES_KEY, JSON.stringify(courseNotes));
+    if (notificationPreferences && typeof notificationPreferences === "object") {
+      localStorage.setItem(NOTIFICATION_PREFERENCES_KEY, JSON.stringify(notificationPreferences));
+    }
     if (theme === "dark" || theme === "light") localStorage.setItem(THEME_KEY, theme);
     showToast("Yedek geri yüklendi. Sayfa yenileniyor…");
     window.setTimeout(() => location.reload(), 700);
@@ -1394,7 +1696,11 @@ function showToast(message) {
 }
 
 function notificationKey(course) {
-  return `notified:${course.code}:${course.startDate.toISOString().slice(0, 10)}:${course.start}`;
+  return `notified:${course.code}:${course.startDate.toISOString().slice(0, 10)}:${course.start}:${state.notificationPreferences.lessonMinutes}`;
+}
+
+function assignmentNotificationKey(assignment) {
+  return `notified:assignment:${assignment.id}:${assignment.dueDate}:${state.notificationPreferences.assignmentMinutes}`;
 }
 
 function checkNotifications(now) {
@@ -1404,23 +1710,74 @@ function checkNotifications(now) {
     || localStorage.getItem(LOCAL_NOTIFICATIONS_KEY) !== "1"
     || localStorage.getItem(PUSH_NOTIFICATIONS_KEY) === "1"
   ) return;
-  const soon = getOccurrences(now).find((course) => {
-    const difference = course.startDate - now;
-    return difference > 0 && difference <= 15 * 60 * 1000 && !localStorage.getItem(notificationKey(course));
-  });
-  if (!soon) return;
-  new Notification(`${soon.name} 15 dakika içinde`, {
-    body: `${formatClockTime(soon.start)} · ${soon.room || "Derslik bilgisini kontrol et"}`,
-    icon: "assets/favicon.svg",
-    tag: notificationKey(soon),
-  });
-  localStorage.setItem(notificationKey(soon), "1");
+  const preferences = state.notificationPreferences;
+  if (preferences.lessonEnabled && state.schedule?.courses) {
+    const soon = getOccurrences(now).find((course) => {
+      const difference = course.startDate - now;
+      return difference > 0
+        && difference <= preferences.lessonMinutes * 60 * 1000
+        && !localStorage.getItem(notificationKey(course));
+    });
+    if (soon) {
+      new Notification(`${soon.name} ${preferences.lessonMinutes} dakika içinde`, {
+        body: `${formatClockTime(soon.start)} · ${soon.room || "Derslik bilgisini kontrol et"}`,
+        icon: "assets/favicon.svg",
+        tag: notificationKey(soon),
+      });
+      localStorage.setItem(notificationKey(soon), "1");
+    }
+  }
+  if (preferences.assignmentEnabled) {
+    const assignment = state.assignments.find((item) => {
+      if (item.completed) return false;
+      const difference = new Date(item.dueDate) - now;
+      return difference > 0
+        && difference <= preferences.assignmentMinutes * 60 * 1000
+        && !localStorage.getItem(assignmentNotificationKey(item));
+    });
+    if (assignment) {
+      new Notification(`Ödev teslimi yaklaşıyor: ${assignment.title}`, {
+        body: `${assignment.course || "Ödev"} · ${formatAssignmentDate(assignment.dueDate)}`,
+        icon: "assets/favicon.svg",
+        tag: assignmentNotificationKey(assignment),
+      });
+      localStorage.setItem(assignmentNotificationKey(assignment), "1");
+    }
+  }
 }
 
 async function getPushSubscription() {
   if (!supportsWebPush()) return null;
   const registration = await navigator.serviceWorker.ready;
   return registration.pushManager.getSubscription();
+}
+
+function notificationItemsForPush() {
+  if (!state.schedule?.courses) return [];
+  const preferences = state.notificationPreferences;
+  const courses = preferences.lessonEnabled
+    ? state.schedule.courses.map((course) => ({
+        ...course,
+        type: "course",
+        reminderMinutes: preferences.lessonMinutes,
+      }))
+    : [];
+  const assignments = preferences.assignmentEnabled
+    ? state.assignments.flatMap((assignment) => {
+        if (assignment.completed) return [];
+        const dueDate = new Date(assignment.dueDate);
+        if (Number.isNaN(dueDate.getTime()) || dueDate <= new Date()) return [];
+        return [{
+          type: "assignment",
+          id: assignment.id,
+          name: assignment.title,
+          course: assignment.course,
+          dueAt: dueDate.toISOString(),
+          reminderMinutes: preferences.assignmentMinutes,
+        }];
+      })
+    : [];
+  return [...courses, ...assignments];
 }
 
 async function syncPushSubscription(subscription) {
@@ -1431,11 +1788,21 @@ async function syncPushSubscription(subscription) {
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       subscription: subscription.toJSON(),
-      schedule: state.schedule.courses,
+      schedule: notificationItemsForPush(),
       timezone: state.schedule.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone,
     }),
   });
   if (!response.ok) throw new Error("Bildirim aboneliği sunucuya kaydedilemedi.");
+}
+
+async function refreshPushSchedule() {
+  if (!pushApiUrl() || localStorage.getItem(PUSH_NOTIFICATIONS_KEY) !== "1" || !state.schedule) return;
+  try {
+    const subscription = await getPushSubscription();
+    if (subscription) await syncPushSubscription(subscription);
+  } catch (error) {
+    console.warn("Bildirim programı eşitlenemedi.", error);
+  }
 }
 
 async function enablePushNotifications() {
@@ -1508,7 +1875,7 @@ async function handleNotificationButton() {
     }
     if (pushApiUrl()) {
       await enablePushNotifications();
-      showToast("Bildirimler açık. Site kapalıyken de 15 dakika önce haber vereceğim.");
+      showToast("Bildirimler açık. Seçtiğin ders ve ödev zamanlarında haber vereceğim.");
     } else {
       localStorage.setItem(LOCAL_NOTIFICATIONS_KEY, "1");
       showToast("Bildirimler açık. Sunucu kurulana kadar sayfa açıkken haber vereceğim.");
@@ -1537,7 +1904,7 @@ async function updateNotificationButton() {
   }
   elements.notificationButton.classList.toggle("enabled", enabled);
   elements.notificationLabel.textContent = enabled ? "Bildirimler açık" : "Bildirimleri aç";
-  const accessibleLabel = enabled ? "Ders bildirimleri açık" : "Ders bildirimlerini aç";
+  const accessibleLabel = enabled ? "Ders ve ödev bildirimleri açık" : "Ders ve ödev bildirimlerini aç";
   elements.notificationButton.setAttribute("aria-label", accessibleLabel);
   elements.notificationButton.setAttribute("title", accessibleLabel);
 }
@@ -1558,8 +1925,12 @@ function tick() {
 }
 
 async function init() {
+  loadNotificationPreferences();
+  renderNotificationPreferences();
   loadAssignments();
   renderAssignments();
+  loadNotes();
+  renderNotes();
   loadGrades();
   renderGrades();
   loadAttendance();
@@ -1580,6 +1951,7 @@ async function init() {
     renderTabs();
     renderWeek();
     populateCourseOptions();
+    renderNotes();
     synchroniseAttendance();
     renderAttendance();
     renderStatistics();
@@ -1607,6 +1979,7 @@ elements.notificationButton.addEventListener("click", handleNotificationButton);
 elements.themeButton.addEventListener("click", toggleTheme);
 elements.settingsButton.addEventListener("click", () => {
   updateInstallButton();
+  renderNotificationPreferences();
   elements.settingsDialog.showModal();
 });
 elements.closeSettingsDialog.addEventListener("click", () => elements.settingsDialog.close());
@@ -1620,6 +1993,22 @@ elements.assignmentForm.addEventListener("submit", handleAssignmentSubmit);
 elements.assignmentSearch.addEventListener("input", () => {
   state.assignmentSearch = elements.assignmentSearch.value;
   renderAssignments();
+});
+elements.addNoteButton.addEventListener("click", () => openNoteDialog());
+elements.closeNoteDialog.addEventListener("click", closeNoteDialog);
+elements.cancelNoteButton.addEventListener("click", closeNoteDialog);
+elements.noteForm.addEventListener("submit", handleNoteSubmit);
+elements.noteDialog.addEventListener("click", (event) => {
+  if (event.target === elements.noteDialog) closeNoteDialog();
+});
+elements.noteLink.addEventListener("input", () => elements.noteLink.setCustomValidity(""));
+elements.noteSearch.addEventListener("input", () => {
+  state.noteSearch = elements.noteSearch.value;
+  renderNotes();
+});
+elements.noteCourseFilter.addEventListener("change", () => {
+  state.noteCourseFilter = elements.noteCourseFilter.value;
+  renderNotes();
 });
 elements.addGradeButton.addEventListener("click", () => openGradeDialog());
 elements.closeGradeDialog.addEventListener("click", closeGradeDialog);
@@ -1635,6 +2024,7 @@ elements.gradeForm.addEventListener("submit", handleGradeSubmit);
 ].forEach((input) => {
   input.addEventListener("input", () => {
     elements.finalWeight.setCustomValidity("");
+    validateIntegerGradeInputs();
     updateGradePreview();
   });
 });
@@ -1660,13 +2050,16 @@ elements.cancelAttendanceButton.addEventListener("click", closeAttendanceDialog)
 elements.attendanceDialog.addEventListener("click", (event) => {
   if (event.target === elements.attendanceDialog) closeAttendanceDialog();
 });
-elements.trackingTabs.forEach((button) => {
-  button.addEventListener("click", () => switchTrackingPanel(button.dataset.trackingPanel));
-});
 elements.exportDataButton.addEventListener("click", exportAppData);
 elements.importDataButton.addEventListener("click", () => elements.importDataInput.click());
 elements.importDataInput.addEventListener("change", () => importAppData(elements.importDataInput.files[0]));
 elements.installAppButton.addEventListener("click", installApp);
+[
+  elements.lessonRemindersEnabled,
+  elements.lessonReminderMinutes,
+  elements.assignmentRemindersEnabled,
+  elements.assignmentReminderMinutes,
+].forEach((control) => control.addEventListener("change", handleNotificationPreferenceChange));
 elements.assignmentDueDate.addEventListener("input", maskDateTimeInput);
 elements.openDatePickerButton.addEventListener("click", () => {
   if (elements.datePicker.hidden) openDatePicker();
@@ -1689,18 +2082,19 @@ elements.assignmentFilters.forEach((button) => {
 elements.navButtons.forEach((button) => {
   button.addEventListener("click", () => switchView(button.dataset.view));
   button.addEventListener("keydown", (event) => {
-    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+    if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
     const currentIndex = elements.navButtons.indexOf(button);
     let nextIndex = currentIndex;
-    if (event.key === "ArrowLeft") nextIndex = (currentIndex - 1 + elements.navButtons.length) % elements.navButtons.length;
-    if (event.key === "ArrowRight") nextIndex = (currentIndex + 1) % elements.navButtons.length;
+    if (["ArrowLeft", "ArrowUp"].includes(event.key)) nextIndex = (currentIndex - 1 + elements.navButtons.length) % elements.navButtons.length;
+    if (["ArrowRight", "ArrowDown"].includes(event.key)) nextIndex = (currentIndex + 1) % elements.navButtons.length;
     if (event.key === "Home") nextIndex = 0;
     if (event.key === "End") nextIndex = elements.navButtons.length - 1;
     elements.navButtons[nextIndex].focus();
     switchView(elements.navButtons[nextIndex].dataset.view);
   });
 });
+elements.sidebarToggle.addEventListener("click", toggleSidebar);
 elements.brandHomeLink.addEventListener("click", (event) => {
   event.preventDefault();
   switchView("home");
@@ -1718,7 +2112,12 @@ window.addEventListener("appinstalled", () => {
 });
 
 const initialView = location.hash.slice(1);
-switchView(initialView in VIEW_INDEX ? initialView : "home", false);
+let sidebarCollapsed = false;
+try {
+  sidebarCollapsed = localStorage.getItem(SIDEBAR_KEY) === "1";
+} catch (_) {}
+applySidebarState(sidebarCollapsed, false);
+switchView(initialView || "home", false);
 applyTheme(document.documentElement.dataset.theme, false);
 
 if ("serviceWorker" in navigator) {

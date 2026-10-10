@@ -93,8 +93,8 @@
           class="notification-button"
           id="notificationButton"
           type="button"
-          aria-label="Ders bildirimlerini aç"
-          title="Ders bildirimlerini aç"
+          aria-label="Ders ve ödev bildirimlerini aç"
+          title="Ders ve ödev bildirimlerini aç"
         >
           <span class="notification-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" role="img">
@@ -236,6 +236,40 @@
       </section>
 
       <section
+        class="view-panel notes-section"
+        id="notesView"
+        role="tabpanel"
+        aria-labelledby="notesNavButton"
+        tabindex="0"
+        hidden
+      >
+        <div class="section-heading notes-heading">
+          <div>
+            <p class="section-overline">DERS ARŞİVİ</p>
+            <h2>Ders notlarım</h2>
+          </div>
+          <button class="primary-button" id="addNoteButton" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+            <span>Not ekle</span>
+          </button>
+        </div>
+
+        <div class="list-toolbar notes-toolbar" aria-label="Ders notlarını ara ve filtrele">
+          <label class="search-control">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+            <input id="noteSearch" type="search" placeholder="Not, içerik veya ders ara" aria-label="Ders notlarında ara" />
+          </label>
+          <span class="select-control compact-select note-course-filter">
+            <select id="noteCourseFilter" aria-label="Derse göre filtrele">
+              <option value="all">Tüm dersler</option>
+            </select>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5" /></svg>
+          </span>
+        </div>
+        <div class="note-list" id="noteList" aria-live="polite"></div>
+      </section>
+
+      <section
         class="view-panel grades-section"
         id="gradesView"
         role="tabpanel"
@@ -286,54 +320,71 @@
       </section>
 
       <section
-        class="view-panel tracking-section"
-        id="trackingView"
+        class="view-panel attendance-section"
+        id="attendanceView"
         role="tabpanel"
-        aria-labelledby="trackingNavButton"
+        aria-labelledby="attendanceNavButton"
         tabindex="0"
         hidden
       >
-        <div class="section-heading tracking-heading">
+        <div class="section-heading attendance-heading">
           <div>
-            <p class="section-overline">AKADEMİK TAKİP</p>
-            <h2>Kontrol merkezi</h2>
+            <p class="section-overline">DERS TAKİBİ</p>
+            <h2>Devamsızlık</h2>
           </div>
         </div>
-
-        <div class="tracking-tabs" role="tablist" aria-label="Takip araçları">
-          <button class="tracking-tab active" type="button" role="tab" aria-selected="true" data-tracking-panel="attendance">Devamsızlık</button>
-          <button class="tracking-tab" type="button" role="tab" aria-selected="false" data-tracking-panel="statistics">İstatistikler</button>
+        <div class="attendance-summary" aria-label="Devamsızlık özeti">
+          <div><strong id="attendanceCourseCount">0</strong><span>Takip edilen ders</span></div>
+          <div><strong id="attendanceUsed">0</strong><span>Toplam devamsızlık</span></div>
+          <div><strong id="attendanceRisk">0</strong><span>Riskli ders</span></div>
         </div>
-
-        <div class="tracking-panel" id="attendancePanel" data-tracking-content="attendance">
-          <div class="attendance-summary" aria-label="Devamsızlık özeti">
-            <div><strong id="attendanceCourseCount">0</strong><span>Takip edilen ders</span></div>
-            <div><strong id="attendanceUsed">0</strong><span>Toplam devamsızlık</span></div>
-            <div><strong id="attendanceRisk">0</strong><span>Riskli ders</span></div>
-          </div>
-          <div class="list-toolbar">
-            <label class="search-control">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
-              <input id="attendanceSearch" type="search" placeholder="Ders ara" aria-label="Devamsızlık derslerinde ara" />
-            </label>
-          </div>
-          <div class="attendance-list" id="attendanceList" aria-live="polite"></div>
+        <div class="list-toolbar">
+          <label class="search-control">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" /></svg>
+            <input id="attendanceSearch" type="search" placeholder="Ders ara" aria-label="Devamsızlık derslerinde ara" />
+          </label>
         </div>
+        <div class="attendance-list" id="attendanceList" aria-live="polite"></div>
+      </section>
 
-        <div class="tracking-panel" id="statisticsPanel" data-tracking-content="statistics" hidden>
-          <div class="statistics-grid" id="statisticsOverview"></div>
-          <div class="statistics-card">
-            <div class="statistics-heading">
-              <div><span>DERS BAZINDA</span><h3>Akademik görünüm</h3></div>
-            </div>
-            <div class="course-stat-list" id="courseStatistics"></div>
+      <section
+        class="view-panel statistics-section"
+        id="statisticsView"
+        role="tabpanel"
+        aria-labelledby="statisticsNavButton"
+        tabindex="0"
+        hidden
+      >
+        <div class="section-heading statistics-page-heading">
+          <div>
+            <p class="section-overline">GENEL DURUM</p>
+            <h2>İstatistikler</h2>
           </div>
         </div>
-
+        <div class="statistics-grid" id="statisticsOverview"></div>
+        <div class="statistics-card">
+          <div class="statistics-heading">
+            <div><span>DERS BAZINDA</span><h3>Akademik görünüm</h3></div>
+          </div>
+          <div class="course-stat-list" id="courseStatistics"></div>
+        </div>
       </section>
     </main>
 
-    <nav class="bottom-nav" aria-label="Ana menü">
+    <nav class="bottom-nav" id="sidebarNav" aria-label="Ana menü">
+      <button
+        class="sidebar-toggle"
+        id="sidebarToggle"
+        type="button"
+        aria-label="Menüyü daralt"
+        title="Menüyü daralt"
+        aria-expanded="true"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m14 7-5 5 5 5" />
+        </svg>
+        <span>Menüyü daralt</span>
+      </button>
       <div class="bottom-nav-list" id="bottomNav" role="tablist" data-active="0">
         <button
           class="bottom-nav-button active"
@@ -396,6 +447,21 @@
         </button>
         <button
           class="bottom-nav-button"
+          id="notesNavButton"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="notesView"
+          data-view="notes"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 3h11a3 3 0 0 1 3 3v15H7a2 2 0 0 1-2-2V3Z" />
+            <path d="M8 8h8M8 12h8M8 16h5M5 19a2 2 0 0 1 2-2h12" />
+          </svg>
+          <span>Ders Notları</span>
+        </button>
+        <button
+          class="bottom-nav-button"
           id="gradesNavButton"
           type="button"
           role="tab"
@@ -407,24 +473,37 @@
             <path d="M4 19V9M10 19V5M16 19v-7M22 19V3" />
             <path d="M2 19h22" />
           </svg>
-          <span>Notlar</span>
+          <span>Sınavlar</span>
         </button>
         <button
           class="bottom-nav-button"
-          id="trackingNavButton"
+          id="attendanceNavButton"
           type="button"
           role="tab"
           aria-selected="false"
-          aria-controls="trackingView"
-          data-view="tracking"
+          aria-controls="attendanceView"
+          data-view="attendance"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="3" y="3" width="7" height="7" rx="2" />
-            <rect x="14" y="3" width="7" height="7" rx="2" />
-            <rect x="3" y="14" width="7" height="7" rx="2" />
-            <rect x="14" y="14" width="7" height="7" rx="2" />
+            <path d="M4 4h16v16H4zM8 2v4M16 2v4M4 9h16" />
+            <path d="m8 14 2 2 5-5" />
           </svg>
-          <span>Kontrol Merkezi</span>
+          <span>Devamsızlık</span>
+        </button>
+        <button
+          class="bottom-nav-button"
+          id="statisticsNavButton"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="statisticsView"
+          data-view="statistics"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 20V10M10 20V4M16 20v-7M22 20V7" />
+            <path d="M2 20h22" />
+          </svg>
+          <span>İstatistikler</span>
         </button>
       </div>
     </nav>
@@ -521,6 +600,44 @@
       </form>
     </dialog>
 
+    <dialog class="assignment-dialog" id="noteDialog" aria-labelledby="noteDialogTitle">
+      <form class="assignment-form" id="noteForm">
+        <div class="dialog-heading">
+          <div>
+            <p class="section-overline">DERS NOTU</p>
+            <h2 id="noteDialogTitle">Yeni not</h2>
+          </div>
+          <button class="dialog-close" id="closeNoteDialog" type="button" aria-label="Not penceresini kapat">×</button>
+        </div>
+        <input id="noteId" type="hidden" />
+        <label class="form-field">
+          <span>Ders *</span>
+          <span class="select-control">
+            <select id="noteCourse" required>
+              <option value="">Programdan ders seç</option>
+            </select>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5" /></svg>
+          </span>
+        </label>
+        <label class="form-field">
+          <span>Başlık *</span>
+          <input id="noteTitle" type="text" maxlength="120" placeholder="Not başlığını yaz" required />
+        </label>
+        <label class="form-field">
+          <span>Not *</span>
+          <textarea id="noteContent" maxlength="10000" rows="8" placeholder="Ders notunu buraya yaz…" required></textarea>
+        </label>
+        <label class="form-field">
+          <span>Kaynak bağlantısı</span>
+          <input id="noteLink" type="url" maxlength="1000" inputmode="url" placeholder="https://…" />
+        </label>
+        <div class="dialog-actions">
+          <button class="secondary-button" id="cancelNoteButton" type="button">Vazgeç</button>
+          <button class="primary-button" type="submit">Notu kaydet</button>
+        </div>
+      </form>
+    </dialog>
+
     <dialog class="assignment-dialog grade-dialog" id="gradeDialog" aria-labelledby="gradeDialogTitle">
       <form class="assignment-form grade-form" id="gradeForm">
         <div class="dialog-heading">
@@ -545,7 +662,7 @@
         <div class="grade-form-grid">
           <label class="form-field">
             <span>Vize notu *</span>
-            <input id="midtermGrade" type="number" min="0" max="100" step="0.01" inputmode="decimal" placeholder="0–100" required />
+            <input id="midtermGrade" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="0–100" required />
           </label>
           <label class="form-field">
             <span>Vize ağırlığı (%)</span>
@@ -553,7 +670,7 @@
           </label>
           <label class="form-field">
             <span>Final notu</span>
-            <input id="finalGrade" type="number" min="0" max="100" step="0.01" inputmode="decimal" placeholder="Henüz belli değil" />
+            <input id="finalGrade" type="number" min="0" max="100" step="1" inputmode="numeric" placeholder="Henüz belli değil" />
           </label>
           <label class="form-field">
             <span>Final ağırlığı (%)</span>
@@ -561,11 +678,11 @@
           </label>
           <label class="form-field">
             <span>Geçme notu</span>
-            <input id="passingGrade" type="number" min="0" max="100" step="0.01" value="60" required />
+            <input id="passingGrade" type="number" min="0" max="100" step="1" inputmode="numeric" value="60" required />
           </label>
           <label class="form-field">
             <span>Final barajı</span>
-            <input id="minimumFinal" type="number" min="0" max="100" step="0.01" value="50" required />
+            <input id="minimumFinal" type="number" min="0" max="100" step="1" inputmode="numeric" value="50" required />
           </label>
         </div>
 
@@ -642,8 +759,42 @@
             <p id="installDescription">Ders Pusulası'nı ana ekranına ekleyip uygulama gibi aç.</p>
             <button class="primary-button" id="installAppButton" type="button" disabled>Kurulum hazırlanıyor</button>
           </article>
+          <article class="tool-card notification-preferences-card">
+            <span class="tool-icon" aria-hidden="true">🔔</span>
+            <h3>Bildirim tercihleri</h3>
+            <div class="notification-setting">
+              <label class="setting-toggle" for="lessonRemindersEnabled">
+                <span><strong>Ders hatırlatmaları</strong><small>Ders başlamadan önce haber ver</small></span>
+                <input id="lessonRemindersEnabled" type="checkbox" checked />
+              </label>
+              <label class="setting-select" for="lessonReminderMinutes">
+                <span>Hatırlatma zamanı</span>
+                <select id="lessonReminderMinutes">
+                  <option value="5">5 dakika önce</option>
+                  <option value="10">10 dakika önce</option>
+                  <option value="15" selected>15 dakika önce</option>
+                  <option value="30">30 dakika önce</option>
+                  <option value="60">1 saat önce</option>
+                </select>
+              </label>
+              <label class="setting-toggle" for="assignmentRemindersEnabled">
+                <span><strong>Ödev hatırlatmaları</strong><small>Bekleyen ödevlerin teslimini hatırlat</small></span>
+                <input id="assignmentRemindersEnabled" type="checkbox" checked />
+              </label>
+              <label class="setting-select" for="assignmentReminderMinutes">
+                <span>Hatırlatma zamanı</span>
+                <select id="assignmentReminderMinutes">
+                  <option value="60">1 saat önce</option>
+                  <option value="360">6 saat önce</option>
+                  <option value="720">12 saat önce</option>
+                  <option value="1440" selected>1 gün önce</option>
+                  <option value="2880">2 gün önce</option>
+                </select>
+              </label>
+            </div>
+          </article>
         </div>
-        <p class="data-note">Kayıtların yalnızca bu cihaz ve tarayıcıda tutulur. Düzenli yedek almak veri kaybını önler.</p>
+        <p class="data-note">Ödev, ders notu, sınav ve devamsızlık kayıtların bu cihazda tutulur. Bildirim programın Cloudflare'a yalnızca bildirim göndermek amacıyla eşitlenir.</p>
       </div>
     </dialog>
 

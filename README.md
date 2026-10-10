@@ -110,6 +110,14 @@ Arka plan bildirimleri için `worker/` klasöründe Cloudflare Workers + D1 + Cr
 
 Ödevler tarayıcının yerel depolama alanında (`localStorage`) saklanır. Aynı cihaz ve tarayıcıyla tekrar girildiğinde korunur; tarayıcı verileri temizlenirse veya farklı bir cihazdan girilirse görünmez.
 
+## Ders notları
+
+**Ders Notları** sekmesinde programdaki bir ders seçilerek başlık, uzun metin ve isteğe bağlı kaynak bağlantısıyla kişisel not oluşturulabilir. Notlar aranabilir, derse göre filtrelenebilir, düzenlenebilir ve yedek dosyasına dahil edilir.
+
+## Özelleştirilebilir bildirimler
+
+**Ayarlar → Bildirim tercihleri** bölümünde ders hatırlatmaları 5, 10, 15, 30 veya 60 dakika öncesine ayarlanabilir. Bekleyen ödevler için 1 saat ile 2 gün arasında ayrı bir hatırlatma süresi seçilebilir. Ders ve ödev bildirimleri birbirinden bağımsız kapatılabilir. Açık Web Push abonelikleri değişikliklerden sonra otomatik olarak Cloudflare Worker ile eşitlenir.
+
 ## Sınav sonucu ve final hedefi
 
 **Notlar** sekmesinde her ders için vize notu, vize/final ağırlıkları, geçme notu ve final barajı girilebilir. Final notu henüz belli değilse sistem geçmek için alınması gereken en düşük final notunu; final girildiyse ağırlıklı ortalamayı ve geçme durumunu gösterir. Sonuçlar ve hesaplama geçmişi tarayıcının `localStorage` alanında saklanır.
@@ -118,9 +126,9 @@ Hesaplama, kullanıcı tarafından girilen ağırlık ve barajlara dayanır. Ba�
 
 ## Devamsızlık ve istatistikler
 
-**Kontrol Merkezi → Devamsızlık** bölümünde `schedule.json` içindeki dersler otomatik listelenir. Her dersin kullanılan devamsızlık sayısı, sınırı, kalan hakkı ve isteğe bağlı notu tutulabilir. Sınırın %75'ine ulaşan dersler riskli olarak işaretlenir.
+**Devamsızlık** sayfasında `schedule.json` içindeki dersler otomatik listelenir. Her dersin kullanılan devamsızlık sayısı, sınırı, kalan hakkı ve isteğe bağlı notu tutulabilir. Sınırın %75'ine ulaşan dersler riskli olarak işaretlenir.
 
-**Kontrol Merkezi → İstatistikler** bölümünde ödev tamamlama oranı, girilmiş final sonuçlarının ortalaması, devamsızlık kullanımı, geciken ödevler ve ders bazındaki özet görünür.
+**İstatistikler** sayfasında ödev tamamlama oranı, girilmiş final sonuçlarının ortalaması, devamsızlık kullanımı, geciken ödevler ve ders bazındaki özet görünür.
 
 Ödevler başlık, açıklama veya ders adına göre; notlar ders adı ve sonuç durumuna göre; devamsızlıklar ise ders adına göre aranabilir.
 

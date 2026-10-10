@@ -41,19 +41,39 @@ function validTime(value) {
   return /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
 }
 
+function reminderMinutes(value, fallback) {
+  const minutes = Number(value);
+  return Number.isInteger(minutes) && minutes >= 1 && minutes <= 10080 ? minutes : fallback;
+}
+
 function sanitizeSchedule(value) {
   if (!Array.isArray(value)) return [];
-  return value.slice(0, 50).flatMap((course) => {
-    const day = Number(course?.day);
-    const start = String(course?.start || "");
-    const name = String(course?.name || "").trim().slice(0, 160);
-    if (!Number.isInteger(day) || day < 0 || day > 6 || !validTime(start) || !name) return [];
+  return value.slice(0, 100).flatMap((item) => {
+    const name = String(item?.name || "").trim().slice(0, 160);
+    if (!name) return [];
+    if (item?.type === "assignment") {
+      const dueAt = new Date(String(item?.dueAt || ""));
+      if (Number.isNaN(dueAt.getTime())) return [];
+      return [{
+        type: "assignment",
+        id: String(item?.id || "").trim().slice(0, 100),
+        name,
+        course: String(item?.course || "").trim().slice(0, 160),
+        dueAt: dueAt.toISOString(),
+        reminderMinutes: reminderMinutes(item?.reminderMinutes, 1440),
+      }];
+    }
+    const day = Number(item?.day);
+    const start = String(item?.start || "");
+    if (!Number.isInteger(day) || day < 0 || day > 6 || !validTime(start)) return [];
     return [{
+      type: "course",
       day,
       start,
       name,
-      code: String(course?.code || "").trim().slice(0, 40),
-      room: String(course?.room || "").trim().slice(0, 120),
+      code: String(item?.code || "").trim().slice(0, 40),
+      room: String(item?.room || "").trim().slice(0, 120),
+      reminderMinutes: reminderMinutes(item?.reminderMinutes, 15),
     }];
   });
 }
@@ -70,7 +90,7 @@ async function saveSubscription(request, env, headers) {
   const body = await request.json();
   const subscription = validateSubscription(body.subscription);
   const schedule = sanitizeSchedule(body.schedule);
-  if (!subscription || !schedule.length) {
+  if (!subscription || !Array.isArray(body.schedule)) {
     return json({ error: "Geçersiz abonelik veya ders programı." }, 400, headers);
   }
   const id = await endpointId(subscription.endpoint);
@@ -130,18 +150,35 @@ function istanbulParts(date) {
   };
 }
 
-function dueCourses(schedule, now) {
+function dueNotifications(schedule, now) {
   const local = istanbulParts(now);
-  return schedule.filter((course) => {
-    if (course.day !== local.weekday) return false;
-    const [hours, minutes] = course.start.split(":").map(Number);
+  return schedule.flatMap((item) => {
+    if (item.type === "assignment") {
+      const dueAt = new Date(item.dueAt);
+      const difference = Math.ceil((dueAt - now) / 60000);
+      return difference === item.reminderMinutes || difference === item.reminderMinutes - 1
+        ? [{ ...item, dateKey: item.dueAt }]
+        : [];
+    }
+    if (item.day !== local.weekday) return [];
+    const [hours, minutes] = item.start.split(":").map(Number);
     const difference = hours * 60 + minutes - local.minutes;
-    return difference === 14 || difference === 15;
-  }).map((course) => ({ ...course, dateKey: local.dateKey }));
+    return difference === item.reminderMinutes || difference === item.reminderMinutes - 1
+      ? [{ ...item, dateKey: local.dateKey }]
+      : [];
+  });
 }
 
-async function sendCourseNotification(subscriptionRow, course, env) {
-  const notificationKey = `${course.dateKey}:${course.code || course.name}:${course.start}`;
+function reminderLabel(minutes) {
+  if (minutes % 1440 === 0) return `${minutes / 1440} gün`;
+  if (minutes % 60 === 0) return `${minutes / 60} saat`;
+  return `${minutes} dakika`;
+}
+
+async function sendScheduledNotification(subscriptionRow, item, env) {
+  const notificationKey = item.type === "assignment"
+    ? `assignment:${item.id || item.name}:${item.dateKey}:${item.reminderMinutes}`
+    : `course:${item.dateKey}:${item.code || item.name}:${item.start}:${item.reminderMinutes}`;
   const alreadySent = await env.DB.prepare(`
     SELECT 1 FROM notification_log
     WHERE subscription_id = ?1 AND notification_key = ?2
@@ -154,11 +191,14 @@ async function sendCourseNotification(subscriptionRow, course, env) {
     keys: { p256dh: subscriptionRow.p256dh, auth: subscriptionRow.auth },
   };
   const siteUrl = String(env.SITE_URL || "").replace(/\/$/, "");
+  const isAssignment = item.type === "assignment";
   const message = {
     data: JSON.stringify({
-      title: `${course.name} 15 dakika içinde`,
-      body: `${course.start}${course.room ? ` · ${course.room}` : ""}`,
-      url: `${siteUrl}/#home`,
+      title: isAssignment ? `Ödev teslimi yaklaşıyor: ${item.name}` : `${item.name} ${reminderLabel(item.reminderMinutes)} içinde`,
+      body: isAssignment
+        ? `${item.course || "Ödev"} · Teslime ${reminderLabel(item.reminderMinutes)} kaldı`
+        : `${item.start}${item.room ? ` · ${item.room}` : ""}`,
+      url: `${siteUrl}/#${isAssignment ? "assignments" : "home"}`,
       icon: `${siteUrl}/assets/icon-192.png`,
       badge: `${siteUrl}/assets/icon-192.png`,
       tag: notificationKey,
@@ -202,9 +242,9 @@ async function runScheduledNotifications(env) {
     } catch (_) {
       continue;
     }
-    for (const course of dueCourses(schedule, now)) {
+    for (const item of dueNotifications(schedule, now)) {
       try {
-        await sendCourseNotification(subscription, course, env);
+        await sendScheduledNotification(subscription, item, env);
       } catch (error) {
         console.error("Push gönderilemedi", subscription.id, error);
       }
