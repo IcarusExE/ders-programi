@@ -403,6 +403,13 @@ html[data-theme="dark"] .theme-icon .sun-icon { display: block; }
 .secondary-button { border: 1px solid var(--line); color: var(--ink); background: transparent; }
 .secondary-button:hover { background: var(--card); }
 
+.touch-input #addAssignmentButton:focus,
+.touch-input #addNoteButton:focus {
+  outline: none;
+  transform: none;
+  box-shadow: none;
+}
+
 .assignment-stats {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

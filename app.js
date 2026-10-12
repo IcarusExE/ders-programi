@@ -192,10 +192,12 @@ let lastInteractionWasKeyboard = false;
 
 document.addEventListener("keydown", () => {
   lastInteractionWasKeyboard = true;
+  document.documentElement.classList.remove("touch-input");
 }, true);
 
-document.addEventListener("pointerdown", () => {
+document.addEventListener("pointerdown", (event) => {
   lastInteractionWasKeyboard = false;
+  document.documentElement.classList.toggle("touch-input", event.pointerType === "touch" || event.pointerType === "pen");
 }, true);
 
 function clearPointerRestoredFocus(dialog) {
