@@ -1,7 +1,7 @@
 {
   "name": "Ders Pusulası — Nallıhan MYO",
   "short_name": "Ders Pusulası",
-  "description": "Ders programı, ödev, not ve devamsızlık takip uygulaması.",
+  "description": "Ders programı, yemek menüsü, ödev, not ve devamsızlık takip uygulaması.",
   "id": "./",
   "start_url": "./",
   "scope": "./",

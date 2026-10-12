@@ -3,6 +3,8 @@ const WEEK_DAYS = [1, 2, 3, 4, 5];
 
 const state = {
   schedule: null,
+  menu: null,
+  selectedMenuDate: "",
   selectedDay: new Date().getDay() || 1,
   now: new Date(),
   activeView: "home",
@@ -43,6 +45,23 @@ const elements = {
   dayTabs: document.querySelector("#dayTabs"),
   weekList: document.querySelector("#weekList"),
   updatedAt: document.querySelector("#updatedAt"),
+  homeMenuDate: document.querySelector("#homeMenuDate"),
+  homeLunchMenu: document.querySelector("#homeLunchMenu"),
+  homeDinnerMenu: document.querySelector("#homeDinnerMenu"),
+  openMenuButton: document.querySelector("#openMenuButton"),
+  menuTitle: document.querySelector("#menuTitle"),
+  menuUpdatedAt: document.querySelector("#menuUpdatedAt"),
+  menuSelectedDay: document.querySelector("#menuSelectedDay"),
+  menuSelectedDate: document.querySelector("#menuSelectedDate"),
+  menuDateTabs: document.querySelector("#menuDateTabs"),
+  previousMenuDay: document.querySelector("#previousMenuDay"),
+  nextMenuDay: document.querySelector("#nextMenuDay"),
+  menuTodayButton: document.querySelector("#menuTodayButton"),
+  lunchMenuItems: document.querySelector("#lunchMenuItems"),
+  dinnerMenuItems: document.querySelector("#dinnerMenuItems"),
+  lunchCalories: document.querySelector("#lunchCalories"),
+  dinnerCalories: document.querySelector("#dinnerCalories"),
+  menuSource: document.querySelector("#menuSource"),
   notificationButton: document.querySelector("#notificationButton"),
   notificationLabel: document.querySelector("#notificationLabel"),
   themeButton: document.querySelector("#themeButton"),
@@ -156,7 +175,7 @@ const elements = {
   assignmentReminderMinutes: document.querySelector("#assignmentReminderMinutes"),
 };
 
-const VIEW_INDEX = { home: 0, today: 1, week: 2, assignments: 3, notes: 4, grades: 5, attendance: 6, statistics: 7 };
+const VIEW_INDEX = { home: 0, today: 1, week: 2, menu: 3, assignments: 4, notes: 5, grades: 6, attendance: 7, statistics: 8 };
 const THEME_KEY = "ders-pusulasi-theme";
 const SIDEBAR_KEY = "ders-pusulasi-sidebar-collapsed";
 const ASSIGNMENTS_KEY = "ders-pusulasi-assignments";
@@ -168,6 +187,7 @@ const NOTIFICATION_PREFERENCES_KEY = "ders-pusulasi-notification-preferences";
 const LOCAL_NOTIFICATIONS_KEY = "ders-pusulasi-local-notifications";
 const PUSH_NOTIFICATIONS_KEY = "ders-pusulasi-push-notifications";
 const MAX_BACKUP_BYTES = 2 * 1024 * 1024;
+let tickTimer = null;
 
 function cleanText(value, maxLength = 500) {
   return String(value ?? "").trim().slice(0, maxLength);
@@ -222,6 +242,44 @@ function sanitizeSchedule(rawSchedule) {
     timezone: cleanText(rawSchedule.timezone, 80) || "Europe/Istanbul",
     updatedAt: cleanText(rawSchedule.updatedAt, 80),
     courses,
+  };
+}
+
+function sanitizeMeal(value) {
+  if (!value || typeof value !== "object") return null;
+  const items = Array.isArray(value.items)
+    ? value.items.slice(0, 8).map((item) => cleanText(item, 180)).filter(Boolean)
+    : [];
+  const note = cleanText(value.note, 180);
+  if (!items.length && !note) return null;
+  return {
+    items,
+    note,
+    calories: /^\d{1,5}\s+KKAL$/i.test(cleanText(value.calories, 20)) ? cleanText(value.calories, 20).toUpperCase() : "",
+  };
+}
+
+function sanitizeMenu(rawMenu) {
+  if (!rawMenu || typeof rawMenu !== "object" || !Array.isArray(rawMenu.days)) {
+    throw new Error("Menü biçimi geçersiz");
+  }
+  const seenDates = new Set();
+  const days = rawMenu.days.slice(0, 62).flatMap((day) => {
+    const date = cleanText(day?.date, 10);
+    const parsed = new Date(`${date}T12:00:00`);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(parsed.getTime()) || seenDates.has(date)) return [];
+    const lunch = sanitizeMeal(day?.lunch);
+    const dinner = sanitizeMeal(day?.dinner);
+    if (!lunch && !dinner) return [];
+    seenDates.add(date);
+    return [{ date, lunch, dinner }];
+  }).sort((first, second) => first.date.localeCompare(second.date));
+  if (!days.length) throw new Error("Menüde geçerli gün bulunamadı");
+  return {
+    source: cleanText(rawMenu.source, 180),
+    period: /^\d{4}-\d{2}$/.test(rawMenu.period) ? rawMenu.period : days[0].date.slice(0, 7),
+    updatedAt: cleanText(rawMenu.updatedAt, 10),
+    days,
   };
 }
 
@@ -468,6 +526,8 @@ function switchView(view, updateHistory = true) {
       });
     });
   }
+  if (view === "home" && state.schedule) renderFocus(state.now);
+  if (view === "menu" && state.menu) renderSelectedMenu();
   if (view === "assignments") renderAssignments();
   if (view === "notes") renderNotes();
   if (view === "grades") renderGrades();
@@ -620,6 +680,148 @@ function renderWeek() {
   elements.weekList.innerHTML = courses.length
     ? courses.map((course) => courseRow(course)).join("")
     : '<div class="empty-state">Bu güne ait ders yok.</div>';
+}
+
+function localDateKey(date) {
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function parseMenuDate(value) {
+  return new Date(`${value}T12:00:00`);
+}
+
+function menuItemName(value) {
+  return value.replace(/\s*\(\d+\s*kkal\)\s*$/i, "");
+}
+
+function appendMealItems(container, meal, emptyMessage, compact = false) {
+  container.replaceChildren();
+  if (!meal) {
+    const item = document.createElement("li");
+    item.className = "menu-empty-item";
+    item.textContent = emptyMessage;
+    container.append(item);
+    return;
+  }
+  if (meal.note) {
+    const item = document.createElement("li");
+    item.className = "menu-note-item";
+    item.textContent = meal.note;
+    container.append(item);
+    return;
+  }
+  meal.items.forEach((value) => {
+    const item = document.createElement("li");
+    item.textContent = compact ? menuItemName(value) : value;
+    container.append(item);
+  });
+}
+
+function findInitialMenuDate(now = new Date()) {
+  const today = localDateKey(now);
+  if (state.menu.days.some((day) => day.date === today)) return today;
+  return state.menu.days.find((day) => day.date > today)?.date || state.menu.days.at(-1).date;
+}
+
+function renderHomeMenu(now = new Date()) {
+  if (!state.menu) return;
+  const today = localDateKey(now);
+  const day = state.menu.days.find((item) => item.date === today);
+  elements.homeMenuDate.dateTime = today;
+  elements.homeMenuDate.textContent = new Intl.DateTimeFormat("tr-TR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(now);
+  appendMealItems(elements.homeLunchMenu, day?.lunch, "Bugüne ait öğle menüsü yok.", true);
+  appendMealItems(elements.homeDinnerMenu, day?.dinner, "Bugüne ait akşam menüsü yok.", true);
+}
+
+function renderMenuTabs() {
+  elements.menuDateTabs.replaceChildren();
+  state.menu.days.forEach((day) => {
+    const date = parseMenuDate(day.date);
+    const selected = day.date === state.selectedMenuDate;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.role = "tab";
+    button.dataset.date = day.date;
+    button.className = `menu-date-tab${selected ? " active" : ""}`;
+    button.setAttribute("aria-selected", String(selected));
+    button.setAttribute("aria-label", new Intl.DateTimeFormat("tr-TR", { dateStyle: "full" }).format(date));
+    const weekday = document.createElement("span");
+    weekday.textContent = new Intl.DateTimeFormat("tr-TR", { weekday: "short" }).format(date);
+    const dayNumber = document.createElement("strong");
+    dayNumber.textContent = String(date.getDate());
+    button.append(weekday, dayNumber);
+    button.addEventListener("click", () => selectMenuDate(day.date));
+    elements.menuDateTabs.append(button);
+  });
+  window.requestAnimationFrame(() => {
+    const selected = elements.menuDateTabs.querySelector(".active");
+    selected?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  });
+}
+
+function renderSelectedMenu() {
+  if (!state.menu) return;
+  const index = state.menu.days.findIndex((day) => day.date === state.selectedMenuDate);
+  const selected = state.menu.days[index];
+  if (!selected) return;
+  const date = parseMenuDate(selected.date);
+  elements.menuSelectedDay.textContent = new Intl.DateTimeFormat("tr-TR", { weekday: "long" }).format(date);
+  elements.menuSelectedDate.textContent = new Intl.DateTimeFormat("tr-TR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+  elements.previousMenuDay.disabled = index === 0;
+  elements.nextMenuDay.disabled = index === state.menu.days.length - 1;
+  elements.menuTodayButton.disabled = !state.menu.days.some((day) => day.date === localDateKey(new Date()));
+  appendMealItems(elements.lunchMenuItems, selected.lunch, "Bu gün için öğle menüsü bulunmuyor.");
+  appendMealItems(elements.dinnerMenuItems, selected.dinner, "Bu gün için akşam menüsü bulunmuyor.");
+  elements.lunchCalories.textContent = selected.lunch?.calories || "";
+  elements.dinnerCalories.textContent = selected.dinner?.calories || "";
+  renderMenuTabs();
+}
+
+function selectMenuDate(date) {
+  if (!state.menu?.days.some((day) => day.date === date)) return;
+  state.selectedMenuDate = date;
+  renderSelectedMenu();
+}
+
+function stepMenuDate(amount) {
+  if (!state.menu) return;
+  const index = state.menu.days.findIndex((day) => day.date === state.selectedMenuDate);
+  const next = state.menu.days[index + amount];
+  if (next) selectMenuDate(next.date);
+}
+
+async function loadMenu() {
+  try {
+    const response = await fetch("menu.json", { cache: "no-store" });
+    if (!response.ok) throw new Error("Menü dosyası okunamadı");
+    state.menu = sanitizeMenu(await response.json());
+    state.selectedMenuDate = findInitialMenuDate(state.now);
+    const periodDate = parseMenuDate(`${state.menu.period}-01`);
+    elements.menuTitle.textContent = `${new Intl.DateTimeFormat("tr-TR", { month: "long", year: "numeric" }).format(periodDate)} yemek menüsü`;
+    elements.menuUpdatedAt.textContent = state.menu.updatedAt
+      ? `Son güncelleme: ${new Intl.DateTimeFormat("tr-TR").format(parseMenuDate(state.menu.updatedAt))}`
+      : "";
+    elements.menuSource.textContent = state.menu.source;
+    renderHomeMenu(state.now);
+    renderSelectedMenu();
+  } catch (error) {
+    elements.homeMenuDate.textContent = "Menü kullanılamıyor";
+    appendMealItems(elements.homeLunchMenu, null, "Menü yüklenemedi.", true);
+    appendMealItems(elements.homeDinnerMenu, null, "Menü yüklenemedi.", true);
+    elements.menuSelectedDate.textContent = "Menü yüklenemedi";
+    appendMealItems(elements.lunchMenuItems, null, "Menü dosyası okunamadı.");
+    appendMealItems(elements.dinnerMenuItems, null, "Menü dosyası okunamadı.");
+    console.error(error);
+  }
 }
 
 function loadAssignments() {
@@ -2101,14 +2303,23 @@ async function updateNotificationButton() {
 function tick() {
   const previousDay = state.now.getDay();
   state.now = new Date();
-  renderFocus(state.now);
+  if (state.activeView === "home") renderFocus(state.now);
   const notificationMinute = Math.floor(state.now.getTime() / 60000);
   if (state.lastNotificationMinute !== notificationMinute) {
     state.lastNotificationMinute = notificationMinute;
     checkNotifications(state.now);
   }
-  if (state.now.getDay() !== previousDay) renderToday(state.now);
+  if (state.now.getDay() !== previousDay) {
+    renderToday(state.now);
+    renderHomeMenu(state.now);
+  }
   if (state.activeView === "assignments" && state.now.getSeconds() === 0) renderAssignments();
+}
+
+function startTicking() {
+  window.clearInterval(tickTimer);
+  tick();
+  tickTimer = window.setInterval(tick, document.hidden ? 60000 : 1000);
 }
 
 async function init() {
@@ -2125,6 +2336,7 @@ async function init() {
   renderAttendance();
   renderStatistics();
   updateInstallButton();
+  loadMenu();
   try {
     const response = await fetch("schedule.json", { cache: "no-store" });
     if (!response.ok) throw new Error("Program dosyası okunamadı");
@@ -2151,8 +2363,7 @@ async function init() {
         console.warn("Ders programı bildirim sunucusuyla eşitlenemedi.", error);
       }
     }
-    tick();
-    window.setInterval(tick, 1000);
+    startTicking();
   } catch (error) {
     elements.statusPill.textContent = "Bir sorun oluştu";
     elements.focusTitle.textContent = "schedule.json yüklenemedi";
@@ -2167,6 +2378,12 @@ async function init() {
 
 elements.notificationButton.addEventListener("click", handleNotificationButton);
 elements.themeButton.addEventListener("click", toggleTheme);
+elements.openMenuButton.addEventListener("click", () => switchView("menu"));
+elements.previousMenuDay.addEventListener("click", () => stepMenuDate(-1));
+elements.nextMenuDay.addEventListener("click", () => stepMenuDate(1));
+elements.menuTodayButton.addEventListener("click", () => {
+  if (state.menu) selectMenuDate(findInitialMenuDate(new Date()));
+});
 elements.settingsButton.addEventListener("click", () => {
   updateInstallButton();
   renderNotificationPreferences();
@@ -2290,6 +2507,9 @@ elements.brandHomeLink.addEventListener("click", (event) => {
   switchView("home");
 });
 window.addEventListener("popstate", () => switchView(location.hash.slice(1), false));
+document.addEventListener("visibilitychange", () => {
+  if (tickTimer !== null) startTicking();
+});
 window.addEventListener("beforeinstallprompt", (event) => {
   event.preventDefault();
   state.installPrompt = event;

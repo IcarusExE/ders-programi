@@ -22,6 +22,16 @@ Gün numaraları: `1` Pazartesi, `2` Salı, `3` Çarşamba, `4` Perşembe, `5` C
 
 > Not: Depodaki ders adları ve saatleri örnektir; yayınlamadan önce okulun güncel programıyla değiştir.
 
+## Yemek menüsünü güncelleme
+
+Ana sayfa ve **Yemek Menüsü** sekmesi verileri `menu.json` dosyasından okur. Yeni aya ait öğle ve akşam Excel dosyaları geldiğinde aşağıdaki komutla bu dosyayı yenile:
+
+```bash
+python3 scripts/import-menus.py /dosya/yolu/oglemenu.xlsx /dosya/yolu/aksammenu.xlsx menu.json
+```
+
+İçe aktarıcı Excel tarihlerini, yemek satırlarını ve kalori toplamlarını kontrol eder. Kaynak tablodaki tutarsızlıklar terminalde uyarı olarak gösterilir.
+
 ## GitHub Pages'te yayınlama
 
 1. Bu klasördeki tüm dosyaları GitHub deponun ana dizinine yükle.

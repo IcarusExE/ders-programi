@@ -1,4 +1,4 @@
-const CACHE_NAME = "ders-pusulasi-v26";
+const CACHE_NAME = "ders-pusulasi-v28";
 const ASSETS = [
   "./",
   "./index.html",
@@ -7,14 +7,16 @@ const ASSETS = [
   "./app.js",
   "./push-config.js",
   "./schedule.json",
+  "./menu.json",
   "./manifest.webmanifest",
   "./assets/favicon.svg",
   "./assets/icon-192.png",
   "./assets/icon-512.png",
-  "./assets/nallihan-myo-logo.png",
+  "./assets/nallihan-myo-logo.webp",
 ];
 const OFFLINE_PAGE = new URL("./index.html", self.registration.scope).href;
 const SCHEDULE_URL = new URL("./schedule.json", self.registration.scope).href;
+const MENU_URL = new URL("./menu.json", self.registration.scope).href;
 const CACHEABLE_URLS = new Set(ASSETS.map((asset) => new URL(asset, self.registration.scope).href));
 
 async function fetchAndCache(request, cacheKey = request) {
@@ -27,8 +29,11 @@ async function fetchAndCache(request, cacheKey = request) {
 }
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
-  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(ASSETS))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener("activate", (event) => {
@@ -49,7 +54,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (!CACHEABLE_URLS.has(requestUrl.href)) return;
-  if (requestUrl.href === SCHEDULE_URL) {
+  if (requestUrl.href === SCHEDULE_URL || requestUrl.href === MENU_URL) {
     event.respondWith(fetchAndCache(event.request).catch(() => caches.match(event.request)));
     return;
   }

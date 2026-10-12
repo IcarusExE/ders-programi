@@ -1,0 +1,629 @@
+{
+  "source": "Ankara Üniversitesi Sağlık, Kültür ve Spor Daire Başkanlığı",
+  "period": "2026-10",
+  "updatedAt": "2026-10-12",
+  "days": [
+    {
+      "date": "2026-10-01",
+      "lunch": {
+        "items": [
+          "MAHLUTA ÇORBA (204 kkal)",
+          "İZMİR KÖFTE (712 kkal)",
+          "BULGUR PİLAVI (373 kkal)",
+          "CACIK (94 kkal)"
+        ],
+        "note": null,
+        "calories": "1383 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "MISIR ÇORBA",
+          "ETLİ KURU FASULYE",
+          "SADE PİRİNÇ PİLAVI/TURŞU",
+          "ÇİKOLATALI BİSKÜVİLİ PUDİNG"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-02",
+      "lunch": {
+        "items": [
+          "TARHANA ÇORBA (176 kkal)",
+          "IZGARA TAVUK BUT/PATATES GARNİTÜR (756 kkal)",
+          "SOSLU MAKARNA (456 kkal)",
+          "MEYVE (80 kkal)"
+        ],
+        "note": null,
+        "calories": "1468 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "YEŞİL MERCİMEK ÇORBA",
+          "MİSKET KÖFTE",
+          "CEVİZLİ ERİŞTE",
+          "AYRAN"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-03",
+      "lunch": null,
+      "dinner": {
+        "items": [
+          "KIRMIZI MERCİMEK ÇORBA",
+          "KIYMALI FIRIN PATATES",
+          "ŞEHRİYELİ PİRİNÇ PİLAVI",
+          "FRAMBUAZ SOSLU MUHALLEBİ"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-04",
+      "lunch": null,
+      "dinner": {
+        "items": [
+          "YAYLA ÇORBA",
+          "TAVUK TALEKS",
+          "SOSLU MAKARNA",
+          "MEYVE"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-05",
+      "lunch": {
+        "items": [
+          "YEŞİL MERCİMEK ÇORBA (200 kkal)",
+          "ETLİ TAZE FASULYE (287 kkal)",
+          "SADE PİRİNÇ PİLAVI (430 kkal)",
+          "YOĞURT (146 kkal)"
+        ],
+        "note": null,
+        "calories": "1063 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "FESLEĞENLİ DOMATES ÇORBA",
+          "PİLAV ÜSTÜ TAVUK DÖNER",
+          "MENEKŞE SALATA",
+          "AYRAN"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-06",
+      "lunch": {
+        "items": [
+          "TARHANA ÇORBA (176 kkal)",
+          "TAVUK TALEKS (656 kkal)",
+          "SOSLU MAKARNA (456 kkal)",
+          "AYRAN (60 kkal)"
+        ],
+        "note": null,
+        "calories": "1348 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "KIRMIZI MERCİMEK ÇORBA",
+          "MECİDİYE KÖFTE",
+          "ÖZBEK PİLAVI",
+          "CACIK"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-07",
+      "lunch": {
+        "items": [
+          "KIRMIZI MERCİMEK ÇORBA (204 kkal)",
+          "İSKENDER KEBAP (567 kkal)",
+          "ŞAKŞUKA (733 kkal)",
+          "RED VELVET (365 kkal)"
+        ],
+        "note": null,
+        "calories": "1869 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "YAYLA ÇORBA",
+          "ETLİ BEZELYE",
+          "SOSLU MAKARNA",
+          "MEYVE"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-08",
+      "lunch": {
+        "items": [
+          "ALACA ÇORBA (194 kkal)",
+          "İSVEÇ KÖFTE/SEBZE GARNİTÜR (462 kkal)",
+          "CEVİZLİ ERİŞTE (412 kkal)",
+          "MEYVE (80 kkal)"
+        ],
+        "note": null,
+        "calories": "1148 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "SEBZE ÇORBA",
+          "ETLİ NOHUT",
+          "BULGUR PİLAVI/TURŞU",
+          "KAKAOLU PUDİNG"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-09",
+      "lunch": {
+        "items": [
+          "ANADOLU ÇORBA (261 kkal)",
+          "ISPANAK YATAĞINDA IZGARA TAVUK (533 kkal)",
+          "MISIRLI PİRİNÇ PİLAVI (403 kkal)",
+          "TRİLEÇE (375 kkal)"
+        ],
+        "note": null,
+        "calories": "1572 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "EZOGELİN ÇORBA",
+          "ÇOBAN KAVURMA",
+          "ARPA ŞEHRİYELİ PİRİNÇ PİLAVI",
+          "MEYVE"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-10",
+      "lunch": null,
+      "dinner": {
+        "items": [
+          "TARHANA ÇORBA",
+          "KÖY USULÜ TAVUK",
+          "SOSLU SPAGETTİ",
+          "FINDIKLI KEŞKÜL"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-11",
+      "lunch": null,
+      "dinner": {
+        "items": [
+          "KIRMIZI MERCİMEK ÇORBA",
+          "ADANA KEBAP/BULGUR PİLAVI",
+          "MENEKŞE SALATA",
+          "TRİLEÇE"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-12",
+      "lunch": {
+        "items": [
+          "EZOGELİN ÇORBA (262 kkal)",
+          "KADINBUDU KÖFTE/PATATES SALATA (1127 kkal)",
+          "ARPA ŞEHRİYE PİLAVI (360 kkal)",
+          "CACIK (94 kkal)"
+        ],
+        "note": null,
+        "calories": "1843 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "KÖYLÜM ÇORBA",
+          "ET TANTUNİ/LAVAŞ/TURŞU",
+          "SOSLU KARIŞIK KIZARTMA",
+          "AYRAN"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-13",
+      "lunch": {
+        "items": [
+          "KIRMIZI MERCİMEK ÇORBA (204 kkal)",
+          "IZGARA TAVUK BUT/SEBZE GARNİTÜR (710 kkal)",
+          "YOĞURTLU MAKARNA (425 kkal)",
+          "MEYVE (80 kkal)"
+        ],
+        "note": null,
+        "calories": "1419 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "ALACA ÇORBA",
+          "İÇLİ KÖFTE",
+          "ZEYTİNYAĞLI TAZE FASULYE",
+          "RED VELVET"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-14",
+      "lunch": {
+        "items": [
+          "MISIR ÇORBA (160 kkal)",
+          "ETLİ KURU FASULYE (410 kkal)",
+          "ŞEHRİYELİ PİRİNÇ PİLAVI/TURŞU (440 kkal)",
+          "LOVE BOMBING (365 kkal)"
+        ],
+        "note": null,
+        "calories": "1375 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "KIRMIZI MERCİMEK ÇORBA",
+          "TAVUK SOTE",
+          "SOSLU MAKARNA",
+          "MEYVE"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-15",
+      "lunch": {
+        "items": [
+          "DÜĞÜRCÜK ÇORBA (196 kkal)",
+          "KÖRİ SOSLU TAVUK/SALATA (613 kkal)",
+          "SOSLU MAKARNA (456 kkal)",
+          "AYRAN (60 kkal)"
+        ],
+        "note": null,
+        "calories": "1325 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "ŞEHRİYE ÇORBA",
+          "ETLİ MEVSİM TÜRLÜ",
+          "SADE PİRİNÇ PİLAVI",
+          "KADAYIFLI MUHALLEBİ"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-16",
+      "lunch": {
+        "items": [
+          "MAHLUTA ÇORBA (204 kkal)",
+          "ÇÖKERTME KEBAP (885 kkal)",
+          "SADE PİRİNÇ PİLAVI (430 kkal)",
+          "KAKAOLU PUDİNG (318 kkal)"
+        ],
+        "note": null,
+        "calories": "1837 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "ANADOLU ÇORBA",
+          "IZGARA TAVUK BAGET/PATATES GARNİTÜR",
+          "SOSLU SPAGETTİ",
+          "MISIRLI AYSBERG SALATA"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-17",
+      "lunch": null,
+      "dinner": {
+        "items": [
+          "DÜĞÜRCÜK ÇORBA",
+          "PİDELİ KÖFTE",
+          "ŞAKŞUKA",
+          "MEYVE"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-18",
+      "lunch": null,
+      "dinner": {
+        "items": [
+          "SEBZE ÇORBA",
+          "ETLİ NOHUT",
+          "ŞEHRİYELİ PİRİNÇ PİLAVI/TURŞU",
+          "KAKAOLU PUDİNG"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-19",
+      "lunch": {
+        "items": [
+          "ŞEHRİYE ÇORBA (161 kkal)",
+          "PİLAV ÜSTÜ TAVUK DÖNER (522 kkal)",
+          "MENEKŞE SALATA (84 kkal)",
+          "AYRAN (60 kkal)"
+        ],
+        "note": null,
+        "calories": "827 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "KIRMIZI MERCİMEK ÇORBA",
+          "ETLİ MEVSİM TÜRLÜ",
+          "BULGUR PİLAVI",
+          "MEYVE"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-20",
+      "lunch": {
+        "items": [
+          "KÖYLÜM ÇORBA (206 kkal)",
+          "KIRKAĞAÇ KÖFTE (533 kkal)",
+          "SOSLU SPAGETTİ (456 kkal)",
+          "TRİLEÇE (375 kkal)"
+        ],
+        "note": null,
+        "calories": "1570 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "EZOGELİN ÇORBA",
+          "ORMAN KEBAP",
+          "CEVİZLİ ERİŞTE",
+          "HAYDARİ"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-21",
+      "lunch": {
+        "items": [
+          "MANTAR ÇORBA (136 kkal)",
+          "TAVUK FAJİTA (524 kkal)",
+          "ŞEHRİYELİ PİRİNÇ PİLAVI (435 kkal)",
+          "MISIRLI AYSBERG SALATA (54 kkal)"
+        ],
+        "note": null,
+        "calories": "1149 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "TARHANA ÇORBA",
+          "İSVEÇ KÖFTE/SEBZE GARNİTÜR",
+          "SOSLU SPAGETTİ",
+          "AYRAN"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-22",
+      "lunch": {
+        "items": [
+          "DOMATES ÇORBA (248 kkal)",
+          "İSKENDER KEBAP (567 kkal)",
+          "ŞAKŞUKA (733 kkal)",
+          "TİRAMİSU (268 kkal)"
+        ],
+        "note": null,
+        "calories": "1816 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "YEŞİL MERCİMEK ÇORBA",
+          "KAJUN BAHARATLI TAVUK/KETÇAP-MAYONEZ",
+          "PEYNİRLİ MAKARNA",
+          "MEYVE"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-23",
+      "lunch": {
+        "items": [
+          "KIRMIZI MERCİMEK ÇORBA (204 kkal)",
+          "LAHMACUN (630 kkal)",
+          "MENEKŞE SALATA (84 kkal)",
+          "AYRAN (60 kkal)"
+        ],
+        "note": null,
+        "calories": "978 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "SEBZE ÇORBA",
+          "ETLİ KURU FASULYE",
+          "ŞEHRİYELİ PİRİNÇ PİLAVI/TURŞU",
+          "TRİLEÇE"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-24",
+      "lunch": null,
+      "dinner": {
+        "items": [
+          "EZOGELİN ÇORBA",
+          "TAVUK TANTUNİ/LAVAŞ",
+          "MENEKŞE SALATA",
+          "AYRAN"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-25",
+      "lunch": null,
+      "dinner": {
+        "items": [
+          "ALACA ÇORBA",
+          "IZGARA KÖFTE/ELMA DİLİM PATATES",
+          "SOSLU MAKARNA",
+          "FRAMBUAZ RÜYASI"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-26",
+      "lunch": {
+        "items": [
+          "ALACA ÇORBA (194 kkal)",
+          "TAVUKLU ÇÖKERTME (969 kkal)",
+          "CEVİZLİ ERİŞTE (412 kkal)",
+          "MEYVE (80 kkal)"
+        ],
+        "note": null,
+        "calories": "1655 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "MISIR ÇORBA",
+          "ETLİ PATATES",
+          "ŞEHRİYELİ PİRİNÇ PİLAVI",
+          "TRAMİSU"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-27",
+      "lunch": {
+        "items": [
+          "SEBZE ÇORBA (150 kkal)",
+          "ETLİ NOHUT (422 kkal)",
+          "ŞEHRİYELİ PİRİNÇ PİLAVI/TURŞU (440 kkal)",
+          "ÇİKOLATALI BROWNİE (440 kkal)"
+        ],
+        "note": null,
+        "calories": "1452 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "EZOGELİN ÇORBA",
+          "SEBZELİ SOSLU TAVUK BİFTEK",
+          "SOSLU MAKARNA",
+          "MEYVE"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-28",
+      "lunch": {
+        "items": [],
+        "note": "YARIM GÜN TATİL",
+        "calories": null
+      },
+      "dinner": {
+        "items": [
+          "ŞEHRİYE ÇORBA",
+          "İZMİR KÖFTE",
+          "BULGUR PİLAVI",
+          "AYRAN"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-29",
+      "lunch": {
+        "items": [],
+        "note": "29 EKİM CUMHURİYET BAYRAMI",
+        "calories": null
+      },
+      "dinner": {
+        "items": [
+          "YOĞURT ÇORBA",
+          "ETLİ KURU FASULYE",
+          "SADE PİRİNÇ PİLAVI/TURŞU",
+          "CEVİZLİ KADAYIF"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-30",
+      "lunch": {
+        "items": [
+          "KIRMIZI MERCİMEK ÇORBA (204 kkal)",
+          "İÇLİ KÖFTE (465 kkal)",
+          "ZEYTİNYAĞLI TAZE FASULYE (159 kkal)",
+          "HALKA TATLI (347 kkal)"
+        ],
+        "note": null,
+        "calories": "1175 KKAL"
+      },
+      "dinner": {
+        "items": [
+          "FESLEĞENLİ DOMATES ÇORBA",
+          "BAHÇEVAN KEBAP",
+          "NOHUTLU PİRİNÇ PİLAVI",
+          "YOĞURT"
+        ],
+        "note": null,
+        "calories": null
+      }
+    },
+    {
+      "date": "2026-10-31",
+      "lunch": null,
+      "dinner": {
+        "items": [
+          "TARHANA ÇORBA",
+          "IZGARA TAVUK BUT/PATATES GARNİTÜR",
+          "SOSLU SPAGETTİ",
+          "MENEKŞE SALATA"
+        ],
+        "note": null,
+        "calories": null
+      }
+    }
+  ]
+}

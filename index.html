@@ -11,7 +11,7 @@
     <meta name="theme-color" content="#134383" id="themeColorMeta" />
     <meta
       name="description"
-      content="Nallıhan MYO ders programı, ödev, sınav sonucu, devamsızlık ve akademik takip uygulaması."
+      content="Nallıhan MYO ders programı, günlük yemek menüsü, ödev, sınav sonucu, devamsızlık ve akademik takip uygulaması."
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Ders Pusulası" />
@@ -36,7 +36,7 @@
       <a class="brand" href="#home" id="brandHomeLink" aria-label="Ders Pusulası ana sayfa">
         <span class="brand-mark" aria-hidden="true">
           <img
-            src="assets/nallihan-myo-logo.png"
+            src="assets/nallihan-myo-logo.webp"
             alt=""
             width="768"
             height="768"
@@ -138,7 +138,7 @@
             </div>
             <img
               class="focus-emblem"
-              src="assets/nallihan-myo-logo.png"
+              src="assets/nallihan-myo-logo.webp"
               alt=""
               aria-hidden="true"
               width="768"
@@ -148,6 +148,42 @@
               <span id="progressBar"></span>
             </div>
           </div>
+
+          <section class="home-menu-preview" aria-labelledby="homeMenuTitle">
+            <div class="home-menu-heading">
+              <div>
+                <p class="section-overline">YEMEK MENÜSÜ</p>
+                <h2 id="homeMenuTitle">Bugün ne var?</h2>
+              </div>
+              <div class="home-menu-actions">
+                <time id="homeMenuDate">Menü yükleniyor</time>
+                <button class="menu-link-button" id="openMenuButton" type="button">
+                  <span>Tüm günler</span>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+                </button>
+              </div>
+            </div>
+            <div class="home-menu-grid">
+              <article class="home-menu-meal">
+                <div class="meal-title-row">
+                  <span class="meal-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 3v7a3 3 0 0 0 3 3V3M7 13v8M12 3v18M12 8h3a4 4 0 0 0 4-4V3" /></svg>
+                  </span>
+                  <h3>Öğle yemeği</h3>
+                </div>
+                <ul id="homeLunchMenu"><li>Menü yükleniyor…</li></ul>
+              </article>
+              <article class="home-menu-meal">
+                <div class="meal-title-row">
+                  <span class="meal-icon dinner" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M12 3v2M4.2 7.2l1.4 1.4M19.8 7.2l-1.4 1.4M3 16h18M5 16a7 7 0 0 1 14 0M3 20h18" /></svg>
+                  </span>
+                  <h3>Akşam yemeği</h3>
+                </div>
+                <ul id="homeDinnerMenu"><li>Menü yükleniyor…</li></ul>
+              </article>
+            </div>
+          </section>
         </div>
       </section>
 
@@ -188,6 +224,62 @@
         </div>
         <div class="day-tabs" id="dayTabs" role="tablist" aria-label="Haftanın günleri"></div>
         <div class="week-list" id="weekList"></div>
+      </section>
+
+      <section
+        class="view-panel menu-section"
+        id="menuView"
+        role="tabpanel"
+        aria-labelledby="menuNavButton"
+        tabindex="0"
+        hidden
+      >
+        <div class="section-heading menu-page-heading">
+          <div>
+            <p class="section-overline">ANKARA ÜNİVERSİTESİ</p>
+            <h2 id="menuTitle">Yemek menüsü</h2>
+          </div>
+          <p class="updated-at" id="menuUpdatedAt"></p>
+        </div>
+
+        <div class="menu-date-toolbar" aria-label="Menü gününü değiştir">
+          <button class="menu-day-arrow" id="previousMenuDay" type="button" aria-label="Önceki gün" title="Önceki gün">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
+          </button>
+          <div class="menu-selected-date">
+            <span id="menuSelectedDay">Gün</span>
+            <strong id="menuSelectedDate">Menü yükleniyor</strong>
+          </div>
+          <button class="menu-today-button" id="menuTodayButton" type="button">Bugün</button>
+          <button class="menu-day-arrow" id="nextMenuDay" type="button" aria-label="Sonraki gün" title="Sonraki gün">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+          </button>
+        </div>
+
+        <div class="menu-date-tabs" id="menuDateTabs" role="tablist" aria-label="Aylık menü günleri"></div>
+        <div class="menu-detail-grid" aria-live="polite">
+          <article class="menu-meal-panel lunch-panel">
+            <div class="menu-meal-heading">
+              <span class="meal-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 3v7a3 3 0 0 0 3 3V3M7 13v8M12 3v18M12 8h3a4 4 0 0 0 4-4V3" /></svg>
+              </span>
+              <div><span>GÜNDÜZ</span><h3>Öğle yemeği</h3></div>
+              <strong id="lunchCalories"></strong>
+            </div>
+            <ol class="menu-items" id="lunchMenuItems"></ol>
+          </article>
+          <article class="menu-meal-panel dinner-panel">
+            <div class="menu-meal-heading">
+              <span class="meal-icon dinner" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 3v2M4.2 7.2l1.4 1.4M19.8 7.2l-1.4 1.4M3 16h18M5 16a7 7 0 0 1 14 0M3 20h18" /></svg>
+              </span>
+              <div><span>AKŞAM</span><h3>Akşam yemeği</h3></div>
+              <strong id="dinnerCalories"></strong>
+            </div>
+            <ol class="menu-items" id="dinnerMenuItems"></ol>
+          </article>
+        </div>
+        <p class="menu-source" id="menuSource"></p>
       </section>
 
       <section
@@ -422,6 +514,20 @@
             <path d="M3 6h.01M3 12h.01M3 18h.01" />
           </svg>
           <span>Tüm Program</span>
+        </button>
+        <button
+          class="bottom-nav-button"
+          id="menuNavButton"
+          type="button"
+          role="tab"
+          aria-selected="false"
+          aria-controls="menuView"
+          data-view="menu"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 3v7a3 3 0 0 0 3 3V3M7 13v8M12 3v18M12 8h3a4 4 0 0 0 4-4V3" />
+          </svg>
+          <span>Yemek Menüsü</span>
         </button>
         <button
           class="bottom-nav-button"
