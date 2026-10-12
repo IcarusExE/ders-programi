@@ -8,6 +8,10 @@
   --wine-dark: #0a2d5c;
   --lime: #e5c97b;
   --line: rgba(19, 67, 131, 0.13);
+  --grid-fine: rgba(19, 67, 131, 0.028);
+  --grid-major: rgba(19, 67, 131, 0.075);
+  --grid-accent: rgba(229, 201, 123, 0.44);
+  --schedule-fill: rgba(255, 255, 255, 0.16);
   --shadow: 0 24px 70px rgba(19, 67, 131, 0.15);
   --radius-xl: 32px;
   --radius-lg: 22px;
@@ -27,6 +31,10 @@ html[data-theme="dark"] {
   --wine-dark: #092a54;
   --lime: #e5c97b;
   --line: rgba(229, 201, 123, 0.18);
+  --grid-fine: rgba(174, 188, 208, 0.035);
+  --grid-major: rgba(174, 188, 208, 0.09);
+  --grid-accent: rgba(229, 201, 123, 0.28);
+  --schedule-fill: rgba(95, 148, 210, 0.035);
   --shadow: 0 24px 70px rgba(0, 7, 19, 0.38);
 }
 
@@ -64,46 +72,77 @@ textarea:focus-visible {
 .background-motion {
   position: fixed;
   z-index: -1;
-  inset: -72px;
+  inset: -120px;
+  overflow: hidden;
   pointer-events: none;
-  opacity: 0.42;
   background-image:
-    linear-gradient(rgba(19, 67, 131, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(19, 67, 131, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, transparent 49.7%, rgba(229, 201, 123, 0.22) 50%, transparent 50.3%);
-  background-size: 72px 72px, 72px 72px, 432px 100%;
+    linear-gradient(var(--grid-fine) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-fine) 1px, transparent 1px),
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px);
+  background-size: 24px 24px, 24px 24px, 120px 120px, 120px 120px;
   will-change: transform;
-  animation: timetable-drift 34s ease-in-out infinite alternate;
+  animation: timetable-drift 38s ease-in-out infinite alternate;
+}
+
+.background-motion::before {
+  content: "";
+  position: absolute;
+  top: 10%;
+  right: -4%;
+  width: min(760px, 62vw);
+  height: min(480px, 54vh);
+  border: 1px solid var(--grid-major);
+  background-color: var(--schedule-fill);
+  background-image:
+    linear-gradient(var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(90deg, transparent 0 39%, var(--grid-accent) 39% 39.35%, transparent 39.35% 100%);
+  background-size: 100% 64px, 96px 100%, 100% 100%;
+  opacity: 0.62;
+  transform: rotate(-8deg);
+  mask-image: linear-gradient(135deg, #000 5%, rgba(0, 0, 0, 0.76) 46%, transparent 86%);
+  -webkit-mask-image: linear-gradient(135deg, #000 5%, rgba(0, 0, 0, 0.76) 46%, transparent 86%);
+}
+
+.background-motion::after {
+  content: "";
+  position: absolute;
+  bottom: 17%;
+  left: 4%;
+  width: min(680px, 58vw);
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--grid-accent) 24%, var(--grid-major) 72%, transparent);
+  box-shadow: 0 120px 0 var(--grid-major), 0 -120px 0 var(--grid-major);
+  opacity: 0.68;
+  transform: rotate(7deg);
 }
 
 .ambient {
   position: fixed;
   z-index: -1;
-  width: 440px;
-  height: 440px;
-  border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.25;
+  height: 170px;
+  filter: blur(76px);
   pointer-events: none;
   will-change: transform;
 }
 
-.ambient-one { top: -170px; right: -130px; background: #9bb8dc; animation: ambient-one-drift 22s ease-in-out infinite alternate; }
-.ambient-two { bottom: 8%; left: -220px; background: #e5c97b; animation: ambient-two-drift 27s ease-in-out infinite alternate; }
+.ambient-one { top: -82px; right: -12vw; width: 68vw; background: rgba(95, 148, 210, 0.3); animation: ambient-one-drift 24s ease-in-out infinite alternate; }
+.ambient-two { bottom: -64px; left: -18vw; width: 62vw; background: rgba(229, 201, 123, 0.26); animation: ambient-two-drift 29s ease-in-out infinite alternate; }
 
 @keyframes timetable-drift {
-  from { transform: translate3d(-28px, -20px, 0); }
-  to { transform: translate3d(28px, 20px, 0); }
+  from { transform: translate3d(-18px, -12px, 0); }
+  to { transform: translate3d(18px, 12px, 0); }
 }
 
 @keyframes ambient-one-drift {
-  from { transform: translate3d(0, 0, 0) scale(0.96); }
-  to { transform: translate3d(-54px, 48px, 0) scale(1.06); }
+  from { transform: translate3d(0, 0, 0) rotate(-7deg); }
+  to { transform: translate3d(-48px, 36px, 0) rotate(-3deg); }
 }
 
 @keyframes ambient-two-drift {
-  from { transform: translate3d(0, 0, 0) scale(1.04); }
-  to { transform: translate3d(62px, -38px, 0) scale(0.96); }
+  from { transform: translate3d(0, 0, 0) rotate(8deg); }
+  to { transform: translate3d(58px, -34px, 0) rotate(4deg); }
 }
 
 .site-header {
@@ -1019,15 +1058,8 @@ html[data-theme="dark"] .theme-icon .sun-icon { display: block; }
 .toast { position: fixed; z-index: 10; right: 22px; bottom: 22px; max-width: min(360px, calc(100% - 44px)); padding: 13px 17px; border-radius: 13px; color: var(--white); background: var(--ink); box-shadow: 0 15px 40px rgba(0,0,0,.2); opacity: 0; transform: translateY(12px); pointer-events: none; transition: 220ms ease; }
 .toast.show { opacity: 1; transform: translateY(0); }
 
-html[data-theme="dark"] .ambient-one { background: #194d88; opacity: 0.28; }
-html[data-theme="dark"] .ambient-two { background: #8b7436; opacity: 0.18; }
-html[data-theme="dark"] .background-motion {
-  opacity: 0.3;
-  background-image:
-    linear-gradient(rgba(174, 188, 208, 0.075) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(174, 188, 208, 0.075) 1px, transparent 1px),
-    linear-gradient(90deg, transparent 49.7%, rgba(229, 201, 123, 0.18) 50%, transparent 50.3%);
-}
+html[data-theme="dark"] .ambient-one { background: rgba(25, 77, 136, 0.38); }
+html[data-theme="dark"] .ambient-two { background: rgba(139, 116, 54, 0.24); }
 html[data-theme="dark"] .settings-button,
 html[data-theme="dark"] .theme-button,
 html[data-theme="dark"] .notification-button { background: rgba(16, 45, 82, 0.72); }
@@ -1342,9 +1374,14 @@ html[data-theme="dark"] .toast { color: #ffffff; background: #123c70; }
 
 @media (max-width: 700px) {
   .background-motion {
-    opacity: 0.3;
-    background-size: 64px 64px, 64px 64px, 320px 100%;
+    inset: -80px;
+    background-size: 22px 22px, 22px 22px, 110px 110px, 110px 110px;
   }
+  .background-motion::before { top: 15%; right: -42%; width: 112vw; height: 44vh; opacity: 0.38; }
+  .background-motion::after { bottom: 20%; left: -18%; width: 86vw; opacity: 0.46; }
+  .ambient { height: 120px; filter: blur(62px); }
+  .ambient-one { right: -34vw; width: 105vw; }
+  .ambient-two { left: -42vw; width: 105vw; }
 }
 
 @media (prefers-reduced-motion: reduce) {
