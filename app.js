@@ -30,6 +30,9 @@ const state = {
   attendanceSearch: "",
   installPrompt: null,
   lastNotificationMinute: null,
+  palette: "classic",
+  englishExempt: false,
+  englishPreferenceSet: false,
 };
 
 const elements = {
@@ -173,10 +176,16 @@ const elements = {
   lessonReminderMinutes: document.querySelector("#lessonReminderMinutes"),
   assignmentRemindersEnabled: document.querySelector("#assignmentRemindersEnabled"),
   assignmentReminderMinutes: document.querySelector("#assignmentReminderMinutes"),
+  paletteOptions: [...document.querySelectorAll(".palette-option")],
+  englishCourseVisible: document.querySelector("#englishCourseVisible"),
+  englishPreferenceDialog: document.querySelector("#englishPreferenceDialog"),
+  englishPreferenceButtons: [...document.querySelectorAll(".english-preference-button")],
 };
 
 const VIEW_INDEX = { home: 0, today: 1, week: 2, menu: 3, assignments: 4, notes: 5, grades: 6, attendance: 7, statistics: 8 };
 const THEME_KEY = "ders-pusulasi-theme";
+const PALETTE_KEY = "ders-pusulasi-palette";
+const ENGLISH_EXEMPT_KEY = "ders-pusulasi-english-exempt";
 const SIDEBAR_KEY = "ders-pusulasi-sidebar-collapsed";
 const ASSIGNMENTS_KEY = "ders-pusulasi-assignments";
 const GRADES_KEY = "ders-pusulasi-grades";
@@ -187,6 +196,12 @@ const NOTIFICATION_PREFERENCES_KEY = "ders-pusulasi-notification-preferences";
 const LOCAL_NOTIFICATIONS_KEY = "ders-pusulasi-local-notifications";
 const PUSH_NOTIFICATIONS_KEY = "ders-pusulasi-push-notifications";
 const MAX_BACKUP_BYTES = 2 * 1024 * 1024;
+const PALETTES = new Set(["classic", "forest", "berry"]);
+const THEME_COLORS = {
+  classic: { light: "#134383", dark: "#07172d" },
+  forest: { light: "#176b5b", dark: "#071b18" },
+  berry: { light: "#8b3156", dark: "#21111a" },
+};
 let tickTimer = null;
 let lastInteractionWasKeyboard = false;
 
@@ -472,12 +487,90 @@ async function handleNotificationPreferenceChange() {
   showToast("Bildirim tercihleri güncellendi.");
 }
 
+function updateThemeColor() {
+  const palette = PALETTES.has(state.palette) ? state.palette : "classic";
+  const theme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+  elements.themeColorMeta.content = THEME_COLORS[palette][theme];
+}
+
+function renderPaletteOptions() {
+  elements.paletteOptions.forEach((button) => {
+    button.setAttribute("aria-checked", String(button.dataset.palette === state.palette));
+  });
+}
+
+function applyPalette(palette, remember = true) {
+  const selectedPalette = PALETTES.has(palette) ? palette : "classic";
+  state.palette = selectedPalette;
+  document.documentElement.dataset.palette = selectedPalette;
+  renderPaletteOptions();
+  updateThemeColor();
+  if (remember) {
+    try {
+      localStorage.setItem(PALETTE_KEY, selectedPalette);
+    } catch (_) {}
+  }
+}
+
+function loadPersonalPreferences() {
+  try {
+    const savedPalette = localStorage.getItem(PALETTE_KEY);
+    state.palette = PALETTES.has(savedPalette) ? savedPalette : "classic";
+    const savedEnglishPreference = localStorage.getItem(ENGLISH_EXEMPT_KEY);
+    state.englishPreferenceSet = savedEnglishPreference === "1" || savedEnglishPreference === "0";
+    state.englishExempt = savedEnglishPreference === "1";
+  } catch (_) {}
+}
+
+function renderEnglishPreference() {
+  elements.englishCourseVisible.checked = !state.englishExempt;
+}
+
+function isEnglishCourse(course) {
+  const code = String(course?.code || "").toLocaleUpperCase("tr-TR");
+  const name = String(course?.name || course?.course || "").toLocaleLowerCase("tr-TR");
+  return code === "YDİ101" || code === "YDI101" || name.includes("yabancı dil") || name.includes("ingilizce");
+}
+
+function visibleScheduleCourses() {
+  if (!state.schedule?.courses) return [];
+  return state.englishExempt ? state.schedule.courses.filter((course) => !isEnglishCourse(course)) : state.schedule.courses;
+}
+
+function visibleAttendanceRecords() {
+  return state.englishExempt
+    ? state.attendanceRecords.filter((record) => !isEnglishCourse(record))
+    : state.attendanceRecords;
+}
+
+async function setEnglishExemption(exempt, { notify = true } = {}) {
+  state.englishExempt = Boolean(exempt);
+  state.englishPreferenceSet = true;
+  try {
+    localStorage.setItem(ENGLISH_EXEMPT_KEY, state.englishExempt ? "1" : "0");
+  } catch (_) {
+    showToast("İngilizce tercihi kaydedilemedi.");
+  }
+  renderEnglishPreference();
+  if (state.schedule) {
+    renderFocus(state.now);
+    renderToday(state.now);
+    renderWeek();
+    populateCourseOptions();
+    synchroniseAttendance();
+    renderAttendance();
+    renderStatistics();
+    await refreshPushSchedule();
+  }
+  if (notify) showToast(state.englishExempt ? "İngilizce dersi programdan gizlendi." : "İngilizce dersi programa eklendi.");
+}
+
 function applyTheme(theme, remember = true) {
   const selectedTheme = theme === "dark" ? "dark" : "light";
   const isDark = selectedTheme === "dark";
   document.documentElement.dataset.theme = selectedTheme;
   document.documentElement.style.colorScheme = selectedTheme;
-  elements.themeColorMeta.content = isDark ? "#07172d" : "#134383";
+  updateThemeColor();
   elements.themeLabel.textContent = isDark ? "Aydınlık mod" : "Koyu mod";
   elements.themeButton.setAttribute("aria-label", isDark ? "Aydınlık moda geç" : "Koyu moda geç");
   elements.themeButton.setAttribute("title", isDark ? "Aydınlık moda geç" : "Koyu moda geç");
@@ -582,7 +675,7 @@ function dateForWeekday(baseDate, weekday, weekOffset = 0) {
 function getOccurrences(now) {
   const occurrences = [];
   for (let weekOffset = 0; weekOffset <= 1; weekOffset += 1) {
-    for (const course of state.schedule.courses) {
+    for (const course of visibleScheduleCourses()) {
       const date = dateForWeekday(now, course.day, weekOffset);
       const start = parseTime(date, course.start);
       const end = parseTime(date, course.end);
@@ -667,7 +760,7 @@ function courseRow(course, active = false) {
 
 function renderToday(now) {
   const today = now.getDay();
-  const courses = state.schedule.courses
+  const courses = visibleScheduleCourses()
     .filter((course) => course.day === today)
     .sort((a, b) => a.start.localeCompare(b.start));
   elements.todayLabel.textContent = `${DAY_NAMES[today].toUpperCase()} · ${new Intl.DateTimeFormat("tr-TR", { day: "numeric", month: "long" }).format(now).toUpperCase()}`;
@@ -695,7 +788,7 @@ function renderTabs() {
 }
 
 function renderWeek() {
-  const courses = state.schedule.courses
+  const courses = visibleScheduleCourses()
     .filter((course) => course.day === state.selectedDay)
     .sort((a, b) => a.start.localeCompare(b.start));
   elements.weekList.innerHTML = courses.length
@@ -1356,7 +1449,7 @@ function populateCourseOptions() {
   const selectedGradeCourse = elements.gradeCourse.value;
   const selectedNoteCourse = elements.noteCourse.value;
   const selectedNoteFilter = elements.noteCourseFilter.value;
-  const courses = [...new Map(state.schedule.courses.map((course) => [course.name, course])).values()]
+  const courses = [...new Map(visibleScheduleCourses().map((course) => [course.name, course])).values()]
     .sort((a, b) => a.name.localeCompare(b.name, "tr"));
   fillCourseSelect(elements.assignmentCourse, courses);
   fillCourseSelect(elements.gradeCourse, courses);
@@ -1742,7 +1835,7 @@ function saveAttendance() {
 
 function uniqueScheduleCourses() {
   if (!state.schedule?.courses) return [];
-  return [...new Map(state.schedule.courses.map((course) => [course.name, course])).values()]
+  return [...new Map(visibleScheduleCourses().map((course) => [course.name, course])).values()]
     .sort((a, b) => a.name.localeCompare(b.name, "tr"));
 }
 
@@ -1864,7 +1957,7 @@ function createAttendanceCard(record) {
 }
 
 function renderAttendance() {
-  const records = state.attendanceRecords;
+  const records = visibleAttendanceRecords();
   const risky = records.filter((record) => attendanceStatus(record).ratio >= 0.75).length;
   elements.attendanceCourseCount.textContent = records.length;
   elements.attendanceUsed.textContent = records.reduce((sum, record) => sum + (Number(record.absent) || 0), 0);
@@ -1935,8 +2028,9 @@ function renderStatistics() {
     ? gradeResults.reduce((sum, result) => sum + result.average, 0) / gradeResults.length
     : null;
   const passed = gradeResults.filter((result) => result.passed).length;
-  const attendanceUsed = state.attendanceRecords.reduce((sum, record) => sum + (Number(record.absent) || 0), 0);
-  const attendanceLimit = state.attendanceRecords.reduce((sum, record) => sum + (Number(record.limit) || 0), 0);
+  const attendanceRecords = visibleAttendanceRecords();
+  const attendanceUsed = attendanceRecords.reduce((sum, record) => sum + (Number(record.absent) || 0), 0);
+  const attendanceLimit = attendanceRecords.reduce((sum, record) => sum + (Number(record.limit) || 0), 0);
   const attendanceRate = attendanceLimit ? Math.round((attendanceUsed / attendanceLimit) * 100) : 0;
   const overdue = state.assignments.filter((item) => !item.completed && new Date(item.dueDate) < new Date()).length;
 
@@ -1950,7 +2044,7 @@ function renderStatistics() {
   const courseNames = new Set([
     ...uniqueScheduleCourses().map((course) => course.name),
     ...state.gradeRecords.map((record) => record.course),
-    ...state.attendanceRecords.map((record) => record.course),
+    ...attendanceRecords.map((record) => record.course),
   ]);
   elements.courseStatistics.replaceChildren();
   if (!courseNames.size) {
@@ -1963,7 +2057,7 @@ function renderStatistics() {
   [...courseNames].sort((a, b) => a.localeCompare(b, "tr")).forEach((courseName) => {
     const grade = state.gradeRecords.find((record) => record.course === courseName);
     const gradeResult = grade ? calculateGrade(grade) : null;
-    const attendance = state.attendanceRecords.find((record) => record.course === courseName);
+    const attendance = attendanceRecords.find((record) => record.course === courseName);
     const assignments = state.assignments.filter((item) => item.course === courseName);
     const completed = assignments.filter((item) => item.completed).length;
     const score = gradeResult?.hasFinal ? Math.max(0, Math.min(100, gradeResult.average)) : null;
@@ -2001,6 +2095,8 @@ function exportAppData() {
       courseNotes: state.notes,
       notificationPreferences: state.notificationPreferences,
       theme: document.documentElement.dataset.theme || "light",
+      palette: state.palette,
+      englishExempt: state.englishExempt,
     },
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
@@ -2026,7 +2122,17 @@ async function importAppData(file) {
     if (backup?.app !== "Ders Pusulası" || backup?.version !== 1 || !backup.data) {
       throw new Error("Bu dosya geçerli bir Ders Pusulası yedeği değil.");
     }
-    const { assignments, grades, gradeLog, attendance, courseNotes = [], notificationPreferences = null, theme } = backup.data;
+    const {
+      assignments,
+      grades,
+      gradeLog,
+      attendance,
+      courseNotes = [],
+      notificationPreferences = null,
+      theme,
+      palette,
+      englishExempt,
+    } = backup.data;
     if (![assignments, grades, gradeLog, attendance].every(Array.isArray)) {
       throw new Error("Yedek dosyasındaki kayıt yapısı geçersiz.");
     }
@@ -2047,6 +2153,8 @@ async function importAppData(file) {
     localStorage.setItem(NOTES_KEY, JSON.stringify(sanitizedData.courseNotes));
     localStorage.setItem(NOTIFICATION_PREFERENCES_KEY, JSON.stringify(sanitizedData.notificationPreferences));
     if (theme === "dark" || theme === "light") localStorage.setItem(THEME_KEY, theme);
+    if (PALETTES.has(palette)) localStorage.setItem(PALETTE_KEY, palette);
+    if (typeof englishExempt === "boolean") localStorage.setItem(ENGLISH_EXEMPT_KEY, englishExempt ? "1" : "0");
     showToast("Yedek geri yüklendi. Sayfa yenileniyor…");
     window.setTimeout(() => location.reload(), 700);
   } catch (error) {
@@ -2168,7 +2276,7 @@ function notificationItemsForPush() {
   if (!state.schedule?.courses) return [];
   const preferences = state.notificationPreferences;
   const courses = preferences.lessonEnabled
-    ? state.schedule.courses.map((course) => ({
+    ? visibleScheduleCourses().map((course) => ({
         ...course,
         type: "course",
         reminderMinutes: preferences.lessonMinutes,
@@ -2385,6 +2493,9 @@ async function init() {
       }
     }
     startTicking();
+    if (!state.englishPreferenceSet) {
+      window.requestAnimationFrame(() => elements.englishPreferenceDialog.showModal());
+    }
   } catch (error) {
     elements.statusPill.textContent = "Bir sorun oluştu";
     elements.focusTitle.textContent = "schedule.json yüklenemedi";
@@ -2408,6 +2519,8 @@ elements.menuTodayButton.addEventListener("click", () => {
 elements.settingsButton.addEventListener("click", () => {
   updateInstallButton();
   renderNotificationPreferences();
+  renderPaletteOptions();
+  renderEnglishPreference();
   elements.settingsDialog.showModal();
 });
 elements.closeSettingsDialog.addEventListener("click", () => elements.settingsDialog.close());
@@ -2484,6 +2597,23 @@ elements.exportDataButton.addEventListener("click", exportAppData);
 elements.importDataButton.addEventListener("click", () => elements.importDataInput.click());
 elements.importDataInput.addEventListener("change", () => importAppData(elements.importDataInput.files[0]));
 elements.installAppButton.addEventListener("click", installApp);
+elements.paletteOptions.forEach((button) => {
+  button.addEventListener("click", () => {
+    applyPalette(button.dataset.palette);
+    showToast("Renk paleti güncellendi.");
+  });
+});
+elements.englishCourseVisible.addEventListener("change", () => {
+  setEnglishExemption(!elements.englishCourseVisible.checked);
+});
+elements.englishPreferenceButtons.forEach((button) => {
+  button.addEventListener("click", async () => {
+    await setEnglishExemption(button.dataset.exempt === "true", { notify: false });
+    elements.englishPreferenceDialog.close();
+    showToast(state.englishExempt ? "İngilizce dersi programdan gizlendi." : "İngilizce dersi programında gösterilecek.");
+  });
+});
+elements.englishPreferenceDialog.addEventListener("cancel", (event) => event.preventDefault());
 [
   elements.lessonRemindersEnabled,
   elements.lessonReminderMinutes,
@@ -2549,9 +2679,12 @@ let sidebarCollapsed = false;
 try {
   sidebarCollapsed = localStorage.getItem(SIDEBAR_KEY) === "1";
 } catch (_) {}
+loadPersonalPreferences();
 applySidebarState(sidebarCollapsed, false);
 switchView(initialView || "home", false);
+applyPalette(state.palette, false);
 applyTheme(document.documentElement.dataset.theme, false);
+renderEnglishPreference();
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js").catch(console.error));

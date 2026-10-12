@@ -842,6 +842,37 @@
           <button class="dialog-close" id="closeSettingsDialog" type="button" aria-label="Ayarları kapat">×</button>
         </div>
         <div class="tool-grid settings-tool-grid">
+          <article class="tool-card appearance-preferences-card">
+            <span class="tool-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 3a9 9 0 1 0 0 18h1.5a2 2 0 0 0 0-4H12a1.5 1.5 0 0 1 0-3h2a7 7 0 0 0 0-14h-2Z" />
+                <circle cx="7.5" cy="10" r=".8" /><circle cx="9.5" cy="6.5" r=".8" /><circle cx="14" cy="6" r=".8" />
+              </svg>
+            </span>
+            <h3>Görünüm ve program</h3>
+            <p>Renk paletini seç ve programında İngilizce dersinin gösterilip gösterilmeyeceğini belirle.</p>
+            <fieldset class="palette-picker">
+              <legend>Renk paleti</legend>
+              <div class="palette-options" id="paletteOptions" role="radiogroup" aria-label="Renk paleti">
+                <button class="palette-option" type="button" role="radio" aria-checked="true" data-palette="classic">
+                  <span class="palette-swatches" aria-hidden="true"><i></i><i></i><i></i></span>
+                  <span>Lacivert</span>
+                </button>
+                <button class="palette-option" type="button" role="radio" aria-checked="false" data-palette="forest">
+                  <span class="palette-swatches" aria-hidden="true"><i></i><i></i><i></i></span>
+                  <span>Zümrüt</span>
+                </button>
+                <button class="palette-option" type="button" role="radio" aria-checked="false" data-palette="berry">
+                  <span class="palette-swatches" aria-hidden="true"><i></i><i></i><i></i></span>
+                  <span>Bordo</span>
+                </button>
+              </div>
+            </fieldset>
+            <label class="setting-toggle english-course-setting" for="englishCourseVisible">
+              <span><strong>İngilizce dersini göster</strong><small>Muafsan kapatarak programdan ve bildirimlerden çıkarabilirsin</small></span>
+              <input id="englishCourseVisible" type="checkbox" checked />
+            </label>
+          </article>
           <article class="tool-card">
             <span class="tool-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">
@@ -915,6 +946,27 @@
           </article>
         </div>
         <p class="data-note">Ödev, ders notu, sınav ve devamsızlık kayıtların bu cihazda tutulur. Bildirim programın Cloudflare'a yalnızca bildirim göndermek amacıyla eşitlenir.</p>
+      </div>
+    </dialog>
+
+    <dialog class="assignment-dialog onboarding-dialog" id="englishPreferenceDialog" aria-labelledby="englishPreferenceTitle" aria-describedby="englishPreferenceDescription">
+      <div class="assignment-form onboarding-content">
+        <span class="onboarding-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5" /><path d="m16 16 2 2 3-4" /></svg>
+        </span>
+        <p class="section-overline">PROGRAMINI KİŞİSELLEŞTİR</p>
+        <h2 id="englishPreferenceTitle">İngilizceden muaf mısın?</h2>
+        <p id="englishPreferenceDescription">Seçimine göre Temel Yabancı Dil dersi programında ve ders bildirimlerinde gösterilecek.</p>
+        <div class="onboarding-actions">
+          <button class="secondary-button english-preference-button" type="button" data-exempt="false">
+            <strong>Dersi alıyorum</strong>
+            <span>Programda göster</span>
+          </button>
+          <button class="primary-button english-preference-button" type="button" data-exempt="true">
+            <strong>Muafım</strong>
+            <span>Programdan gizle</span>
+          </button>
+        </div>
       </div>
     </dialog>
 
