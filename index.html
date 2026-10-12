@@ -510,8 +510,8 @@
           data-view="week"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M8 6h13M8 12h13M8 18h13" />
-            <path d="M3 6h.01M3 12h.01M3 18h.01" />
+            <rect x="3" y="4" width="18" height="16" rx="2" />
+            <path d="M3 10h18M9 4v16M15 4v16" />
           </svg>
           <span>Tüm Program</span>
         </button>
@@ -525,7 +525,8 @@
           data-view="menu"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 3v7a3 3 0 0 0 3 3V3M7 13v8M12 3v18M12 8h3a4 4 0 0 0 4-4V3" />
+            <path d="M4 16a8 8 0 0 1 16 0M2 16h20M5 20h14" />
+            <path d="M12 6V4M10 4h4" />
           </svg>
           <span>Yemek Menüsü</span>
         </button>
@@ -569,8 +570,8 @@
           data-view="grades"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 19V9M10 19V5M16 19v-7M22 19V3" />
-            <path d="M2 19h22" />
+            <path d="m3 8 9-5 9 5-9 5-9-5Z" />
+            <path d="M7 10.5V15c3 2.5 7 2.5 10 0v-4.5M21 8v6" />
           </svg>
           <span>Sınavlar</span>
         </button>
@@ -584,8 +585,8 @@
           data-view="attendance"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 4h16v16H4zM8 2v4M16 2v4M4 9h16" />
-            <path d="m8 14 2 2 5-5" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M3 21v-2a6 6 0 0 1 10.5-4M16 17l2 2 4-5" />
           </svg>
           <span>Devamsızlık</span>
         </button>
@@ -599,8 +600,9 @@
           data-view="statistics"
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 20V10M10 20V4M16 20v-7M22 20V7" />
-            <path d="M2 20h22" />
+            <path d="M3 3v18h18" />
+            <path d="m7 16 4-5 4 3 5-7" />
+            <path d="M17 7h3v3" />
           </svg>
           <span>İstatistikler</span>
         </button>
@@ -840,20 +842,33 @@
         </div>
         <div class="tool-grid settings-tool-grid">
           <article class="tool-card">
-            <span class="tool-icon" aria-hidden="true">↓</span>
+            <span class="tool-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
+              </svg>
+            </span>
             <h3>Verilerini yedekle</h3>
             <p>Ödev, not, devamsızlık ve tercihlerini tek JSON dosyasında indir.</p>
             <button class="primary-button" id="exportDataButton" type="button">Yedeği indir</button>
           </article>
           <article class="tool-card">
-            <span class="tool-icon" aria-hidden="true">↑</span>
+            <span class="tool-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 16V4M7 9l5-5 5 5M5 21h14" />
+              </svg>
+            </span>
             <h3>Yedeği geri yükle</h3>
             <p>Daha önce indirdiğin Ders Pusulası yedeğini bu tarayıcıya aktar.</p>
             <button class="secondary-button" id="importDataButton" type="button">Dosya seç</button>
             <input id="importDataInput" type="file" accept="application/json,.json" hidden />
           </article>
           <article class="tool-card install-card">
-            <span class="tool-icon" aria-hidden="true">＋</span>
+            <span class="tool-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <rect x="3" y="4" width="13" height="16" rx="2" />
+                <path d="M8 17h3M19 8v8M16 13l3 3 3-3" />
+              </svg>
+            </span>
             <h3>Uygulama olarak kur</h3>
             <p id="installDescription">Ders Pusulası'nı ana ekranına ekleyip uygulama gibi aç.</p>
             <button class="primary-button" id="installAppButton" type="button" disabled>Kurulum hazırlanıyor</button>
