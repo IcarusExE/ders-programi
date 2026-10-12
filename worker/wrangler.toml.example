@@ -1,0 +1,16 @@
+name = "ders-pusulasi-push"
+main = "src/index.js"
+compatibility_date = "2026-10-09"
+
+[triggers]
+crons = ["* * * * *"]
+
+[vars]
+ALLOWED_ORIGINS = "https://icarusexe.github.io"
+SITE_URL = "https://icarusexe.github.io/ders-programi"
+VAPID_SUBJECT = "https://icarusexe.github.io/ders-programi/"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ders-pusulasi-push"
+database_id = "D1_DATABASE_ID"
