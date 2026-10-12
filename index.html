@@ -3,6 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://ders-pusulasi-push.kenankuscu.workers.dev; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+    />
+    <meta name="referrer" content="no-referrer" />
     <meta name="theme-color" content="#134383" id="themeColorMeta" />
     <meta
       name="description"
@@ -11,19 +16,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Ders Pusulası" />
     <title>Ders Pusulası</title>
-    <script>
-      (() => {
-        try {
-          const savedTheme = localStorage.getItem("ders-pusulasi-theme");
-          const theme = savedTheme === "dark" || savedTheme === "light"
-            ? savedTheme
-            : matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-          document.documentElement.dataset.theme = theme;
-          document.documentElement.style.colorScheme = theme;
-          document.querySelector("#themeColorMeta").content = theme === "dark" ? "#07172d" : "#134383";
-        } catch (_) {}
-      })();
-    </script>
+    <script src="theme-init.js"></script>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="assets/icon-192.png" />
     <link rel="manifest" href="manifest.webmanifest" />
@@ -124,7 +117,7 @@
             </p>
           </div>
 
-          <div class="focus-card" id="focusCard" aria-live="polite">
+          <div class="focus-card" id="focusCard">
             <div class="focus-topline">
               <span class="status-pill" id="statusPill">Program yükleniyor</span>
               <span class="live-clock" id="liveClock">--:--</span>
@@ -760,7 +753,12 @@
             <button class="primary-button" id="installAppButton" type="button" disabled>Kurulum hazırlanıyor</button>
           </article>
           <article class="tool-card notification-preferences-card">
-            <span class="tool-icon" aria-hidden="true">🔔</span>
+            <span class="tool-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                <path d="M10 21h4" />
+              </svg>
+            </span>
             <h3>Bildirim tercihleri</h3>
             <div class="notification-setting">
               <label class="setting-toggle" for="lessonRemindersEnabled">

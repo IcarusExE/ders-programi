@@ -27,6 +27,7 @@ const state = {
   attendanceRecords: [],
   attendanceSearch: "",
   installPrompt: null,
+  lastNotificationMinute: null,
 };
 
 const elements = {
@@ -166,6 +167,168 @@ const NOTES_KEY = "ders-pusulasi-course-notes";
 const NOTIFICATION_PREFERENCES_KEY = "ders-pusulasi-notification-preferences";
 const LOCAL_NOTIFICATIONS_KEY = "ders-pusulasi-local-notifications";
 const PUSH_NOTIFICATIONS_KEY = "ders-pusulasi-push-notifications";
+const MAX_BACKUP_BYTES = 2 * 1024 * 1024;
+
+function cleanText(value, maxLength = 500) {
+  return String(value ?? "").trim().slice(0, maxLength);
+}
+
+function validDateText(value, fallback = "") {
+  const text = cleanText(value, 50);
+  return text && !Number.isNaN(new Date(text).getTime()) ? text : fallback;
+}
+
+function boundedInteger(value, minimum, maximum, fallback = null) {
+  const number = Number(value);
+  return Number.isInteger(number) && number >= minimum && number <= maximum ? number : fallback;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  })[character]);
+}
+
+function sanitizeSchedule(rawSchedule) {
+  if (!rawSchedule || typeof rawSchedule !== "object" || !Array.isArray(rawSchedule.courses)) {
+    throw new Error("Program biçimi geçersiz");
+  }
+  const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+  const courses = rawSchedule.courses.slice(0, 100).flatMap((course) => {
+    const day = boundedInteger(course?.day, 0, 6);
+    const start = cleanText(course?.start, 5);
+    const end = cleanText(course?.end, 5);
+    const name = cleanText(course?.name, 160);
+    if (day === null || !timePattern.test(start) || !timePattern.test(end) || start >= end || !name) return [];
+    return [{
+      day,
+      start,
+      end,
+      name,
+      code: cleanText(course?.code, 40),
+      room: cleanText(course?.room, 120),
+      instructor: cleanText(course?.instructor, 160),
+    }];
+  });
+  if (!courses.length) throw new Error("Programda geçerli ders bulunamadı");
+  return {
+    school: cleanText(rawSchedule.school, 160) || "Nallıhan Meslek Yüksekokulu",
+    department: cleanText(rawSchedule.department, 160) || "Bilgisayar Programcılığı",
+    classLevel: cleanText(rawSchedule.classLevel, 80),
+    timezone: cleanText(rawSchedule.timezone, 80) || "Europe/Istanbul",
+    updatedAt: cleanText(rawSchedule.updatedAt, 80),
+    courses,
+  };
+}
+
+function sanitizeAssignments(items) {
+  if (!Array.isArray(items)) return [];
+  const identifiers = new Set();
+  return items.slice(0, 500).flatMap((item) => {
+    const id = cleanText(item?.id, 100);
+    const title = cleanText(item?.title, 100);
+    const dueDate = validDateText(item?.dueDate);
+    if (!id || identifiers.has(id) || !title || !dueDate) return [];
+    identifiers.add(id);
+    return [{
+      id,
+      title,
+      course: cleanText(item?.course, 160),
+      description: cleanText(item?.description, 3000),
+      priority: ["low", "medium", "high"].includes(item?.priority) ? item.priority : "medium",
+      dueDate,
+      completed: item?.completed === true,
+      createdAt: validDateText(item?.createdAt, new Date().toISOString()),
+      updatedAt: validDateText(item?.updatedAt, new Date().toISOString()),
+    }];
+  });
+}
+
+function sanitizeNotes(items) {
+  if (!Array.isArray(items)) return [];
+  const identifiers = new Set();
+  return items.slice(0, 500).flatMap((item) => {
+    const id = cleanText(item?.id, 100);
+    const course = cleanText(item?.course, 160);
+    const title = cleanText(item?.title, 120);
+    const content = cleanText(item?.content, 10000);
+    if (!id || identifiers.has(id) || !course || !title || !content) return [];
+    identifiers.add(id);
+    return [{
+      id,
+      course,
+      title,
+      content,
+      link: safeNoteUrl(cleanText(item?.link, 1000)),
+      createdAt: validDateText(item?.createdAt, new Date().toISOString()),
+      updatedAt: validDateText(item?.updatedAt, new Date().toISOString()),
+    }];
+  });
+}
+
+function sanitizeGradeRecords(items) {
+  if (!Array.isArray(items)) return [];
+  const courses = new Set();
+  return items.slice(0, 200).flatMap((item) => {
+    const id = cleanText(item?.id, 100);
+    const course = cleanText(item?.course, 160);
+    const midtermGrade = boundedInteger(item?.midtermGrade, 0, 100);
+    const midtermWeight = boundedInteger(item?.midtermWeight, 0, 100);
+    const finalWeight = boundedInteger(item?.finalWeight, 1, 100);
+    const passingGrade = boundedInteger(item?.passingGrade, 0, 100);
+    const minimumFinal = boundedInteger(item?.minimumFinal, 0, 100);
+    const finalProvided = item?.finalGrade !== null && item?.finalGrade !== "";
+    const finalGrade = !finalProvided
+      ? null
+      : boundedInteger(item?.finalGrade, 0, 100);
+    if (!id || !course || courses.has(course) || [midtermGrade, midtermWeight, finalWeight, passingGrade, minimumFinal].includes(null) || (finalProvided && finalGrade === null)) return [];
+    courses.add(course);
+    return [{
+      id,
+      course,
+      midtermGrade,
+      midtermWeight,
+      finalGrade,
+      finalWeight,
+      passingGrade,
+      minimumFinal,
+      createdAt: validDateText(item?.createdAt, new Date().toISOString()),
+      updatedAt: validDateText(item?.updatedAt, new Date().toISOString()),
+    }];
+  });
+}
+
+function sanitizeGradeLog(items) {
+  if (!Array.isArray(items)) return [];
+  return items.slice(0, 50).flatMap((item) => {
+    const id = cleanText(item?.id, 100);
+    const message = cleanText(item?.message, 500);
+    if (!id || !message) return [];
+    return [{ id, message, createdAt: validDateText(item?.createdAt, new Date().toISOString()) }];
+  });
+}
+
+function sanitizeAttendanceRecords(items) {
+  if (!Array.isArray(items)) return [];
+  const courses = new Set();
+  return items.slice(0, 200).flatMap((item) => {
+    const course = cleanText(item?.course, 160);
+    if (!course || courses.has(course)) return [];
+    courses.add(course);
+    return [{
+      course,
+      code: cleanText(item?.code, 40),
+      absent: boundedInteger(item?.absent, 0, 999, 0),
+      limit: boundedInteger(item?.limit, 1, 999, 4),
+      note: cleanText(item?.note, 500),
+      updatedAt: validDateText(item?.updatedAt, new Date().toISOString()),
+    }];
+  });
+}
 
 function pushApiUrl() {
   return String(window.DERS_PUSULASI_PUSH?.apiUrl || "").trim().replace(/\/$/, "");
@@ -182,17 +345,20 @@ function urlBase64ToUint8Array(value) {
   return Uint8Array.from(decoded, (character) => character.charCodeAt(0));
 }
 
+function sanitizeNotificationPreferences(value) {
+  const saved = value && typeof value === "object" ? value : {};
+  return {
+    lessonEnabled: saved.lessonEnabled !== false,
+    lessonMinutes: [5, 10, 15, 30, 60].includes(Number(saved.lessonMinutes)) ? Number(saved.lessonMinutes) : 15,
+    assignmentEnabled: saved.assignmentEnabled !== false,
+    assignmentMinutes: [60, 360, 720, 1440, 2880].includes(Number(saved.assignmentMinutes)) ? Number(saved.assignmentMinutes) : 1440,
+  };
+}
+
 function loadNotificationPreferences() {
   try {
     const saved = JSON.parse(localStorage.getItem(NOTIFICATION_PREFERENCES_KEY) || "null");
-    if (saved && typeof saved === "object") {
-      state.notificationPreferences = {
-        lessonEnabled: saved.lessonEnabled !== false,
-        lessonMinutes: [5, 10, 15, 30, 60].includes(Number(saved.lessonMinutes)) ? Number(saved.lessonMinutes) : 15,
-        assignmentEnabled: saved.assignmentEnabled !== false,
-        assignmentMinutes: [60, 360, 720, 1440, 2880].includes(Number(saved.assignmentMinutes)) ? Number(saved.assignmentMinutes) : 1440,
-      };
-    }
+    state.notificationPreferences = sanitizeNotificationPreferences(saved);
   } catch (_) {}
 }
 
@@ -400,12 +566,21 @@ function renderFocus(now) {
 function courseRow(course, active = false) {
   return `
     <article class="course-row${active ? " active" : ""}">
-      <div class="course-time">${formatClockTime(course.start)}<small>${formatClockTime(course.end)}'e kadar</small></div>
-      <div class="course-main">
-        <h3>${course.name}</h3>
-        <p>${courseMeta(course) || "Derslik bilgisi eklenmedi"}</p>
+      <div class="course-time">
+        <span class="course-time-item">
+          <small>BAŞLANGIÇ</small>
+          <strong>${formatClockTime(course.start)}</strong>
+        </span>
+        <span class="course-time-item course-end-time">
+          <small>BİTİŞ</small>
+          <strong>${formatClockTime(course.end)}</strong>
+        </span>
       </div>
-      <span class="course-code">${active ? "ŞİMDİ" : course.code || "DERS"}</span>
+      <div class="course-main">
+        <h3>${escapeHtml(course.name)}</h3>
+        <p>${escapeHtml(courseMeta(course) || "Derslik bilgisi eklenmedi")}</p>
+      </div>
+      <span class="course-code">${escapeHtml(active ? "ŞİMDİ" : course.code || "DERS")}</span>
     </article>`;
 }
 
@@ -450,9 +625,7 @@ function renderWeek() {
 function loadAssignments() {
   try {
     const saved = JSON.parse(localStorage.getItem(ASSIGNMENTS_KEY) || "[]");
-    state.assignments = Array.isArray(saved)
-      ? saved.filter((assignment) => assignment && assignment.id && assignment.title && assignment.dueDate && !Number.isNaN(new Date(assignment.dueDate).getTime()))
-      : [];
+    state.assignments = sanitizeAssignments(saved);
   } catch (_) {
     state.assignments = [];
   }
@@ -802,9 +975,7 @@ function deleteAssignment(id) {
 function loadNotes() {
   try {
     const saved = JSON.parse(localStorage.getItem(NOTES_KEY) || "[]");
-    state.notes = Array.isArray(saved)
-      ? saved.filter((note) => note && note.id && note.course && note.title && note.content)
-      : [];
+    state.notes = sanitizeNotes(saved);
   } catch (_) {
     state.notes = [];
   }
@@ -1024,10 +1195,8 @@ function loadGrades() {
   try {
     const savedGrades = JSON.parse(localStorage.getItem(GRADES_KEY) || "[]");
     const savedLog = JSON.parse(localStorage.getItem(GRADE_LOG_KEY) || "[]");
-    state.gradeRecords = Array.isArray(savedGrades)
-      ? savedGrades.filter((record) => record && record.id && record.course)
-      : [];
-    state.gradeLog = Array.isArray(savedLog) ? savedLog.slice(0, 50) : [];
+    state.gradeRecords = sanitizeGradeRecords(savedGrades);
+    state.gradeLog = sanitizeGradeLog(savedLog);
   } catch (_) {
     state.gradeRecords = [];
     state.gradeLog = [];
@@ -1334,16 +1503,7 @@ function deleteGradeRecord(id) {
 function loadAttendance() {
   try {
     const saved = JSON.parse(localStorage.getItem(ATTENDANCE_KEY) || "[]");
-    state.attendanceRecords = Array.isArray(saved)
-      ? saved.filter((record) => record && record.course).map((record) => ({
-          ...record,
-          course: String(record.course),
-          code: String(record.code || ""),
-          absent: Math.max(0, Number(record.absent) || 0),
-          limit: Math.max(1, Number(record.limit) || 4),
-          note: String(record.note || ""),
-        }))
-      : [];
+    state.attendanceRecords = sanitizeAttendanceRecords(saved);
   } catch (_) {
     state.attendanceRecords = [];
   }
@@ -1427,12 +1587,18 @@ function createAttendanceCard(record) {
 
   const numbers = document.createElement("div");
   numbers.className = "attendance-numbers";
-  const used = document.createElement("div");
-  used.innerHTML = `<strong>${Number(record.absent) || 0}</strong><span>Kullanılan</span>`;
-  const left = document.createElement("div");
-  left.innerHTML = `<strong>${remaining}</strong><span>Kalan hak</span>`;
-  const total = document.createElement("div");
-  total.innerHTML = `<strong>${Number(record.limit) || 0}</strong><span>Sınır</span>`;
+  const attendanceNumber = (value, label) => {
+    const container = document.createElement("div");
+    const strong = document.createElement("strong");
+    const span = document.createElement("span");
+    strong.textContent = value;
+    span.textContent = label;
+    container.append(strong, span);
+    return container;
+  };
+  const used = attendanceNumber(Number(record.absent) || 0, "Kullanılan");
+  const left = attendanceNumber(remaining, "Kalan hak");
+  const total = attendanceNumber(Number(record.limit) || 0, "Sınır");
   numbers.append(used, left, total);
 
   const progress = document.createElement("div");
@@ -1630,6 +1796,9 @@ function exportAppData() {
 async function importAppData(file) {
   if (!file) return;
   try {
+    if (file.size > MAX_BACKUP_BYTES) {
+      throw new Error("Yedek dosyası en fazla 2 MB olabilir.");
+    }
     const backup = JSON.parse(await file.text());
     if (backup?.app !== "Ders Pusulası" || backup?.version !== 1 || !backup.data) {
       throw new Error("Bu dosya geçerli bir Ders Pusulası yedeği değil.");
@@ -1639,15 +1808,21 @@ async function importAppData(file) {
       throw new Error("Yedek dosyasındaki kayıt yapısı geçersiz.");
     }
     if (!Array.isArray(courseNotes)) throw new Error("Yedekteki ders notları geçersiz.");
+    const sanitizedData = {
+      assignments: sanitizeAssignments(assignments),
+      grades: sanitizeGradeRecords(grades),
+      gradeLog: sanitizeGradeLog(gradeLog),
+      attendance: sanitizeAttendanceRecords(attendance),
+      courseNotes: sanitizeNotes(courseNotes),
+      notificationPreferences: sanitizeNotificationPreferences(notificationPreferences),
+    };
     if (!window.confirm("Bu yedek mevcut ödev, ders notu, sınav ve devamsızlık kayıtlarının üzerine yazacak. Devam edilsin mi?")) return;
-    localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(assignments));
-    localStorage.setItem(GRADES_KEY, JSON.stringify(grades));
-    localStorage.setItem(GRADE_LOG_KEY, JSON.stringify(gradeLog));
-    localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(attendance));
-    localStorage.setItem(NOTES_KEY, JSON.stringify(courseNotes));
-    if (notificationPreferences && typeof notificationPreferences === "object") {
-      localStorage.setItem(NOTIFICATION_PREFERENCES_KEY, JSON.stringify(notificationPreferences));
-    }
+    localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(sanitizedData.assignments));
+    localStorage.setItem(GRADES_KEY, JSON.stringify(sanitizedData.grades));
+    localStorage.setItem(GRADE_LOG_KEY, JSON.stringify(sanitizedData.gradeLog));
+    localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(sanitizedData.attendance));
+    localStorage.setItem(NOTES_KEY, JSON.stringify(sanitizedData.courseNotes));
+    localStorage.setItem(NOTIFICATION_PREFERENCES_KEY, JSON.stringify(sanitizedData.notificationPreferences));
     if (theme === "dark" || theme === "light") localStorage.setItem(THEME_KEY, theme);
     showToast("Yedek geri yüklendi. Sayfa yenileniyor…");
     window.setTimeout(() => location.reload(), 700);
@@ -1696,11 +1871,25 @@ function showToast(message) {
 }
 
 function notificationKey(course) {
-  return `notified:${course.code}:${course.startDate.toISOString().slice(0, 10)}:${course.start}:${state.notificationPreferences.lessonMinutes}`;
+  return `notified:${course.code || course.name}:${course.startDate.toISOString().slice(0, 10)}:${course.start}:${state.notificationPreferences.lessonMinutes}`;
 }
 
 function assignmentNotificationKey(assignment) {
   return `notified:assignment:${assignment.id}:${assignment.dueDate}:${state.notificationPreferences.assignmentMinutes}`;
+}
+
+function cleanupNotificationHistory() {
+  const cutoff = new Date(Date.now() - 45 * 86400000);
+  try {
+    const keysToRemove = [];
+    for (let index = 0; index < localStorage.length; index += 1) {
+      const key = localStorage.key(index);
+      if (!key?.startsWith("notified:")) continue;
+      const dateMatch = key.match(/\d{4}-\d{2}-\d{2}/);
+      if (dateMatch && new Date(`${dateMatch[0]}T00:00:00`).getTime() < cutoff.getTime()) keysToRemove.push(key);
+    }
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+  } catch (_) {}
 }
 
 function checkNotifications(now) {
@@ -1912,19 +2101,18 @@ async function updateNotificationButton() {
 function tick() {
   const previousDay = state.now.getDay();
   state.now = new Date();
-  elements.liveClock.textContent = state.now.toLocaleTimeString("tr-TR", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hourCycle: "h23",
-  });
   renderFocus(state.now);
-  checkNotifications(state.now);
+  const notificationMinute = Math.floor(state.now.getTime() / 60000);
+  if (state.lastNotificationMinute !== notificationMinute) {
+    state.lastNotificationMinute = notificationMinute;
+    checkNotifications(state.now);
+  }
   if (state.now.getDay() !== previousDay) renderToday(state.now);
   if (state.activeView === "assignments" && state.now.getSeconds() === 0) renderAssignments();
 }
 
 async function init() {
+  cleanupNotificationHistory();
   loadNotificationPreferences();
   renderNotificationPreferences();
   loadAssignments();
@@ -1940,8 +2128,7 @@ async function init() {
   try {
     const response = await fetch("schedule.json", { cache: "no-store" });
     if (!response.ok) throw new Error("Program dosyası okunamadı");
-    state.schedule = await response.json();
-    if (!Array.isArray(state.schedule.courses)) throw new Error("Program biçimi geçersiz");
+    state.schedule = sanitizeSchedule(await response.json());
 
     const today = new Date().getDay();
     state.selectedDay = WEEK_DAYS.includes(today) ? today : 1;
@@ -1970,7 +2157,10 @@ async function init() {
     elements.statusPill.textContent = "Bir sorun oluştu";
     elements.focusTitle.textContent = "schedule.json yüklenemedi";
     elements.focusKicker.textContent = "Dosya yapısını kontrol et";
-    elements.todayList.innerHTML = `<div class="empty-state">${error.message}</div>`;
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = error.message || "Program yüklenemedi.";
+    elements.todayList.replaceChildren(empty);
     console.error(error);
   }
 }

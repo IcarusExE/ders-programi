@@ -1,7 +1,8 @@
-const CACHE_NAME = "ders-pusulasi-v22";
+const CACHE_NAME = "ders-pusulasi-v26";
 const ASSETS = [
   "./",
   "./index.html",
+  "./theme-init.js",
   "./styles.css",
   "./app.js",
   "./push-config.js",
@@ -12,6 +13,18 @@ const ASSETS = [
   "./assets/icon-512.png",
   "./assets/nallihan-myo-logo.png",
 ];
+const OFFLINE_PAGE = new URL("./index.html", self.registration.scope).href;
+const SCHEDULE_URL = new URL("./schedule.json", self.registration.scope).href;
+const CACHEABLE_URLS = new Set(ASSETS.map((asset) => new URL(asset, self.registration.scope).href));
+
+async function fetchAndCache(request, cacheKey = request) {
+  const response = await fetch(request);
+  if (response.ok && response.type === "basic") {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put(cacheKey, response.clone());
+  }
+  return response;
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
@@ -27,14 +40,22 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  const requestUrl = new URL(event.request.url);
+  if (requestUrl.origin !== self.location.origin) return;
+
+  if (event.request.mode === "navigate") {
+    event.respondWith(fetchAndCache(event.request, OFFLINE_PAGE).catch(() => caches.match(OFFLINE_PAGE)));
+    return;
+  }
+
+  if (!CACHEABLE_URLS.has(requestUrl.href)) return;
+  if (requestUrl.href === SCHEDULE_URL) {
+    event.respondWith(fetchAndCache(event.request).catch(() => caches.match(event.request)));
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
-        return response;
-      })
-      .catch(() => caches.match(event.request))
+    caches.match(event.request).then((cached) => cached || fetchAndCache(event.request))
   );
 });
 
@@ -59,7 +80,10 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const targetUrl = new URL(event.notification.data?.url || "./#home", self.location.origin).href;
+  const requestedUrl = new URL(event.notification.data?.url || "./#home", self.registration.scope);
+  const targetUrl = requestedUrl.origin === self.location.origin && requestedUrl.href.startsWith(self.registration.scope)
+    ? requestedUrl.href
+    : new URL("./#home", self.registration.scope).href;
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (clients) => {
       const appClient = clients.find((client) => client.url.startsWith(self.registration.scope));

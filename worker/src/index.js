@@ -2,15 +2,32 @@ import { buildPushPayload } from "@block65/webcrypto-web-push";
 
 const ISTANBUL_TIMEZONE = "Europe/Istanbul";
 const WEEKDAY_INDEX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+const MAX_REQUEST_BYTES = 128 * 1024;
+const SECURITY_HEADERS = {
+  "cache-control": "no-store",
+  "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+  "referrer-policy": "no-referrer",
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+};
 
 function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
       "content-type": "application/json; charset=utf-8",
+      ...SECURITY_HEADERS,
       ...extraHeaders,
     },
   });
+}
+
+async function readJson(request) {
+  const declaredLength = Number(request.headers.get("content-length") || 0);
+  if (declaredLength > MAX_REQUEST_BYTES) throw new Error("İstek çok büyük.");
+  const text = await request.text();
+  if (!text || new TextEncoder().encode(text).byteLength > MAX_REQUEST_BYTES) throw new Error("Geçersiz istek.");
+  return JSON.parse(text);
 }
 
 function allowedOrigin(request, env) {
@@ -82,12 +99,42 @@ function validateSubscription(value) {
   const endpoint = String(value?.endpoint || "");
   const p256dh = String(value?.keys?.p256dh || "");
   const auth = String(value?.keys?.auth || "");
-  if (!endpoint.startsWith("https://") || endpoint.length > 2048 || !p256dh || !auth) return null;
+  let endpointUrl;
+  try {
+    endpointUrl = new URL(endpoint);
+  } catch (_) {
+    return null;
+  }
+  const hostname = endpointUrl.hostname.toLowerCase();
+  const keyPattern = /^[A-Za-z0-9_-]+$/;
+  const invalidHost = hostname === "localhost"
+    || hostname.endsWith(".localhost")
+    || /^\d{1,3}(?:\.\d{1,3}){3}$/.test(hostname)
+    || hostname.includes(":");
+  if (
+    endpointUrl.protocol !== "https:"
+    || endpointUrl.username
+    || endpointUrl.password
+    || (endpointUrl.port && endpointUrl.port !== "443")
+    || endpoint.length > 2048
+    || invalidHost
+    || p256dh.length < 40
+    || p256dh.length > 256
+    || auth.length < 16
+    || auth.length > 128
+    || !keyPattern.test(p256dh)
+    || !keyPattern.test(auth)
+  ) return null;
   return { endpoint, expirationTime: value?.expirationTime || null, keys: { p256dh, auth } };
 }
 
 async function saveSubscription(request, env, headers) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await readJson(request);
+  } catch (_) {
+    return json({ error: "Geçersiz veya çok büyük istek." }, 400, headers);
+  }
   const subscription = validateSubscription(body.subscription);
   const schedule = sanitizeSchedule(body.schedule);
   if (!subscription || !Array.isArray(body.schedule)) {
@@ -120,9 +167,20 @@ async function saveSubscription(request, env, headers) {
 }
 
 async function removeSubscription(request, env, headers) {
-  const body = await request.json();
+  let body;
+  try {
+    body = await readJson(request);
+  } catch (_) {
+    return json({ error: "Geçersiz istek." }, 400, headers);
+  }
   const endpoint = String(body.endpoint || "");
-  if (!endpoint.startsWith("https://")) return json({ error: "Geçersiz abonelik." }, 400, headers);
+  let endpointUrl;
+  try {
+    endpointUrl = new URL(endpoint);
+  } catch (_) {
+    return json({ error: "Geçersiz abonelik." }, 400, headers);
+  }
+  if (endpointUrl.protocol !== "https:" || endpoint.length > 2048) return json({ error: "Geçersiz abonelik." }, 400, headers);
   await env.DB.prepare("DELETE FROM subscriptions WHERE id = ?1")
     .bind(await endpointId(endpoint))
     .run();
@@ -156,14 +214,14 @@ function dueNotifications(schedule, now) {
     if (item.type === "assignment") {
       const dueAt = new Date(item.dueAt);
       const difference = Math.ceil((dueAt - now) / 60000);
-      return difference === item.reminderMinutes || difference === item.reminderMinutes - 1
+      return difference <= item.reminderMinutes && difference >= item.reminderMinutes - 2
         ? [{ ...item, dateKey: item.dueAt }]
         : [];
     }
     if (item.day !== local.weekday) return [];
     const [hours, minutes] = item.start.split(":").map(Number);
     const difference = hours * 60 + minutes - local.minutes;
-    return difference === item.reminderMinutes || difference === item.reminderMinutes - 1
+    return difference <= item.reminderMinutes && difference >= item.reminderMinutes - 2
       ? [{ ...item, dateKey: local.dateKey }]
       : [];
   });
@@ -252,6 +310,8 @@ async function runScheduledNotifications(env) {
   }
   const cutoff = new Date(Date.now() - 35 * 86400000).toISOString();
   await env.DB.prepare("DELETE FROM notification_log WHERE sent_at < ?1").bind(cutoff).run();
+  const staleSubscriptionCutoff = new Date(Date.now() - 180 * 86400000).toISOString();
+  await env.DB.prepare("DELETE FROM subscriptions WHERE updated_at < ?1").bind(staleSubscriptionCutoff).run();
 }
 
 async function handleRequest(request, env) {
@@ -261,7 +321,7 @@ async function handleRequest(request, env) {
   const origin = allowedOrigin(request, env);
   if (!origin) return json({ error: "Bu origin için erişim izni yok." }, 403);
   const headers = corsHeaders(origin);
-  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
+  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: { ...SECURITY_HEADERS, ...headers } });
 
   if (url.pathname === "/config" && request.method === "GET") {
     return json({ vapidPublicKey: env.VAPID_SERVER_PUBLIC_KEY }, 200, headers);
