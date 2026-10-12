@@ -188,6 +188,25 @@ const LOCAL_NOTIFICATIONS_KEY = "ders-pusulasi-local-notifications";
 const PUSH_NOTIFICATIONS_KEY = "ders-pusulasi-push-notifications";
 const MAX_BACKUP_BYTES = 2 * 1024 * 1024;
 let tickTimer = null;
+let lastInteractionWasKeyboard = false;
+
+document.addEventListener("keydown", () => {
+  lastInteractionWasKeyboard = true;
+}, true);
+
+document.addEventListener("pointerdown", () => {
+  lastInteractionWasKeyboard = false;
+}, true);
+
+function clearPointerRestoredFocus(dialog) {
+  if (lastInteractionWasKeyboard) return;
+  requestAnimationFrame(() => {
+    const focusedElement = document.activeElement;
+    if (focusedElement instanceof HTMLElement && focusedElement !== document.body && !dialog.contains(focusedElement)) {
+      focusedElement.blur();
+    }
+  });
+}
 
 function cleanText(value, maxLength = 500) {
   return String(value ?? "").trim().slice(0, maxLength);
@@ -2396,6 +2415,7 @@ elements.settingsDialog.addEventListener("click", (event) => {
 elements.addAssignmentButton.addEventListener("click", () => openAssignmentDialog());
 elements.closeAssignmentDialog.addEventListener("click", closeAssignmentDialog);
 elements.cancelAssignmentButton.addEventListener("click", closeAssignmentDialog);
+elements.assignmentDialog.addEventListener("close", () => clearPointerRestoredFocus(elements.assignmentDialog));
 elements.assignmentForm.addEventListener("submit", handleAssignmentSubmit);
 elements.assignmentSearch.addEventListener("input", () => {
   state.assignmentSearch = elements.assignmentSearch.value;
@@ -2404,6 +2424,7 @@ elements.assignmentSearch.addEventListener("input", () => {
 elements.addNoteButton.addEventListener("click", () => openNoteDialog());
 elements.closeNoteDialog.addEventListener("click", closeNoteDialog);
 elements.cancelNoteButton.addEventListener("click", closeNoteDialog);
+elements.noteDialog.addEventListener("close", () => clearPointerRestoredFocus(elements.noteDialog));
 elements.noteForm.addEventListener("submit", handleNoteSubmit);
 elements.noteDialog.addEventListener("click", (event) => {
   if (event.target === elements.noteDialog) closeNoteDialog();
