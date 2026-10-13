@@ -219,11 +219,14 @@ const HIGH_CONTRAST_KEY = "ders-pusulasi-high-contrast";
 const REDUCED_MOTION_KEY = "ders-pusulasi-reduced-motion";
 const MAX_BACKUP_BYTES = 2 * 1024 * 1024;
 const CLOUD_BACKUP_CODE_PREFIX = "DP1";
-const PALETTES = new Set(["classic", "forest", "berry"]);
+const PALETTES = new Set(["classic", "forest", "berry", "sunset", "violet", "ocean"]);
 const THEME_COLORS = {
   classic: { light: "#134383", dark: "#07172d" },
   forest: { light: "#176b5b", dark: "#071b18" },
   berry: { light: "#8b3156", dark: "#21111a" },
+  sunset: { light: "#a33f24", dark: "#24120d" },
+  violet: { light: "#5b3f99", dark: "#171126" },
+  ocean: { light: "#006979", dark: "#071d22" },
 };
 let tickTimer = null;
 let lastInteractionWasKeyboard = false;

@@ -37,7 +37,7 @@
 | Günün dersleri ve canlı geri sayım | Ödev oluşturma, filtreleme ve tamamlama |
 | Haftalık ders programı | Ders notları ve kaynak bağlantıları |
 | Günlük öğle ve akşam menüsü | Sınav sonucu ve hedef final hesabı |
-| Açık/koyu tema ve renk paletleri | Devamsızlık ve risk takibi |
+| Açık/koyu tema ve altı renk paleti | Devamsızlık ve risk takibi |
 | Çevrimdışı PWA ve sürüm güncelleme bildirimi | Ders bazlı istatistikler |
 | Ders ve ödev bildirimleri | JSON ve otomatik şifreli bulut senkronizasyonu |
 | Büyük yazı, yüksek kontrast ve azaltılmış hareket | Çakışma korumalı cihazlar arası yedekleme |

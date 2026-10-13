@@ -79,6 +79,17 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('data-high-contrast="true"', styles)
         self.assertIn('data-reduced-motion="true"', styles)
 
+    def test_color_palettes_are_available_everywhere(self):
+        html = (ROOT / "index.html").read_text(encoding="utf-8")
+        javascript = (ROOT / "app.js").read_text(encoding="utf-8")
+        theme_init = (ROOT / "theme-init.js").read_text(encoding="utf-8")
+        styles = (ROOT / "styles.css").read_text(encoding="utf-8")
+        for palette in ("classic", "forest", "berry", "sunset", "violet", "ocean"):
+            self.assertIn(f'data-palette="{palette}"', html)
+            self.assertIn(f'"{palette}"', javascript)
+            self.assertIn(f'"{palette}"', theme_init)
+            self.assertIn(f'data-palette="{palette}"', styles)
+
     def test_onboarding_starts_without_a_selected_answer(self):
         html = (ROOT / "index.html").read_text(encoding="utf-8")
         javascript = (ROOT / "app.js").read_text(encoding="utf-8")
