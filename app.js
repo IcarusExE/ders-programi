@@ -175,6 +175,10 @@ const elements = {
   saveCloudBackupButton: document.querySelector("#saveCloudBackupButton"),
   restoreCloudBackupButton: document.querySelector("#restoreCloudBackupButton"),
   copyCloudBackupCodeButton: document.querySelector("#copyCloudBackupCodeButton"),
+  cloudAutoSyncEnabled: document.querySelector("#cloudAutoSyncEnabled"),
+  updateBanner: document.querySelector("#updateBanner"),
+  applyUpdateButton: document.querySelector("#applyUpdateButton"),
+  dismissUpdateButton: document.querySelector("#dismissUpdateButton"),
   installAppButton: document.querySelector("#installAppButton"),
   installDescription: document.querySelector("#installDescription"),
   lessonRemindersEnabled: document.querySelector("#lessonRemindersEnabled"),
@@ -201,6 +205,9 @@ const NOTIFICATION_PREFERENCES_KEY = "ders-pusulasi-notification-preferences";
 const LOCAL_NOTIFICATIONS_KEY = "ders-pusulasi-local-notifications";
 const PUSH_NOTIFICATIONS_KEY = "ders-pusulasi-push-notifications";
 const CLOUD_BACKUP_CODE_KEY = "ders-pusulasi-cloud-backup-code";
+const CLOUD_AUTO_SYNC_KEY = "ders-pusulasi-cloud-auto-sync";
+const CLOUD_LAST_SYNC_KEY = "ders-pusulasi-cloud-last-sync";
+const LOCAL_DATA_CHANGED_AT_KEY = "ders-pusulasi-data-changed-at";
 const MAX_BACKUP_BYTES = 2 * 1024 * 1024;
 const CLOUD_BACKUP_CODE_PREFIX = "DP1";
 const PALETTES = new Set(["classic", "forest", "berry"]);
@@ -211,6 +218,11 @@ const THEME_COLORS = {
 };
 let tickTimer = null;
 let lastInteractionWasKeyboard = false;
+let cloudSyncTimer = null;
+let cloudSyncInProgress = false;
+let cloudSyncPending = false;
+let refreshingForUpdate = false;
+let waitingServiceWorker = null;
 
 document.addEventListener("keydown", () => {
   lastInteractionWasKeyboard = true;
@@ -476,6 +488,7 @@ function renderNotificationPreferences() {
 function saveNotificationPreferences() {
   try {
     localStorage.setItem(NOTIFICATION_PREFERENCES_KEY, JSON.stringify(state.notificationPreferences));
+    recordLocalDataChange();
   } catch (_) {
     showToast("Bildirim tercihleri kaydedilemedi.");
   }
@@ -515,6 +528,7 @@ function applyPalette(palette, remember = true) {
   if (remember) {
     try {
       localStorage.setItem(PALETTE_KEY, selectedPalette);
+      recordLocalDataChange();
     } catch (_) {}
   }
 }
@@ -555,6 +569,7 @@ async function setEnglishExemption(exempt, { notify = true } = {}) {
   state.englishPreferenceSet = true;
   try {
     localStorage.setItem(ENGLISH_EXEMPT_KEY, state.englishExempt ? "1" : "0");
+    recordLocalDataChange();
   } catch (_) {
     showToast("İngilizce tercihi kaydedilemedi.");
   }
@@ -585,6 +600,7 @@ function applyTheme(theme, remember = true) {
   if (remember) {
     try {
       localStorage.setItem(THEME_KEY, selectedTheme);
+      recordLocalDataChange();
     } catch (_) {}
   }
 }
@@ -957,6 +973,7 @@ function loadAssignments() {
 function saveAssignments() {
   try {
     localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(state.assignments));
+    recordLocalDataChange();
   } catch (_) {
     showToast("Ödevler tarayıcıya kaydedilemedi.");
   }
@@ -1307,6 +1324,7 @@ function loadNotes() {
 function saveNotes() {
   try {
     localStorage.setItem(NOTES_KEY, JSON.stringify(state.notes));
+    recordLocalDataChange();
   } catch (_) {
     showToast("Ders notları tarayıcıya kaydedilemedi.");
   }
@@ -1530,6 +1548,7 @@ function saveGrades() {
   try {
     localStorage.setItem(GRADES_KEY, JSON.stringify(state.gradeRecords));
     localStorage.setItem(GRADE_LOG_KEY, JSON.stringify(state.gradeLog));
+    recordLocalDataChange();
   } catch (_) {
     showToast("Not kayıtları tarayıcıya kaydedilemedi.");
   }
@@ -1835,6 +1854,7 @@ function loadAttendance() {
 function saveAttendance() {
   try {
     localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(state.attendanceRecords));
+    recordLocalDataChange();
   } catch (_) {
     showToast("Devamsızlık kayıtları tarayıcıya kaydedilemedi.");
   }
@@ -1847,10 +1867,15 @@ function uniqueScheduleCourses() {
 }
 
 function synchroniseAttendance() {
+  let changed = false;
   uniqueScheduleCourses().forEach((course) => {
     const existing = state.attendanceRecords.find((record) => record.course === course.name);
     if (existing) {
-      existing.code = course.code || existing.code || "";
+      const code = course.code || existing.code || "";
+      if (existing.code !== code) {
+        existing.code = code;
+        changed = true;
+      }
       return;
     }
     state.attendanceRecords.push({
@@ -1861,8 +1886,9 @@ function synchroniseAttendance() {
       note: "",
       updatedAt: new Date().toISOString(),
     });
+    changed = true;
   });
-  saveAttendance();
+  if (changed) saveAttendance();
 }
 
 function attendanceStatus(record) {
@@ -2254,12 +2280,56 @@ async function readCloudResponse(response) {
   return result;
 }
 
-async function saveCloudBackup() {
+function cloudAutoSyncEnabled() {
+  try {
+    return Boolean(localStorage.getItem(CLOUD_BACKUP_CODE_KEY)) && localStorage.getItem(CLOUD_AUTO_SYNC_KEY) !== "0";
+  } catch (_) {
+    return false;
+  }
+}
+
+function formatSyncTime(value) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime())
+    ? ""
+    : new Intl.DateTimeFormat("tr-TR", { dateStyle: "short", timeStyle: "short" }).format(date);
+}
+
+function scheduleCloudSync(delay = 1800) {
+  window.clearTimeout(cloudSyncTimer);
+  if (!cloudAutoSyncEnabled()) return;
+  if (!navigator.onLine) {
+    elements.cloudBackupStatus.textContent = "Çevrimdışı. Değişiklikler bağlantı gelince eşitlenecek.";
+    return;
+  }
+  if (cloudSyncInProgress) {
+    cloudSyncPending = true;
+    return;
+  }
+  elements.cloudBackupStatus.textContent = "Değişiklikler otomatik eşitlenecek…";
+  cloudSyncTimer = window.setTimeout(() => saveCloudBackup({ automatic: true }), delay);
+}
+
+function recordLocalDataChange() {
+  try {
+    localStorage.setItem(LOCAL_DATA_CHANGED_AT_KEY, new Date().toISOString());
+  } catch (_) {}
+  scheduleCloudSync();
+}
+
+async function saveCloudBackup({ automatic = false } = {}) {
+  if (cloudSyncInProgress) {
+    cloudSyncPending = true;
+    return;
+  }
+  const typedCode = elements.cloudBackupCode.value.trim();
+  if (automatic && !typedCode) return;
+  cloudSyncInProgress = true;
+  window.clearTimeout(cloudSyncTimer);
   setCloudBackupBusy(true);
-  elements.cloudBackupStatus.textContent = "Yedek şifrelenip gönderiliyor…";
+  elements.cloudBackupStatus.textContent = automatic ? "Değişiklikler eşitleniyor…" : "Yedek şifrelenip gönderiliyor…";
   try {
     const apiUrl = cloudBackupApi();
-    const typedCode = elements.cloudBackupCode.value.trim();
     const credential = typedCode ? parseCloudCredential(typedCode) : createCloudCredential();
     const encrypted = await encryptCloudBackup(createAppBackup(), credential.key);
     const response = await fetch(`${apiUrl}/backups/${encodeURIComponent(credential.id)}`, {
@@ -2269,14 +2339,25 @@ async function saveCloudBackup() {
     });
     const result = await readCloudResponse(response);
     localStorage.setItem(CLOUD_BACKUP_CODE_KEY, credential.code);
+    localStorage.setItem(CLOUD_AUTO_SYNC_KEY, "1");
+    localStorage.setItem(CLOUD_LAST_SYNC_KEY, result.updatedAt);
     elements.cloudBackupCode.value = credential.code;
-    elements.cloudBackupStatus.textContent = `Son yedek: ${new Intl.DateTimeFormat("tr-TR", { dateStyle: "short", timeStyle: "short" }).format(new Date(result.updatedAt))}`;
-    showToast(typedCode ? "Bulut yedeği güncellendi." : "Bulut yedeği oluşturuldu. Kurtarma kodunu sakla.");
+    elements.cloudAutoSyncEnabled.checked = true;
+    elements.cloudAutoSyncEnabled.disabled = false;
+    elements.cloudBackupStatus.textContent = `Otomatik senkronizasyon açık · Son eşitleme: ${formatSyncTime(result.updatedAt)}`;
+    if (!automatic) showToast(typedCode ? "Bulut yedeği güncellendi." : "Bulut yedeği oluşturuldu. Kurtarma kodunu sakla.");
   } catch (error) {
-    elements.cloudBackupStatus.textContent = error.message || "Bulut yedeği oluşturulamadı.";
-    showToast(elements.cloudBackupStatus.textContent);
+    elements.cloudBackupStatus.textContent = automatic
+      ? "Otomatik senkronizasyon başarısız. Yeni değişiklikte tekrar denenecek."
+      : error.message || "Bulut yedeği oluşturulamadı.";
+    if (!automatic) showToast(elements.cloudBackupStatus.textContent);
   } finally {
+    cloudSyncInProgress = false;
     setCloudBackupBusy(false);
+    if (cloudSyncPending) {
+      cloudSyncPending = false;
+      scheduleCloudSync(500);
+    }
   }
 }
 
@@ -2292,7 +2373,11 @@ async function restoreCloudBackup() {
     const result = await readCloudResponse(response);
     const backup = await decryptCloudBackup(result.payload, credential.key);
     localStorage.setItem(CLOUD_BACKUP_CODE_KEY, credential.code);
+    localStorage.setItem(CLOUD_AUTO_SYNC_KEY, "1");
+    localStorage.setItem(CLOUD_LAST_SYNC_KEY, result.updatedAt);
     elements.cloudBackupCode.value = credential.code;
+    elements.cloudAutoSyncEnabled.checked = true;
+    elements.cloudAutoSyncEnabled.disabled = false;
     elements.cloudBackupStatus.textContent = `Bulut yedeği bulundu: ${new Intl.DateTimeFormat("tr-TR", { dateStyle: "short", timeStyle: "short" }).format(new Date(result.updatedAt))}`;
     restoreAppBackup(backup, "Bulut yedeği bu cihazdaki ödev, ders notu, sınav ve devamsızlık kayıtlarının üzerine yazacak. Devam edilsin mi?");
   } catch (error) {
@@ -2316,12 +2401,29 @@ async function copyCloudBackupCode() {
 function loadCloudBackupCode() {
   try {
     const saved = localStorage.getItem(CLOUD_BACKUP_CODE_KEY) || "";
+    const autoSync = saved && localStorage.getItem(CLOUD_AUTO_SYNC_KEY) !== "0";
+    const lastSync = formatSyncTime(localStorage.getItem(CLOUD_LAST_SYNC_KEY));
     elements.cloudBackupCode.value = saved;
     elements.cloudBackupStatus.textContent = saved
-      ? "Bu cihaz bir bulut yedeğine bağlı. Değişikliklerden sonra yedeği güncelle."
+      ? `${autoSync ? "Otomatik senkronizasyon açık" : "Otomatik senkronizasyon kapalı"}${lastSync ? ` · Son eşitleme: ${lastSync}` : ""}`
       : "İlk yedekte sana özel bir kurtarma kodu oluşturulur.";
+    elements.cloudAutoSyncEnabled.checked = Boolean(autoSync);
+    elements.cloudAutoSyncEnabled.disabled = !saved;
     elements.copyCloudBackupCodeButton.disabled = !saved;
   } catch (_) {}
+}
+
+function handleCloudAutoSyncChange() {
+  try {
+    localStorage.setItem(CLOUD_AUTO_SYNC_KEY, elements.cloudAutoSyncEnabled.checked ? "1" : "0");
+  } catch (_) {}
+  if (elements.cloudAutoSyncEnabled.checked) {
+    elements.cloudBackupStatus.textContent = "Otomatik senkronizasyon açıldı.";
+    scheduleCloudSync(300);
+  } else {
+    window.clearTimeout(cloudSyncTimer);
+    elements.cloudBackupStatus.textContent = "Otomatik senkronizasyon kapalı.";
+  }
 }
 
 function isAppInstalled() {
@@ -2352,6 +2454,38 @@ async function installApp() {
   state.installPrompt = null;
   await prompt.prompt();
   updateInstallButton();
+}
+
+function showUpdateBanner(worker) {
+  waitingServiceWorker = worker;
+  elements.applyUpdateButton.disabled = false;
+  elements.applyUpdateButton.textContent = "Güncelle";
+  elements.updateBanner.hidden = false;
+}
+
+async function registerServiceWorker() {
+  try {
+    const registration = await navigator.serviceWorker.register("service-worker.js");
+    if (registration.waiting && navigator.serviceWorker.controller) showUpdateBanner(registration.waiting);
+    registration.addEventListener("updatefound", () => {
+      const installing = registration.installing;
+      if (!installing) return;
+      installing.addEventListener("statechange", () => {
+        if (installing.state === "installed" && navigator.serviceWorker.controller) showUpdateBanner(installing);
+      });
+    });
+    await registration.update();
+  } catch (error) {
+    console.error("Service Worker kaydedilemedi.", error);
+  }
+}
+
+function applyPwaUpdate() {
+  if (!waitingServiceWorker) return;
+  refreshingForUpdate = true;
+  elements.applyUpdateButton.disabled = true;
+  elements.applyUpdateButton.textContent = "Güncelleniyor…";
+  waitingServiceWorker.postMessage({ type: "SKIP_WAITING" });
 }
 
 function showToast(message) {
@@ -2763,10 +2897,15 @@ elements.importDataInput.addEventListener("change", () => importAppData(elements
 elements.saveCloudBackupButton.addEventListener("click", saveCloudBackup);
 elements.restoreCloudBackupButton.addEventListener("click", restoreCloudBackup);
 elements.copyCloudBackupCodeButton.addEventListener("click", copyCloudBackupCode);
+elements.cloudAutoSyncEnabled.addEventListener("change", handleCloudAutoSyncChange);
 elements.cloudBackupCode.addEventListener("input", () => {
   elements.copyCloudBackupCodeButton.disabled = !elements.cloudBackupCode.value.trim();
 });
 elements.installAppButton.addEventListener("click", installApp);
+elements.applyUpdateButton.addEventListener("click", applyPwaUpdate);
+elements.dismissUpdateButton.addEventListener("click", () => {
+  elements.updateBanner.hidden = true;
+});
 elements.paletteOptions.forEach((button) => {
   button.addEventListener("click", () => {
     applyPalette(button.dataset.palette);
@@ -2843,6 +2982,9 @@ window.addEventListener("appinstalled", () => {
   updateInstallButton();
   showToast("Ders Pusulası uygulama olarak kuruldu.");
 });
+window.addEventListener("online", () => {
+  if (cloudAutoSyncEnabled()) scheduleCloudSync(300);
+});
 
 const initialView = location.hash.slice(1);
 let sidebarCollapsed = false;
@@ -2858,7 +3000,10 @@ applyTheme(document.documentElement.dataset.theme, false);
 renderEnglishPreference();
 
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js").catch(console.error));
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (refreshingForUpdate) location.reload();
+  });
+  window.addEventListener("load", registerServiceWorker);
 }
 
 init();

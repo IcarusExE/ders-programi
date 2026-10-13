@@ -908,6 +908,10 @@
               <input id="cloudBackupCode" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Yeni kod oluştur veya mevcut kodu yapıştır" />
             </label>
             <p class="cloud-backup-status" id="cloudBackupStatus" role="status"></p>
+            <label class="setting-toggle cloud-sync-setting" for="cloudAutoSyncEnabled">
+              <span><strong>Otomatik senkronizasyon</strong><small>Değişiklikleri kısa bir beklemeden sonra şifreleyip buluta gönder</small></span>
+              <input id="cloudAutoSyncEnabled" type="checkbox" checked disabled />
+            </label>
             <div class="cloud-backup-actions">
               <button class="primary-button" id="saveCloudBackupButton" type="button">Buluta yedekle</button>
               <button class="secondary-button" id="restoreCloudBackupButton" type="button">Geri yükle</button>
@@ -990,6 +994,14 @@
       </div>
     </dialog>
 
+    <div class="update-banner" id="updateBanner" role="status" aria-live="polite" hidden>
+      <div>
+        <strong>Yeni sürüm hazır</strong>
+        <span>Güncelleyerek son özellikleri hemen kullanabilirsin.</span>
+      </div>
+      <button class="primary-button" id="applyUpdateButton" type="button">Güncelle</button>
+      <button class="update-dismiss" id="dismissUpdateButton" type="button" aria-label="Güncelleme bildirimini kapat">×</button>
+    </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="push-config.js"></script>
     <script src="app.js" defer></script>

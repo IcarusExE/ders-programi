@@ -47,10 +47,22 @@ class ProjectTests(unittest.TestCase):
             "saveCloudBackupButton",
             "restoreCloudBackupButton",
             "copyCloudBackupCodeButton",
+            "cloudAutoSyncEnabled",
         }
         for control_id in control_ids:
             self.assertIn(f'id="{control_id}"', html)
             self.assertIn(f'#{control_id}', javascript)
+
+    def test_pwa_update_prompt_is_wired(self):
+        html = (ROOT / "index.html").read_text(encoding="utf-8")
+        javascript = (ROOT / "app.js").read_text(encoding="utf-8")
+        service_worker = (ROOT / "service-worker.js").read_text(encoding="utf-8")
+        for control_id in ("updateBanner", "applyUpdateButton", "dismissUpdateButton"):
+            self.assertIn(f'id="{control_id}"', html)
+            self.assertIn(f'#{control_id}', javascript)
+        self.assertIn('type: "SKIP_WAITING"', javascript)
+        self.assertIn('event.data?.type === "SKIP_WAITING"', service_worker)
+        self.assertNotIn('.then(() => self.skipWaiting())', service_worker)
 
     def test_onboarding_starts_without_a_selected_answer(self):
         html = (ROOT / "index.html").read_text(encoding="utf-8")

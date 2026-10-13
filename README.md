@@ -38,12 +38,12 @@
 | Haftalık ders programı | Ders notları ve kaynak bağlantıları |
 | Günlük öğle ve akşam menüsü | Sınav sonucu ve hedef final hesabı |
 | Açık/koyu tema ve renk paletleri | Devamsızlık ve risk takibi |
-| Çevrimdışı PWA desteği | Ders bazlı istatistikler |
-| Ders ve ödev bildirimleri | JSON ve uçtan uca şifreli bulut yedeği |
+| Çevrimdışı PWA ve sürüm güncelleme bildirimi | Ders bazlı istatistikler |
+| Ders ve ödev bildirimleri | JSON ve otomatik şifreli bulut senkronizasyonu |
 
 İlk kullanımda İngilizce muafiyet tercihi sorulur. Muaf öğrenciler Temel Yabancı Dil dersini programdan ve bildirimlerden gizleyebilir; tercih daha sonra Ayarlar bölümünden değiştirilebilir.
 
-Uygulama framework kullanmadan hazırlanmıştır. Kişisel kayıtlar tarayıcının `localStorage` alanında tutulur; ödevler, notlar ve devamsızlık bilgileri bir sunucuya gönderilmez.
+Uygulama framework kullanmadan hazırlanmıştır. Kişisel kayıtlar varsayılan olarak tarayıcının `localStorage` alanında tutulur. Bulut yedekleme açılırsa yalnızca tarayıcıda şifrelenen veri Worker'a gönderilir.
 
 ## Yerelde çalıştırma
 
@@ -157,7 +157,7 @@ npm run db:migrate:remote
 npm run deploy
 ```
 
-Yedek uygulamadan çıkmadan önce AES-GCM ile şifrelenir. Worker yalnızca şifreli veriyi saklar; kurtarma kodu sunucuya gönderilmez. Kodu kaybeden kullanıcı yedeği geri açamaz.
+Yedek uygulamadan çıkmadan önce AES-GCM ile şifrelenir. Worker yalnızca şifreli veriyi saklar; kurtarma kodu sunucuya gönderilmez. İlk bulut yedeğinden sonra ödev, not, devamsızlık ve tercih değişiklikleri kısa bir gecikmeyle otomatik eşitlenir. Kodu kaybeden kullanıcı yedeği geri açamaz.
 
 </details>
 
