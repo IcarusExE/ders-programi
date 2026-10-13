@@ -71,6 +71,8 @@ const elements = {
   themeLabel: document.querySelector("#themeLabel"),
   themeColorMeta: document.querySelector("#themeColorMeta"),
   settingsButton: document.querySelector("#settingsButton"),
+  syncStatusButton: document.querySelector("#syncStatusButton"),
+  syncStatusLabel: document.querySelector("#syncStatusLabel"),
   settingsDialog: document.querySelector("#settingsDialog"),
   closeSettingsDialog: document.querySelector("#closeSettingsDialog"),
   toast: document.querySelector("#toast"),
@@ -211,6 +213,7 @@ const CLOUD_AUTO_SYNC_KEY = "ders-pusulasi-cloud-auto-sync";
 const CLOUD_LAST_SYNC_KEY = "ders-pusulasi-cloud-last-sync";
 const LOCAL_DATA_CHANGED_AT_KEY = "ders-pusulasi-data-changed-at";
 const SYNC_TOMBSTONES_KEY = "ders-pusulasi-sync-tombstones";
+const OFFLINE_QUEUE_KEY = "ders-pusulasi-offline-queue";
 const TEXT_SIZE_KEY = "ders-pusulasi-text-size";
 const HIGH_CONTRAST_KEY = "ders-pusulasi-high-contrast";
 const REDUCED_MOTION_KEY = "ders-pusulasi-reduced-motion";
@@ -2478,6 +2481,68 @@ function cloudAutoSyncEnabled() {
   }
 }
 
+function loadOfflineQueue() {
+  try {
+    const queue = JSON.parse(localStorage.getItem(OFFLINE_QUEUE_KEY) || "[]");
+    return Array.isArray(queue) ? queue.slice(-100) : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function renderSyncStatus() {
+  const linked = cloudAutoSyncEnabled();
+  const pendingCount = loadOfflineQueue().length;
+  elements.syncStatusButton.classList.remove("pending", "offline", "synced");
+  if (!linked) {
+    elements.syncStatusLabel.textContent = "Yalnızca cihazda";
+    elements.syncStatusButton.title = "Cihaz eşitlemeyi ayarla";
+    return;
+  }
+  if (!navigator.onLine) {
+    elements.syncStatusButton.classList.add("offline");
+    elements.syncStatusLabel.textContent = pendingCount ? `${pendingCount} işlem bekliyor` : "Çevrimdışı";
+    elements.syncStatusButton.title = "Bağlantı gelince otomatik eşitlenecek";
+    return;
+  }
+  if (cloudSyncInProgress) {
+    elements.syncStatusButton.classList.add("pending");
+    elements.syncStatusLabel.textContent = "Eşitleniyor";
+    elements.syncStatusButton.title = "Değişiklikler cihazlar arasında eşitleniyor";
+    return;
+  }
+  if (pendingCount) {
+    elements.syncStatusButton.classList.add("pending");
+    elements.syncStatusLabel.textContent = `${pendingCount} işlem bekliyor`;
+    elements.syncStatusButton.title = "Bekleyen değişiklikler gönderilecek";
+    return;
+  }
+  elements.syncStatusButton.classList.add("synced");
+  elements.syncStatusLabel.textContent = "Eşitlendi";
+  elements.syncStatusButton.title = "Tüm değişiklikler eşitlendi";
+}
+
+function enqueueOfflineOperation(type = "change") {
+  if (!cloudAutoSyncEnabled()) return;
+  const queue = loadOfflineQueue();
+  queue.push({
+    id: globalThis.crypto?.randomUUID?.() || `operation-${Date.now()}`,
+    type: cleanText(type, 50) || "change",
+    createdAt: new Date().toISOString(),
+  });
+  try {
+    localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(queue.slice(-100)));
+  } catch (_) {}
+  renderSyncStatus();
+}
+
+function clearOfflineQueue() {
+  try {
+    localStorage.removeItem(OFFLINE_QUEUE_KEY);
+  } catch (_) {}
+  renderSyncStatus();
+}
+
 function formatSyncTime(value) {
   const date = new Date(value);
   return Number.isNaN(date.getTime())
@@ -2504,6 +2569,7 @@ function recordLocalDataChange() {
   try {
     localStorage.setItem(LOCAL_DATA_CHANGED_AT_KEY, new Date().toISOString());
   } catch (_) {}
+  enqueueOfflineOperation();
   scheduleCloudSync();
 }
 
@@ -2523,6 +2589,7 @@ function markCloudSynced(updatedAt) {
   localStorage.setItem(LOCAL_DATA_CHANGED_AT_KEY, updatedAt);
   elements.cloudAutoSyncEnabled.checked = true;
   elements.cloudBackupStatus.textContent = `Tüm cihazlar eşitleniyor · Son güncelleme: ${formatSyncTime(updatedAt)}`;
+  clearOfflineQueue();
 }
 
 function setCloudLinkedState(linked) {
@@ -2551,6 +2618,7 @@ async function syncCloudNow({ quiet = false } = {}) {
   const savedCode = localStorage.getItem(CLOUD_BACKUP_CODE_KEY) || "";
   if (!savedCode || !navigator.onLine) return;
   cloudSyncInProgress = true;
+  renderSyncStatus();
   window.clearTimeout(cloudSyncTimer);
   if (!quiet) elements.cloudBackupStatus.textContent = "Cihazlar eşitleniyor…";
   try {
@@ -2584,6 +2652,7 @@ async function syncCloudNow({ quiet = false } = {}) {
     console.warn("Cihaz eşitleme tamamlanamadı.", error);
   } finally {
     cloudSyncInProgress = false;
+    renderSyncStatus();
     if (cloudSyncPending) {
       cloudSyncPending = false;
       scheduleCloudSync(500);
@@ -2629,10 +2698,12 @@ function clearCloudConnection() {
   localStorage.removeItem(CLOUD_BACKUP_CODE_KEY);
   localStorage.removeItem(CLOUD_AUTO_SYNC_KEY);
   localStorage.removeItem(CLOUD_LAST_SYNC_KEY);
+  localStorage.removeItem(OFFLINE_QUEUE_KEY);
   elements.cloudBackupCode.value = "";
   elements.cloudAutoSyncEnabled.checked = false;
   setCloudLinkedState(false);
   setCloudBackupBusy(false);
+  renderSyncStatus();
 }
 
 function disconnectCloudBackup() {
@@ -2688,6 +2759,7 @@ function loadCloudBackupCode() {
       startCloudLiveSync();
       if (navigator.onLine) window.setTimeout(() => syncCloudNow({ quiet: true }), 500);
     }
+    renderSyncStatus();
   } catch (_) {}
 }
 
@@ -3087,6 +3159,10 @@ elements.settingsButton.addEventListener("click", () => {
   elements.settingsDialog.showModal();
   document.querySelector("#settingsDialogTitle").focus({ preventScroll: true });
 });
+elements.syncStatusButton.addEventListener("click", () => {
+  elements.settingsButton.click();
+  window.requestAnimationFrame(() => document.querySelector(".cloud-backup-card").scrollIntoView({ block: "center" }));
+});
 elements.closeSettingsDialog.addEventListener("click", () => elements.settingsDialog.close());
 elements.settingsDialog.addEventListener("click", (event) => {
   if (event.target === elements.settingsDialog) elements.settingsDialog.close();
@@ -3252,8 +3328,10 @@ window.addEventListener("appinstalled", () => {
   showToast("Ders Pusulası uygulama olarak kuruldu.");
 });
 window.addEventListener("online", () => {
+  renderSyncStatus();
   if (cloudAutoSyncEnabled()) syncCloudNow({ quiet: true });
 });
+window.addEventListener("offline", renderSyncStatus);
 window.addEventListener("focus", () => {
   if (cloudAutoSyncEnabled()) syncCloudNow({ quiet: true });
 });

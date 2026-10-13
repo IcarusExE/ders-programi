@@ -50,6 +50,18 @@
       </a>
       <div class="header-actions">
         <button
+          class="sync-status-button"
+          id="syncStatusButton"
+          type="button"
+          aria-label="Eşitleme durumunu göster"
+          title="Eşitleme durumu"
+        >
+          <span class="sync-status-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M20 7h-5V2M4 17h5v5M19 12a7 7 0 0 0-12-5L4 10M5 12a7 7 0 0 0 12 5l3-3" /></svg>
+          </span>
+          <span id="syncStatusLabel">Yalnızca cihazda</span>
+        </button>
+        <button
           class="settings-button"
           id="settingsButton"
           type="button"

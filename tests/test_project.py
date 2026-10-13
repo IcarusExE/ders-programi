@@ -63,6 +63,16 @@ class ProjectTests(unittest.TestCase):
         self.assertIn("applyAppBackupLive(remoteBackup)", javascript)
         self.assertIn("mergeAppBackups(backupToUpload, remoteBackup)", javascript)
 
+    def test_offline_queue_and_status_are_wired(self):
+        html = (ROOT / "index.html").read_text(encoding="utf-8")
+        javascript = (ROOT / "app.js").read_text(encoding="utf-8")
+        self.assertIn('id="syncStatusButton"', html)
+        self.assertIn('id="syncStatusLabel"', html)
+        self.assertIn("OFFLINE_QUEUE_KEY", javascript)
+        self.assertIn("enqueueOfflineOperation", javascript)
+        self.assertIn("clearOfflineQueue", javascript)
+        self.assertIn('window.addEventListener("offline", renderSyncStatus)', javascript)
+
     def test_pwa_update_prompt_is_wired(self):
         html = (ROOT / "index.html").read_text(encoding="utf-8")
         javascript = (ROOT / "app.js").read_text(encoding="utf-8")

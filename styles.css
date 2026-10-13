@@ -352,7 +352,8 @@ textarea:focus-visible {
 
 .settings-button,
 .theme-button,
-.notification-button {
+.notification-button,
+.sync-status-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -373,11 +374,17 @@ textarea:focus-visible {
 .settings-button { order: 1; }
 .settings-button:hover,
 .theme-button:hover,
-.notification-button:hover { background: var(--white); transform: translateY(-2px); }
+.notification-button:hover,
+.sync-status-button:hover { background: var(--white); transform: translateY(-2px); }
+.sync-status-button { width: 150px; }
+.sync-status-button.pending { color: #8a5b0a; border-color: rgba(219, 151, 31, .35); }
+.sync-status-button.offline { color: #a23333; border-color: rgba(190, 58, 58, .35); }
+.sync-status-button.synced { color: #27613f; border-color: rgba(65, 155, 98, .3); }
 .notification-button.enabled { border-color: rgba(19, 67, 131, 0.28); color: var(--wine); }
 .settings-icon,
 .theme-icon,
-.notification-icon {
+.notification-icon,
+.sync-status-icon {
   position: relative;
   display: grid;
   place-items: center;
@@ -387,7 +394,8 @@ textarea:focus-visible {
 }
 .settings-icon svg,
 .theme-icon svg,
-.notification-icon svg {
+.notification-icon svg,
+.sync-status-icon svg {
   width: 100%;
   height: 100%;
   fill: none;
@@ -1304,10 +1312,15 @@ html[data-theme="dark"] .theme-icon .sun-icon { display: block; }
 
 html[data-theme="dark"] .settings-button,
 html[data-theme="dark"] .theme-button,
-html[data-theme="dark"] .notification-button { background: var(--dark-card); }
+html[data-theme="dark"] .notification-button,
+html[data-theme="dark"] .sync-status-button { background: var(--dark-card); }
 html[data-theme="dark"] .settings-button:hover,
 html[data-theme="dark"] .theme-button:hover,
-html[data-theme="dark"] .notification-button:hover { background: var(--dark-hover); }
+html[data-theme="dark"] .notification-button:hover,
+html[data-theme="dark"] .sync-status-button:hover { background: var(--dark-hover); }
+html[data-theme="dark"] .sync-status-button.pending { color: #f0d68e; }
+html[data-theme="dark"] .sync-status-button.offline { color: #ff9b9b; }
+html[data-theme="dark"] .sync-status-button.synced { color: #83d6a1; }
 html[data-theme="dark"] .notification-button.enabled { border-color: rgba(229, 201, 123, 0.32); }
 html[data-theme="dark"] .focus-card {
   background:
@@ -1537,7 +1550,8 @@ html[data-theme="dark"] .bottom-nav-list { background: color-mix(in srgb, var(--
   .header-actions { gap: 6px; }
   .settings-button,
   .theme-button,
-  .notification-button {
+  .notification-button,
+  .sync-status-button {
     flex: 0 0 44px;
     width: 44px;
     height: 44px;
@@ -1545,7 +1559,8 @@ html[data-theme="dark"] .bottom-nav-list { background: color-mix(in srgb, var(--
   }
   .settings-button span:last-child,
   .theme-button span:last-child,
-  .notification-button span:last-child { display: none; }
+  .notification-button span:last-child,
+  .sync-status-button span:last-child { display: none; }
   .hero { grid-template-columns: minmax(0, 1fr); gap: 22px; padding: 20px 0 116px; }
   .hero-copy { text-align: center; }
   .focus-card { min-height: 340px; }
