@@ -22,3 +22,14 @@ CREATE TABLE IF NOT EXISTS notification_log (
 
 CREATE INDEX IF NOT EXISTS notification_log_sent_at_idx
   ON notification_log(sent_at);
+
+CREATE TABLE IF NOT EXISTS cloud_backups (
+  id TEXT PRIMARY KEY,
+  auth_token TEXT NOT NULL,
+  payload_json TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS cloud_backups_updated_at_idx
+  ON cloud_backups(updated_at);

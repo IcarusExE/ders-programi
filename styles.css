@@ -997,6 +997,13 @@ html[data-theme="dark"] .theme-icon .sun-icon { display: block; }
 .settings-dialog { width: min(980px, calc(100% - 32px)); }
 .settings-content { padding: 28px; }
 .settings-tool-grid .tool-card { min-height: 250px; }
+.cloud-backup-card { grid-column: 1 / -1; }
+.cloud-backup-code { display: grid; gap: 6px; width: 100%; }
+.cloud-backup-code span { color: var(--muted); font-size: 10px; font-weight: 700; }
+.cloud-backup-code input { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: var(--card); font: 500 11px/1.3 "DM Sans", sans-serif; }
+.cloud-backup-code input:focus { outline: 2px solid rgba(var(--accent-rgb), .25); border-color: var(--wine); }
+.cloud-backup-status { min-height: 18px; margin: 0; color: var(--muted); font-size: 10px; }
+.cloud-backup-actions { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
 .appearance-preferences-card { grid-column: 1 / -1; min-height: 0 !important; }
 .appearance-preferences-card > p { margin-bottom: 18px; }
 .palette-picker { width: 100%; margin: 0; padding: 0; border: 0; }
@@ -1194,6 +1201,7 @@ html[data-theme="dark"] .compact-select select { background: var(--dark-field); 
 html[data-theme="dark"] .setting-toggle,
 html[data-theme="dark"] .setting-select { background: rgba(var(--accent-rgb), .08); }
 html[data-theme="dark"] .setting-select select { background: var(--dark-field); }
+html[data-theme="dark"] .cloud-backup-code input { background: var(--dark-field); }
 html[data-theme="dark"] .date-input-control { background: var(--dark-field); }
 html[data-theme="dark"] .date-picker { background: var(--dark-dialog); }
 html[data-theme="dark"] .calendar-header button { background: var(--dark-field); }

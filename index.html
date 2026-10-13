@@ -894,6 +894,26 @@
             <button class="secondary-button" id="importDataButton" type="button">Dosya seç</button>
             <input id="importDataInput" type="file" accept="application/json,.json" hidden />
           </article>
+          <article class="tool-card cloud-backup-card">
+            <span class="tool-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M7 18h11a4 4 0 0 0 .4-8A6.5 6.5 0 0 0 6 8.5 4.8 4.8 0 0 0 7 18Z" />
+                <path d="M12 10v7M9.5 12.5 12 10l2.5 2.5" />
+              </svg>
+            </span>
+            <h3>Şifreli bulut yedeği</h3>
+            <p>Verilerin cihazında şifrelenir. Başka cihazda geri yüklemek için kurtarma kodunu güvenli bir yerde sakla.</p>
+            <label class="cloud-backup-code" for="cloudBackupCode">
+              <span>Kurtarma kodu</span>
+              <input id="cloudBackupCode" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Yeni kod oluştur veya mevcut kodu yapıştır" />
+            </label>
+            <p class="cloud-backup-status" id="cloudBackupStatus" role="status"></p>
+            <div class="cloud-backup-actions">
+              <button class="primary-button" id="saveCloudBackupButton" type="button">Buluta yedekle</button>
+              <button class="secondary-button" id="restoreCloudBackupButton" type="button">Geri yükle</button>
+              <button class="secondary-button" id="copyCloudBackupCodeButton" type="button" disabled>Kodu kopyala</button>
+            </div>
+          </article>
           <article class="tool-card install-card">
             <span class="tool-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">

@@ -2,7 +2,9 @@ import { buildPushPayload } from "@block65/webcrypto-web-push";
 
 const ISTANBUL_TIMEZONE = "Europe/Istanbul";
 const WEEKDAY_INDEX = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
-const MAX_REQUEST_BYTES = 128 * 1024;
+const MAX_REQUEST_BYTES = 512 * 1024;
+const BACKUP_ID_PATTERN = /^[A-Za-z0-9_-]{22}$/;
+const BACKUP_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 const SECURITY_HEADERS = {
   "cache-control": "no-store",
   "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
@@ -42,8 +44,8 @@ function allowedOrigin(request, env) {
 function corsHeaders(origin) {
   return {
     "access-control-allow-origin": origin,
-    "access-control-allow-methods": "GET,POST,DELETE,OPTIONS",
-    "access-control-allow-headers": "content-type",
+    "access-control-allow-methods": "GET,POST,PUT,DELETE,OPTIONS",
+    "access-control-allow-headers": "content-type,x-backup-token",
     "access-control-max-age": "86400",
     vary: "Origin",
   };
@@ -183,6 +185,83 @@ async function removeSubscription(request, env, headers) {
   if (endpointUrl.protocol !== "https:" || endpoint.length > 2048) return json({ error: "Geçersiz abonelik." }, 400, headers);
   await env.DB.prepare("DELETE FROM subscriptions WHERE id = ?1")
     .bind(await endpointId(endpoint))
+    .run();
+  return json({ ok: true }, 200, headers);
+}
+
+function backupCredentials(request, url) {
+  const match = url.pathname.match(/^\/backups\/([A-Za-z0-9_-]{22})$/);
+  const token = request.headers.get("x-backup-token") || "";
+  if (!match || !BACKUP_ID_PATTERN.test(match[1]) || !BACKUP_TOKEN_PATTERN.test(token)) return null;
+  return { id: match[1], token };
+}
+
+function sanitizeEncryptedBackup(value) {
+  const iv = String(value?.iv || "");
+  const ciphertext = String(value?.ciphertext || "");
+  if (
+    value?.version !== 1
+    || !/^[A-Za-z0-9_-]{16}$/.test(iv)
+    || ciphertext.length < 24
+    || ciphertext.length > 480000
+    || !/^[A-Za-z0-9_-]+$/.test(ciphertext)
+  ) return null;
+  return { version: 1, iv, ciphertext };
+}
+
+async function findAuthorizedBackup(credentials, env) {
+  const row = await env.DB.prepare(`
+    SELECT payload_json, updated_at
+    FROM cloud_backups
+    WHERE id = ?1 AND auth_token = ?2
+  `).bind(credentials.id, credentials.token).first();
+  return row || null;
+}
+
+async function saveCloudBackup(request, env, headers, credentials) {
+  let body;
+  try {
+    body = sanitizeEncryptedBackup(await readJson(request));
+  } catch (_) {
+    return json({ error: "Geçersiz veya çok büyük yedek." }, 400, headers);
+  }
+  if (!body) return json({ error: "Geçersiz şifreli yedek." }, 400, headers);
+
+  const existing = await env.DB.prepare("SELECT auth_token FROM cloud_backups WHERE id = ?1")
+    .bind(credentials.id)
+    .first();
+  if (existing && existing.auth_token !== credentials.token) {
+    return json({ error: "Yedek bulunamadı veya kurtarma kodu yanlış." }, 404, headers);
+  }
+
+  const now = new Date().toISOString();
+  await env.DB.prepare(`
+    INSERT INTO cloud_backups (id, auth_token, payload_json, created_at, updated_at)
+    VALUES (?1, ?2, ?3, ?4, ?4)
+    ON CONFLICT(id) DO UPDATE SET
+      payload_json = excluded.payload_json,
+      updated_at = excluded.updated_at
+  `).bind(credentials.id, credentials.token, JSON.stringify(body), now).run();
+  return json({ ok: true, updatedAt: now }, existing ? 200 : 201, headers);
+}
+
+async function getCloudBackup(env, headers, credentials) {
+  const row = await findAuthorizedBackup(credentials, env);
+  if (!row) return json({ error: "Yedek bulunamadı veya kurtarma kodu yanlış." }, 404, headers);
+  let payload;
+  try {
+    payload = JSON.parse(row.payload_json);
+  } catch (_) {
+    return json({ error: "Bulut yedeği bozuk." }, 500, headers);
+  }
+  return json({ payload, updatedAt: row.updated_at }, 200, headers);
+}
+
+async function removeCloudBackup(env, headers, credentials) {
+  const row = await findAuthorizedBackup(credentials, env);
+  if (!row) return json({ error: "Yedek bulunamadı veya kurtarma kodu yanlış." }, 404, headers);
+  await env.DB.prepare("DELETE FROM cloud_backups WHERE id = ?1 AND auth_token = ?2")
+    .bind(credentials.id, credentials.token)
     .run();
   return json({ ok: true }, 200, headers);
 }
@@ -331,6 +410,13 @@ async function handleRequest(request, env) {
   }
   if (url.pathname === "/subscriptions" && request.method === "DELETE") {
     return removeSubscription(request, env, headers);
+  }
+  if (url.pathname.startsWith("/backups/")) {
+    const credentials = backupCredentials(request, url);
+    if (!credentials) return json({ error: "Geçersiz yedek isteği." }, 400, headers);
+    if (request.method === "PUT") return saveCloudBackup(request, env, headers, credentials);
+    if (request.method === "GET") return getCloudBackup(env, headers, credentials);
+    if (request.method === "DELETE") return removeCloudBackup(env, headers, credentials);
   }
   return json({ error: "Bulunamadı." }, 404, headers);
 }

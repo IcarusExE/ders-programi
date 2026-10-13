@@ -170,6 +170,11 @@ const elements = {
   exportDataButton: document.querySelector("#exportDataButton"),
   importDataButton: document.querySelector("#importDataButton"),
   importDataInput: document.querySelector("#importDataInput"),
+  cloudBackupCode: document.querySelector("#cloudBackupCode"),
+  cloudBackupStatus: document.querySelector("#cloudBackupStatus"),
+  saveCloudBackupButton: document.querySelector("#saveCloudBackupButton"),
+  restoreCloudBackupButton: document.querySelector("#restoreCloudBackupButton"),
+  copyCloudBackupCodeButton: document.querySelector("#copyCloudBackupCodeButton"),
   installAppButton: document.querySelector("#installAppButton"),
   installDescription: document.querySelector("#installDescription"),
   lessonRemindersEnabled: document.querySelector("#lessonRemindersEnabled"),
@@ -195,7 +200,9 @@ const NOTES_KEY = "ders-pusulasi-course-notes";
 const NOTIFICATION_PREFERENCES_KEY = "ders-pusulasi-notification-preferences";
 const LOCAL_NOTIFICATIONS_KEY = "ders-pusulasi-local-notifications";
 const PUSH_NOTIFICATIONS_KEY = "ders-pusulasi-push-notifications";
+const CLOUD_BACKUP_CODE_KEY = "ders-pusulasi-cloud-backup-code";
 const MAX_BACKUP_BYTES = 2 * 1024 * 1024;
+const CLOUD_BACKUP_CODE_PREFIX = "DP1";
 const PALETTES = new Set(["classic", "forest", "berry"]);
 const THEME_COLORS = {
   classic: { light: "#134383", dark: "#07172d" },
@@ -2082,8 +2089,8 @@ function renderStatistics() {
   });
 }
 
-function exportAppData() {
-  const backup = {
+function createAppBackup() {
+  return {
     app: "Ders Pusulası",
     version: 1,
     exportedAt: new Date().toISOString(),
@@ -2099,6 +2106,10 @@ function exportAppData() {
       englishExempt: state.englishExempt,
     },
   };
+}
+
+function exportAppData() {
+  const backup = createAppBackup();
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -2112,56 +2123,205 @@ function exportAppData() {
   showToast("Yedek dosyası indirildi.");
 }
 
+function restoreAppBackup(backup, confirmationMessage) {
+  if (backup?.app !== "Ders Pusulası" || backup?.version !== 1 || !backup.data) {
+    throw new Error("Bu, geçerli bir Ders Pusulası yedeği değil.");
+  }
+  const {
+    assignments,
+    grades,
+    gradeLog,
+    attendance,
+    courseNotes = [],
+    notificationPreferences = null,
+    theme,
+    palette,
+    englishExempt,
+  } = backup.data;
+  if (![assignments, grades, gradeLog, attendance].every(Array.isArray)) {
+    throw new Error("Yedekteki kayıt yapısı geçersiz.");
+  }
+  if (!Array.isArray(courseNotes)) throw new Error("Yedekteki ders notları geçersiz.");
+  const sanitizedData = {
+    assignments: sanitizeAssignments(assignments),
+    grades: sanitizeGradeRecords(grades),
+    gradeLog: sanitizeGradeLog(gradeLog),
+    attendance: sanitizeAttendanceRecords(attendance),
+    courseNotes: sanitizeNotes(courseNotes),
+    notificationPreferences: sanitizeNotificationPreferences(notificationPreferences),
+  };
+  if (!window.confirm(confirmationMessage)) return false;
+  localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(sanitizedData.assignments));
+  localStorage.setItem(GRADES_KEY, JSON.stringify(sanitizedData.grades));
+  localStorage.setItem(GRADE_LOG_KEY, JSON.stringify(sanitizedData.gradeLog));
+  localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(sanitizedData.attendance));
+  localStorage.setItem(NOTES_KEY, JSON.stringify(sanitizedData.courseNotes));
+  localStorage.setItem(NOTIFICATION_PREFERENCES_KEY, JSON.stringify(sanitizedData.notificationPreferences));
+  if (theme === "dark" || theme === "light") localStorage.setItem(THEME_KEY, theme);
+  if (PALETTES.has(palette)) localStorage.setItem(PALETTE_KEY, palette);
+  if (typeof englishExempt === "boolean") localStorage.setItem(ENGLISH_EXEMPT_KEY, englishExempt ? "1" : "0");
+  showToast("Yedek geri yüklendi. Sayfa yenileniyor…");
+  window.setTimeout(() => location.reload(), 700);
+  return true;
+}
+
 async function importAppData(file) {
   if (!file) return;
   try {
-    if (file.size > MAX_BACKUP_BYTES) {
-      throw new Error("Yedek dosyası en fazla 2 MB olabilir.");
-    }
-    const backup = JSON.parse(await file.text());
-    if (backup?.app !== "Ders Pusulası" || backup?.version !== 1 || !backup.data) {
-      throw new Error("Bu dosya geçerli bir Ders Pusulası yedeği değil.");
-    }
-    const {
-      assignments,
-      grades,
-      gradeLog,
-      attendance,
-      courseNotes = [],
-      notificationPreferences = null,
-      theme,
-      palette,
-      englishExempt,
-    } = backup.data;
-    if (![assignments, grades, gradeLog, attendance].every(Array.isArray)) {
-      throw new Error("Yedek dosyasındaki kayıt yapısı geçersiz.");
-    }
-    if (!Array.isArray(courseNotes)) throw new Error("Yedekteki ders notları geçersiz.");
-    const sanitizedData = {
-      assignments: sanitizeAssignments(assignments),
-      grades: sanitizeGradeRecords(grades),
-      gradeLog: sanitizeGradeLog(gradeLog),
-      attendance: sanitizeAttendanceRecords(attendance),
-      courseNotes: sanitizeNotes(courseNotes),
-      notificationPreferences: sanitizeNotificationPreferences(notificationPreferences),
-    };
-    if (!window.confirm("Bu yedek mevcut ödev, ders notu, sınav ve devamsızlık kayıtlarının üzerine yazacak. Devam edilsin mi?")) return;
-    localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(sanitizedData.assignments));
-    localStorage.setItem(GRADES_KEY, JSON.stringify(sanitizedData.grades));
-    localStorage.setItem(GRADE_LOG_KEY, JSON.stringify(sanitizedData.gradeLog));
-    localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(sanitizedData.attendance));
-    localStorage.setItem(NOTES_KEY, JSON.stringify(sanitizedData.courseNotes));
-    localStorage.setItem(NOTIFICATION_PREFERENCES_KEY, JSON.stringify(sanitizedData.notificationPreferences));
-    if (theme === "dark" || theme === "light") localStorage.setItem(THEME_KEY, theme);
-    if (PALETTES.has(palette)) localStorage.setItem(PALETTE_KEY, palette);
-    if (typeof englishExempt === "boolean") localStorage.setItem(ENGLISH_EXEMPT_KEY, englishExempt ? "1" : "0");
-    showToast("Yedek geri yüklendi. Sayfa yenileniyor…");
-    window.setTimeout(() => location.reload(), 700);
+    if (file.size > MAX_BACKUP_BYTES) throw new Error("Yedek dosyası en fazla 2 MB olabilir.");
+    restoreAppBackup(
+      JSON.parse(await file.text()),
+      "Bu yedek mevcut ödev, ders notu, sınav ve devamsızlık kayıtlarının üzerine yazacak. Devam edilsin mi?",
+    );
   } catch (error) {
     showToast(error.message || "Yedek dosyası okunamadı.");
   } finally {
     elements.importDataInput.value = "";
   }
+}
+
+function bytesToBase64Url(bytes) {
+  let binary = "";
+  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+function base64UrlToBytes(value) {
+  if (!/^[A-Za-z0-9_-]+$/.test(value)) throw new Error("Yedek kodu geçersiz.");
+  const padding = "=".repeat((4 - (value.length % 4)) % 4);
+  const binary = atob((value + padding).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+}
+
+function createCloudCredential() {
+  const id = crypto.getRandomValues(new Uint8Array(16));
+  const key = crypto.getRandomValues(new Uint8Array(32));
+  return { id: bytesToBase64Url(id), key, code: `${CLOUD_BACKUP_CODE_PREFIX}.${bytesToBase64Url(id)}.${bytesToBase64Url(key)}` };
+}
+
+function parseCloudCredential(value) {
+  const parts = String(value || "").trim().split(".");
+  if (parts.length !== 3 || parts[0] !== CLOUD_BACKUP_CODE_PREFIX) throw new Error("Yedek kodu geçersiz.");
+  const idBytes = base64UrlToBytes(parts[1]);
+  const key = base64UrlToBytes(parts[2]);
+  if (idBytes.length !== 16 || key.length !== 32) throw new Error("Yedek kodu geçersiz.");
+  return { id: parts[1], key, code: `${CLOUD_BACKUP_CODE_PREFIX}.${parts[1]}.${parts[2]}` };
+}
+
+async function cloudAuthToken(key) {
+  const digest = await crypto.subtle.digest("SHA-256", key);
+  return bytesToBase64Url(new Uint8Array(digest));
+}
+
+async function encryptCloudBackup(backup, keyBytes) {
+  const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["encrypt"]);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const plaintext = new TextEncoder().encode(JSON.stringify(backup));
+  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
+  return { version: 1, iv: bytesToBase64Url(iv), ciphertext: bytesToBase64Url(new Uint8Array(ciphertext)) };
+}
+
+async function decryptCloudBackup(payload, keyBytes) {
+  if (payload?.version !== 1) throw new Error("Bulut yedeğinin sürümü desteklenmiyor.");
+  const iv = base64UrlToBytes(payload.iv);
+  const ciphertext = base64UrlToBytes(payload.ciphertext);
+  if (iv.length !== 12) throw new Error("Bulut yedeği bozuk.");
+  const key = await crypto.subtle.importKey("raw", keyBytes, "AES-GCM", false, ["decrypt"]);
+  try {
+    const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+    return JSON.parse(new TextDecoder().decode(plaintext));
+  } catch (_) {
+    throw new Error("Yedek kodu yanlış veya bulut yedeği bozuk.");
+  }
+}
+
+function setCloudBackupBusy(busy) {
+  elements.saveCloudBackupButton.disabled = busy;
+  elements.restoreCloudBackupButton.disabled = busy;
+  elements.copyCloudBackupCodeButton.disabled = busy || !elements.cloudBackupCode.value.trim();
+}
+
+function cloudBackupApi() {
+  const apiUrl = pushApiUrl();
+  if (!apiUrl) throw new Error("Bulut yedekleme servisi yapılandırılmamış.");
+  if (!window.crypto?.subtle) throw new Error("Bu tarayıcı güvenli bulut yedeklemeyi desteklemiyor.");
+  return apiUrl;
+}
+
+async function readCloudResponse(response) {
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || "Bulut servisine ulaşılamadı.");
+  return result;
+}
+
+async function saveCloudBackup() {
+  setCloudBackupBusy(true);
+  elements.cloudBackupStatus.textContent = "Yedek şifrelenip gönderiliyor…";
+  try {
+    const apiUrl = cloudBackupApi();
+    const typedCode = elements.cloudBackupCode.value.trim();
+    const credential = typedCode ? parseCloudCredential(typedCode) : createCloudCredential();
+    const encrypted = await encryptCloudBackup(createAppBackup(), credential.key);
+    const response = await fetch(`${apiUrl}/backups/${encodeURIComponent(credential.id)}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json", "x-backup-token": await cloudAuthToken(credential.key) },
+      body: JSON.stringify(encrypted),
+    });
+    const result = await readCloudResponse(response);
+    localStorage.setItem(CLOUD_BACKUP_CODE_KEY, credential.code);
+    elements.cloudBackupCode.value = credential.code;
+    elements.cloudBackupStatus.textContent = `Son yedek: ${new Intl.DateTimeFormat("tr-TR", { dateStyle: "short", timeStyle: "short" }).format(new Date(result.updatedAt))}`;
+    showToast(typedCode ? "Bulut yedeği güncellendi." : "Bulut yedeği oluşturuldu. Kurtarma kodunu sakla.");
+  } catch (error) {
+    elements.cloudBackupStatus.textContent = error.message || "Bulut yedeği oluşturulamadı.";
+    showToast(elements.cloudBackupStatus.textContent);
+  } finally {
+    setCloudBackupBusy(false);
+  }
+}
+
+async function restoreCloudBackup() {
+  setCloudBackupBusy(true);
+  elements.cloudBackupStatus.textContent = "Şifreli yedek indiriliyor…";
+  try {
+    const apiUrl = cloudBackupApi();
+    const credential = parseCloudCredential(elements.cloudBackupCode.value);
+    const response = await fetch(`${apiUrl}/backups/${encodeURIComponent(credential.id)}`, {
+      headers: { "x-backup-token": await cloudAuthToken(credential.key) },
+    });
+    const result = await readCloudResponse(response);
+    const backup = await decryptCloudBackup(result.payload, credential.key);
+    localStorage.setItem(CLOUD_BACKUP_CODE_KEY, credential.code);
+    elements.cloudBackupCode.value = credential.code;
+    elements.cloudBackupStatus.textContent = `Bulut yedeği bulundu: ${new Intl.DateTimeFormat("tr-TR", { dateStyle: "short", timeStyle: "short" }).format(new Date(result.updatedAt))}`;
+    restoreAppBackup(backup, "Bulut yedeği bu cihazdaki ödev, ders notu, sınav ve devamsızlık kayıtlarının üzerine yazacak. Devam edilsin mi?");
+  } catch (error) {
+    elements.cloudBackupStatus.textContent = error.message || "Bulut yedeği geri yüklenemedi.";
+    showToast(elements.cloudBackupStatus.textContent);
+  } finally {
+    setCloudBackupBusy(false);
+  }
+}
+
+async function copyCloudBackupCode() {
+  try {
+    const credential = parseCloudCredential(elements.cloudBackupCode.value);
+    await navigator.clipboard.writeText(credential.code);
+    showToast("Kurtarma kodu kopyalandı.");
+  } catch (error) {
+    showToast(error.message || "Kurtarma kodu kopyalanamadı.");
+  }
+}
+
+function loadCloudBackupCode() {
+  try {
+    const saved = localStorage.getItem(CLOUD_BACKUP_CODE_KEY) || "";
+    elements.cloudBackupCode.value = saved;
+    elements.cloudBackupStatus.textContent = saved
+      ? "Bu cihaz bir bulut yedeğine bağlı. Değişikliklerden sonra yedeği güncelle."
+      : "İlk yedekte sana özel bir kurtarma kodu oluşturulur.";
+    elements.copyCloudBackupCodeButton.disabled = !saved;
+  } catch (_) {}
 }
 
 function isAppInstalled() {
@@ -2596,6 +2756,12 @@ elements.attendanceDialog.addEventListener("click", (event) => {
 elements.exportDataButton.addEventListener("click", exportAppData);
 elements.importDataButton.addEventListener("click", () => elements.importDataInput.click());
 elements.importDataInput.addEventListener("change", () => importAppData(elements.importDataInput.files[0]));
+elements.saveCloudBackupButton.addEventListener("click", saveCloudBackup);
+elements.restoreCloudBackupButton.addEventListener("click", restoreCloudBackup);
+elements.copyCloudBackupCodeButton.addEventListener("click", copyCloudBackupCode);
+elements.cloudBackupCode.addEventListener("input", () => {
+  elements.copyCloudBackupCodeButton.disabled = !elements.cloudBackupCode.value.trim();
+});
 elements.installAppButton.addEventListener("click", installApp);
 elements.paletteOptions.forEach((button) => {
   button.addEventListener("click", () => {
@@ -2680,6 +2846,7 @@ try {
   sidebarCollapsed = localStorage.getItem(SIDEBAR_KEY) === "1";
 } catch (_) {}
 loadPersonalPreferences();
+loadCloudBackupCode();
 applySidebarState(sidebarCollapsed, false);
 switchView(initialView || "home", false);
 applyPalette(state.palette, false);

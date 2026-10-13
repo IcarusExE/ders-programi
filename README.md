@@ -39,7 +39,7 @@
 | Günlük öğle ve akşam menüsü | Sınav sonucu ve hedef final hesabı |
 | Açık/koyu tema ve renk paletleri | Devamsızlık ve risk takibi |
 | Çevrimdışı PWA desteği | Ders bazlı istatistikler |
-| Ders ve ödev bildirimleri | JSON yedekleme ve geri yükleme |
+| Ders ve ödev bildirimleri | JSON ve uçtan uca şifreli bulut yedeği |
 
 İlk kullanımda İngilizce muafiyet tercihi sorulur. Muaf öğrenciler Temel Yabancı Dil dersini programdan ve bildirimlerden gizleyebilir; tercih daha sonra Ayarlar bölümünden değiştirilebilir.
 
@@ -146,6 +146,18 @@ Arka plan bildirimleri için `worker/` klasöründe Cloudflare Workers, D1 ve Cr
    ```
 
 VAPID özel anahtarını repoya ekleme. Anahtarlar değiştirilirse mevcut cihazların yeniden abone olması gerekir.
+
+### Bulut yedeklemeyi etkinleştirme
+
+Bulut yedekleme aynı Worker ve D1 veritabanını kullanır. `worker/schema.sql` güncel şema ile uzak veritabanına uygulandıktan sonra Worker'ı yeniden yayınla:
+
+```bash
+cd worker
+npm run db:migrate:remote
+npm run deploy
+```
+
+Yedek uygulamadan çıkmadan önce AES-GCM ile şifrelenir. Worker yalnızca şifreli veriyi saklar; kurtarma kodu sunucuya gönderilmez. Kodu kaybeden kullanıcı yedeği geri açamaz.
 
 </details>
 
