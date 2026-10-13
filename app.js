@@ -167,9 +167,6 @@ const elements = {
   cancelAttendanceButton: document.querySelector("#cancelAttendanceButton"),
   statisticsOverview: document.querySelector("#statisticsOverview"),
   courseStatistics: document.querySelector("#courseStatistics"),
-  exportDataButton: document.querySelector("#exportDataButton"),
-  importDataButton: document.querySelector("#importDataButton"),
-  importDataInput: document.querySelector("#importDataInput"),
   cloudBackupCode: document.querySelector("#cloudBackupCode"),
   cloudBackupStatus: document.querySelector("#cloudBackupStatus"),
   saveCloudBackupButton: document.querySelector("#saveCloudBackupButton"),
@@ -217,7 +214,6 @@ const SYNC_TOMBSTONES_KEY = "ders-pusulasi-sync-tombstones";
 const TEXT_SIZE_KEY = "ders-pusulasi-text-size";
 const HIGH_CONTRAST_KEY = "ders-pusulasi-high-contrast";
 const REDUCED_MOTION_KEY = "ders-pusulasi-reduced-motion";
-const MAX_BACKUP_BYTES = 2 * 1024 * 1024;
 const CLOUD_BACKUP_CODE_PREFIX = "DP1";
 const PALETTES = new Set(["classic", "forest", "berry", "sunset", "violet", "ocean"]);
 const THEME_COLORS = {
@@ -2322,45 +2318,6 @@ function applyAppBackupLive(backup) {
   return normalized;
 }
 
-function exportAppData() {
-  const backup = createAppBackup();
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  const date = new Date().toISOString().slice(0, 10);
-  link.href = url;
-  link.download = `ders-pusulasi-yedek-${date}.json`;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-  showToast("Yedek dosyası indirildi.");
-}
-
-function restoreAppBackup(backup, confirmationMessage) {
-  normalizeAppBackup(backup);
-  if (!window.confirm(confirmationMessage)) return false;
-  persistAppBackup(backup);
-  showToast("Yedek geri yüklendi. Sayfa yenileniyor…");
-  window.setTimeout(() => location.reload(), 700);
-  return true;
-}
-
-async function importAppData(file) {
-  if (!file) return;
-  try {
-    if (file.size > MAX_BACKUP_BYTES) throw new Error("Yedek dosyası en fazla 2 MB olabilir.");
-    restoreAppBackup(
-      JSON.parse(await file.text()),
-      "Bu yedek mevcut ödev, ders notu, sınav ve devamsızlık kayıtlarının üzerine yazacak. Devam edilsin mi?",
-    );
-  } catch (error) {
-    showToast(error.message || "Yedek dosyası okunamadı.");
-  } finally {
-    elements.importDataInput.value = "";
-  }
-}
-
 function bytesToBase64Url(bytes) {
   let binary = "";
   bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
@@ -3186,9 +3143,6 @@ elements.cancelAttendanceButton.addEventListener("click", closeAttendanceDialog)
 elements.attendanceDialog.addEventListener("click", (event) => {
   if (event.target === elements.attendanceDialog) closeAttendanceDialog();
 });
-elements.exportDataButton.addEventListener("click", exportAppData);
-elements.importDataButton.addEventListener("click", () => elements.importDataInput.click());
-elements.importDataInput.addEventListener("change", () => importAppData(elements.importDataInput.files[0]));
 elements.saveCloudBackupButton.addEventListener("click", connectCloudSync);
 elements.copyCloudBackupCodeButton.addEventListener("click", copyCloudBackupCode);
 elements.disconnectCloudBackupButton.addEventListener("click", disconnectCloudBackup);
