@@ -421,6 +421,8 @@ async function handleRequest(request, env) {
   return json({ error: "Bulunamadı." }, 404, headers);
 }
 
+export { dueNotifications, sanitizeEncryptedBackup, sanitizeSchedule };
+
 export default {
   async fetch(request, env) {
     try {

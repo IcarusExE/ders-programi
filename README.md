@@ -184,3 +184,16 @@ Yedek uygulamadan çıkmadan önce AES-GCM ile şifrelenir. Worker yalnızca şi
 
 > [!NOTE]
 > Ders programı ve yemek listesi kuruma bağlı güncel verilerdir. Yayınlamadan önce `schedule.json` ve `menu.json` içeriklerini doğrula.
+
+## Testler
+
+Proje veri dosyaları, HTML varlıkları, Service Worker önbelleği ve D1 şeması Python standart kütüphanesiyle test edilir. Worker işlev testleri Node.js'in yerleşik test çalıştırıcısını kullanır:
+
+```bash
+python3 -m unittest discover -s tests -v
+cd worker
+npm ci
+npm test
+```
+
+`.github/workflows/ci.yml` bu kontrolleri `main` dalına gönderilen her committe ve pull request'lerde otomatik çalıştırır.
