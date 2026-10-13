@@ -1066,6 +1066,7 @@ html[data-theme="dark"] .theme-icon .sun-icon { display: block; }
 .onboarding-icon svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .onboarding-content .section-overline { margin-bottom: 9px; }
 .onboarding-content h2 { margin: 0; font: 800 28px/1.15 "Manrope", sans-serif; }
+.onboarding-content h2:focus { outline: none; }
 .onboarding-content > p:last-of-type { max-width: 390px; margin: 13px auto 24px; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .onboarding-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .english-preference-button { min-height: 68px; flex-direction: column; gap: 4px; }

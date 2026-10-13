@@ -2654,7 +2654,10 @@ async function init() {
     }
     startTicking();
     if (!state.englishPreferenceSet) {
-      window.requestAnimationFrame(() => elements.englishPreferenceDialog.showModal());
+      window.requestAnimationFrame(() => {
+        elements.englishPreferenceDialog.showModal();
+        document.querySelector("#englishPreferenceTitle").focus({ preventScroll: true });
+      });
     }
   } catch (error) {
     elements.statusPill.textContent = "Bir sorun oluştu";
