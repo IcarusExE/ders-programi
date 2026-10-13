@@ -2685,6 +2685,7 @@ elements.settingsButton.addEventListener("click", () => {
   renderPaletteOptions();
   renderEnglishPreference();
   elements.settingsDialog.showModal();
+  document.querySelector("#settingsDialogTitle").focus({ preventScroll: true });
 });
 elements.closeSettingsDialog.addEventListener("click", () => elements.settingsDialog.close());
 elements.settingsDialog.addEventListener("click", (event) => {

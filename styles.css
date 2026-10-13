@@ -996,6 +996,7 @@ html[data-theme="dark"] .theme-icon .sun-icon { display: block; }
 .data-note { margin: 15px 0 0; color: var(--muted); font-size: 10px; text-align: center; }
 .settings-dialog { width: min(980px, calc(100% - 32px)); }
 .settings-content { padding: 28px; }
+.settings-content h2:focus { outline: none; }
 .settings-tool-grid .tool-card { min-height: 250px; }
 .cloud-backup-card { grid-column: 1 / -1; }
 .cloud-backup-code { display: grid; gap: 6px; width: 100%; }

@@ -58,6 +58,12 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('id="englishPreferenceTitle" tabindex="-1"', html)
         self.assertIn('document.querySelector("#englishPreferenceTitle").focus', javascript)
 
+    def test_settings_starts_without_focusing_close_button(self):
+        html = (ROOT / "index.html").read_text(encoding="utf-8")
+        javascript = (ROOT / "app.js").read_text(encoding="utf-8")
+        self.assertIn('id="settingsDialogTitle" tabindex="-1"', html)
+        self.assertIn('document.querySelector("#settingsDialogTitle").focus', javascript)
+
     def test_schedule_data(self):
         schedule = json.loads((ROOT / "schedule.json").read_text(encoding="utf-8"))
         self.assertEqual(schedule["timezone"], "Europe/Istanbul")
