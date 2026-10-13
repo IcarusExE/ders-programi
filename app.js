@@ -174,8 +174,14 @@ const elements = {
   cloudBackupStatus: document.querySelector("#cloudBackupStatus"),
   saveCloudBackupButton: document.querySelector("#saveCloudBackupButton"),
   restoreCloudBackupButton: document.querySelector("#restoreCloudBackupButton"),
+  checkCloudBackupButton: document.querySelector("#checkCloudBackupButton"),
   copyCloudBackupCodeButton: document.querySelector("#copyCloudBackupCodeButton"),
+  disconnectCloudBackupButton: document.querySelector("#disconnectCloudBackupButton"),
+  deleteCloudBackupButton: document.querySelector("#deleteCloudBackupButton"),
   cloudAutoSyncEnabled: document.querySelector("#cloudAutoSyncEnabled"),
+  textSizePreference: document.querySelector("#textSizePreference"),
+  highContrastEnabled: document.querySelector("#highContrastEnabled"),
+  reducedMotionEnabled: document.querySelector("#reducedMotionEnabled"),
   updateBanner: document.querySelector("#updateBanner"),
   applyUpdateButton: document.querySelector("#applyUpdateButton"),
   dismissUpdateButton: document.querySelector("#dismissUpdateButton"),
@@ -208,6 +214,9 @@ const CLOUD_BACKUP_CODE_KEY = "ders-pusulasi-cloud-backup-code";
 const CLOUD_AUTO_SYNC_KEY = "ders-pusulasi-cloud-auto-sync";
 const CLOUD_LAST_SYNC_KEY = "ders-pusulasi-cloud-last-sync";
 const LOCAL_DATA_CHANGED_AT_KEY = "ders-pusulasi-data-changed-at";
+const TEXT_SIZE_KEY = "ders-pusulasi-text-size";
+const HIGH_CONTRAST_KEY = "ders-pusulasi-high-contrast";
+const REDUCED_MOTION_KEY = "ders-pusulasi-reduced-motion";
 const MAX_BACKUP_BYTES = 2 * 1024 * 1024;
 const CLOUD_BACKUP_CODE_PREFIX = "DP1";
 const PALETTES = new Set(["classic", "forest", "berry"]);
@@ -541,6 +550,39 @@ function loadPersonalPreferences() {
     state.englishPreferenceSet = savedEnglishPreference === "1" || savedEnglishPreference === "0";
     state.englishExempt = savedEnglishPreference === "1";
   } catch (_) {}
+}
+
+function renderAccessibilityPreferences() {
+  elements.textSizePreference.value = document.documentElement.dataset.textSize || "normal";
+  elements.highContrastEnabled.checked = document.documentElement.dataset.highContrast === "true";
+  elements.reducedMotionEnabled.checked = document.documentElement.dataset.reducedMotion === "true";
+}
+
+function applyAccessibilityPreferences({ textSize, highContrast, reducedMotion }, remember = true) {
+  const selectedTextSize = ["normal", "large", "xlarge"].includes(textSize) ? textSize : "normal";
+  document.documentElement.dataset.textSize = selectedTextSize;
+  document.documentElement.dataset.highContrast = highContrast ? "true" : "false";
+  document.documentElement.dataset.reducedMotion = reducedMotion ? "true" : "false";
+  if (remember) {
+    try {
+      localStorage.setItem(TEXT_SIZE_KEY, selectedTextSize);
+      localStorage.setItem(HIGH_CONTRAST_KEY, highContrast ? "1" : "0");
+      localStorage.setItem(REDUCED_MOTION_KEY, reducedMotion ? "1" : "0");
+      recordLocalDataChange();
+    } catch (_) {
+      showToast("Erişilebilirlik tercihleri kaydedilemedi.");
+    }
+  }
+  renderAccessibilityPreferences();
+}
+
+function handleAccessibilityPreferenceChange() {
+  applyAccessibilityPreferences({
+    textSize: elements.textSizePreference.value,
+    highContrast: elements.highContrastEnabled.checked,
+    reducedMotion: elements.reducedMotionEnabled.checked,
+  });
+  showToast("Erişilebilirlik tercihleri güncellendi.");
 }
 
 function renderEnglishPreference() {
@@ -2130,6 +2172,9 @@ function createAppBackup() {
       theme: document.documentElement.dataset.theme || "light",
       palette: state.palette,
       englishExempt: state.englishExempt,
+      textSize: document.documentElement.dataset.textSize || "normal",
+      highContrast: document.documentElement.dataset.highContrast === "true",
+      reducedMotion: document.documentElement.dataset.reducedMotion === "true",
     },
   };
 }
@@ -2163,6 +2208,9 @@ function restoreAppBackup(backup, confirmationMessage) {
     theme,
     palette,
     englishExempt,
+    textSize = "normal",
+    highContrast = false,
+    reducedMotion = false,
   } = backup.data;
   if (![assignments, grades, gradeLog, attendance].every(Array.isArray)) {
     throw new Error("Yedekteki kayıt yapısı geçersiz.");
@@ -2186,6 +2234,9 @@ function restoreAppBackup(backup, confirmationMessage) {
   if (theme === "dark" || theme === "light") localStorage.setItem(THEME_KEY, theme);
   if (PALETTES.has(palette)) localStorage.setItem(PALETTE_KEY, palette);
   if (typeof englishExempt === "boolean") localStorage.setItem(ENGLISH_EXEMPT_KEY, englishExempt ? "1" : "0");
+  if (["normal", "large", "xlarge"].includes(textSize)) localStorage.setItem(TEXT_SIZE_KEY, textSize);
+  if (typeof highContrast === "boolean") localStorage.setItem(HIGH_CONTRAST_KEY, highContrast ? "1" : "0");
+  if (typeof reducedMotion === "boolean") localStorage.setItem(REDUCED_MOTION_KEY, reducedMotion ? "1" : "0");
   showToast("Yedek geri yüklendi. Sayfa yenileniyor…");
   window.setTimeout(() => location.reload(), 700);
   return true;
@@ -2262,9 +2313,13 @@ async function decryptCloudBackup(payload, keyBytes) {
 }
 
 function setCloudBackupBusy(busy) {
+  const linked = Boolean(elements.cloudBackupCode.value.trim());
   elements.saveCloudBackupButton.disabled = busy;
-  elements.restoreCloudBackupButton.disabled = busy;
-  elements.copyCloudBackupCodeButton.disabled = busy || !elements.cloudBackupCode.value.trim();
+  elements.restoreCloudBackupButton.disabled = busy || !linked;
+  elements.checkCloudBackupButton.disabled = busy || !linked;
+  elements.copyCloudBackupCodeButton.disabled = busy || !linked;
+  elements.disconnectCloudBackupButton.disabled = busy || !linked;
+  elements.deleteCloudBackupButton.disabled = busy || !linked;
 }
 
 function cloudBackupApi() {
@@ -2278,6 +2333,34 @@ async function readCloudResponse(response) {
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(result.error || "Bulut servisine ulaşılamadı.");
   return result;
+}
+
+async function fetchCloudBackup(credential) {
+  const response = await fetch(`${cloudBackupApi()}/backups/${encodeURIComponent(credential.id)}`, {
+    headers: { "x-backup-token": await cloudAuthToken(credential.key) },
+    cache: "no-store",
+  });
+  if (response.status === 404) return null;
+  return readCloudResponse(response);
+}
+
+function cloudVersionState(remoteUpdatedAt) {
+  const remoteTime = new Date(remoteUpdatedAt).getTime() || 0;
+  const lastSyncTime = new Date(localStorage.getItem(CLOUD_LAST_SYNC_KEY) || 0).getTime() || 0;
+  const localChangeTime = new Date(localStorage.getItem(LOCAL_DATA_CHANGED_AT_KEY) || 0).getTime() || 0;
+  return {
+    remoteNewer: remoteTime > lastSyncTime,
+    localChanged: localChangeTime > lastSyncTime,
+  };
+}
+
+function pauseCloudSyncForRemoteChange(conflict) {
+  window.clearTimeout(cloudSyncTimer);
+  localStorage.setItem(CLOUD_AUTO_SYNC_KEY, "0");
+  elements.cloudAutoSyncEnabled.checked = false;
+  elements.cloudBackupStatus.textContent = conflict
+    ? "Senkronizasyon çakışması: Bu cihazda ve bulutta farklı değişiklikler var. Geri yükle veya bu cihazı buluta yedekle."
+    : "Bulutta daha yeni bir yedek var. İncelemek için geri yükle; otomatik senkronizasyon duraklatıldı.";
 }
 
 function cloudAutoSyncEnabled() {
@@ -2331,6 +2414,16 @@ async function saveCloudBackup({ automatic = false } = {}) {
   try {
     const apiUrl = cloudBackupApi();
     const credential = typedCode ? parseCloudCredential(typedCode) : createCloudCredential();
+    if (automatic) {
+      const remote = await fetchCloudBackup(credential);
+      if (remote) {
+        const versionState = cloudVersionState(remote.updatedAt);
+        if (versionState.remoteNewer) {
+          pauseCloudSyncForRemoteChange(versionState.localChanged);
+          return;
+        }
+      }
+    }
     const encrypted = await encryptCloudBackup(createAppBackup(), credential.key);
     const response = await fetch(`${apiUrl}/backups/${encodeURIComponent(credential.id)}`, {
       method: "PUT",
@@ -2341,6 +2434,7 @@ async function saveCloudBackup({ automatic = false } = {}) {
     localStorage.setItem(CLOUD_BACKUP_CODE_KEY, credential.code);
     localStorage.setItem(CLOUD_AUTO_SYNC_KEY, "1");
     localStorage.setItem(CLOUD_LAST_SYNC_KEY, result.updatedAt);
+    localStorage.setItem(LOCAL_DATA_CHANGED_AT_KEY, result.updatedAt);
     elements.cloudBackupCode.value = credential.code;
     elements.cloudAutoSyncEnabled.checked = true;
     elements.cloudAutoSyncEnabled.disabled = false;
@@ -2365,16 +2459,14 @@ async function restoreCloudBackup() {
   setCloudBackupBusy(true);
   elements.cloudBackupStatus.textContent = "Şifreli yedek indiriliyor…";
   try {
-    const apiUrl = cloudBackupApi();
     const credential = parseCloudCredential(elements.cloudBackupCode.value);
-    const response = await fetch(`${apiUrl}/backups/${encodeURIComponent(credential.id)}`, {
-      headers: { "x-backup-token": await cloudAuthToken(credential.key) },
-    });
-    const result = await readCloudResponse(response);
+    const result = await fetchCloudBackup(credential);
+    if (!result) throw new Error("Bulut yedeği bulunamadı.");
     const backup = await decryptCloudBackup(result.payload, credential.key);
     localStorage.setItem(CLOUD_BACKUP_CODE_KEY, credential.code);
     localStorage.setItem(CLOUD_AUTO_SYNC_KEY, "1");
     localStorage.setItem(CLOUD_LAST_SYNC_KEY, result.updatedAt);
+    localStorage.setItem(LOCAL_DATA_CHANGED_AT_KEY, result.updatedAt);
     elements.cloudBackupCode.value = credential.code;
     elements.cloudAutoSyncEnabled.checked = true;
     elements.cloudAutoSyncEnabled.disabled = false;
@@ -2382,6 +2474,73 @@ async function restoreCloudBackup() {
     restoreAppBackup(backup, "Bulut yedeği bu cihazdaki ödev, ders notu, sınav ve devamsızlık kayıtlarının üzerine yazacak. Devam edilsin mi?");
   } catch (error) {
     elements.cloudBackupStatus.textContent = error.message || "Bulut yedeği geri yüklenemedi.";
+    showToast(elements.cloudBackupStatus.textContent);
+  } finally {
+    setCloudBackupBusy(false);
+  }
+}
+
+async function checkCloudBackup({ silent = false } = {}) {
+  if (!elements.cloudBackupCode.value.trim() || !navigator.onLine) return;
+  if (!silent) {
+    setCloudBackupBusy(true);
+    elements.cloudBackupStatus.textContent = "Bulut yedeği kontrol ediliyor…";
+  }
+  try {
+    const credential = parseCloudCredential(elements.cloudBackupCode.value);
+    const remote = await fetchCloudBackup(credential);
+    if (!remote) throw new Error("Bulut yedeği bulunamadı.");
+    const versionState = cloudVersionState(remote.updatedAt);
+    if (versionState.remoteNewer) {
+      pauseCloudSyncForRemoteChange(versionState.localChanged);
+    } else if (!silent) {
+      elements.cloudBackupStatus.textContent = `Bulut yedeği güncel · ${formatSyncTime(remote.updatedAt)}`;
+      showToast("Bulut yedeği güncel.");
+    }
+  } catch (error) {
+    if (!silent) {
+      elements.cloudBackupStatus.textContent = error.message || "Bulut yedeği kontrol edilemedi.";
+      showToast(elements.cloudBackupStatus.textContent);
+    }
+  } finally {
+    if (!silent) setCloudBackupBusy(false);
+  }
+}
+
+function clearCloudConnection() {
+  window.clearTimeout(cloudSyncTimer);
+  localStorage.removeItem(CLOUD_BACKUP_CODE_KEY);
+  localStorage.removeItem(CLOUD_AUTO_SYNC_KEY);
+  localStorage.removeItem(CLOUD_LAST_SYNC_KEY);
+  elements.cloudBackupCode.value = "";
+  elements.cloudAutoSyncEnabled.checked = false;
+  elements.cloudAutoSyncEnabled.disabled = true;
+  setCloudBackupBusy(false);
+}
+
+function disconnectCloudBackup() {
+  if (!window.confirm("Bu cihazın bulut yedeği bağlantısı kesilsin mi? Buluttaki şifreli yedek silinmez.")) return;
+  clearCloudConnection();
+  elements.cloudBackupStatus.textContent = "Bu cihazın bulut bağlantısı kesildi.";
+  showToast("Bulut bağlantısı kesildi.");
+}
+
+async function deleteCloudBackup() {
+  if (!window.confirm("Bulut yedeği kalıcı olarak silinsin mi? Bu işlem geri alınamaz; cihazdaki veriler korunur.")) return;
+  setCloudBackupBusy(true);
+  elements.cloudBackupStatus.textContent = "Bulut yedeği siliniyor…";
+  try {
+    const credential = parseCloudCredential(elements.cloudBackupCode.value);
+    const response = await fetch(`${cloudBackupApi()}/backups/${encodeURIComponent(credential.id)}`, {
+      method: "DELETE",
+      headers: { "x-backup-token": await cloudAuthToken(credential.key) },
+    });
+    await readCloudResponse(response);
+    clearCloudConnection();
+    elements.cloudBackupStatus.textContent = "Bulut yedeği silindi. Cihazdaki veriler korunuyor.";
+    showToast("Bulut yedeği kalıcı olarak silindi.");
+  } catch (error) {
+    elements.cloudBackupStatus.textContent = error.message || "Bulut yedeği silinemedi.";
     showToast(elements.cloudBackupStatus.textContent);
   } finally {
     setCloudBackupBusy(false);
@@ -2410,6 +2569,10 @@ function loadCloudBackupCode() {
     elements.cloudAutoSyncEnabled.checked = Boolean(autoSync);
     elements.cloudAutoSyncEnabled.disabled = !saved;
     elements.copyCloudBackupCodeButton.disabled = !saved;
+    elements.disconnectCloudBackupButton.disabled = !saved;
+    elements.deleteCloudBackupButton.disabled = !saved;
+    elements.checkCloudBackupButton.disabled = !saved;
+    if (saved && navigator.onLine) window.setTimeout(() => checkCloudBackup({ silent: true }), 800);
   } catch (_) {}
 }
 
@@ -2818,6 +2981,7 @@ elements.settingsButton.addEventListener("click", () => {
   renderNotificationPreferences();
   renderPaletteOptions();
   renderEnglishPreference();
+  renderAccessibilityPreferences();
   elements.settingsDialog.showModal();
   document.querySelector("#settingsDialogTitle").focus({ preventScroll: true });
 });
@@ -2896,11 +3060,19 @@ elements.importDataButton.addEventListener("click", () => elements.importDataInp
 elements.importDataInput.addEventListener("change", () => importAppData(elements.importDataInput.files[0]));
 elements.saveCloudBackupButton.addEventListener("click", saveCloudBackup);
 elements.restoreCloudBackupButton.addEventListener("click", restoreCloudBackup);
+elements.checkCloudBackupButton.addEventListener("click", () => checkCloudBackup());
 elements.copyCloudBackupCodeButton.addEventListener("click", copyCloudBackupCode);
+elements.disconnectCloudBackupButton.addEventListener("click", disconnectCloudBackup);
+elements.deleteCloudBackupButton.addEventListener("click", deleteCloudBackup);
 elements.cloudAutoSyncEnabled.addEventListener("change", handleCloudAutoSyncChange);
 elements.cloudBackupCode.addEventListener("input", () => {
-  elements.copyCloudBackupCodeButton.disabled = !elements.cloudBackupCode.value.trim();
+  setCloudBackupBusy(false);
 });
+[
+  elements.textSizePreference,
+  elements.highContrastEnabled,
+  elements.reducedMotionEnabled,
+].forEach((control) => control.addEventListener("change", handleAccessibilityPreferenceChange));
 elements.installAppButton.addEventListener("click", installApp);
 elements.applyUpdateButton.addEventListener("click", applyPwaUpdate);
 elements.dismissUpdateButton.addEventListener("click", () => {
@@ -2998,6 +3170,7 @@ switchView(initialView || "home", false);
 applyPalette(state.palette, false);
 applyTheme(document.documentElement.dataset.theme, false);
 renderEnglishPreference();
+renderAccessibilityPreferences();
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.addEventListener("controllerchange", () => {

@@ -914,8 +914,38 @@
             </label>
             <div class="cloud-backup-actions">
               <button class="primary-button" id="saveCloudBackupButton" type="button">Buluta yedekle</button>
-              <button class="secondary-button" id="restoreCloudBackupButton" type="button">Geri yükle</button>
+              <button class="secondary-button" id="restoreCloudBackupButton" type="button" disabled>Geri yükle</button>
+              <button class="secondary-button" id="checkCloudBackupButton" type="button" disabled>Bulutu kontrol et</button>
               <button class="secondary-button" id="copyCloudBackupCodeButton" type="button" disabled>Kodu kopyala</button>
+              <button class="secondary-button" id="disconnectCloudBackupButton" type="button" disabled>Bağlantıyı kes</button>
+              <button class="danger-button" id="deleteCloudBackupButton" type="button" disabled>Bulut yedeğini sil</button>
+            </div>
+          </article>
+          <article class="tool-card accessibility-card">
+            <span class="tool-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="4" r="2" /><path d="M5 8h14M12 6v14M8 11l4 3 4-3M9 20l3-6 3 6" />
+              </svg>
+            </span>
+            <h3>Erişilebilirlik</h3>
+            <p>Metinleri büyüt, kontrastı artır veya arayüz hareketlerini azalt.</p>
+            <div class="accessibility-settings">
+              <label class="setting-select" for="textSizePreference">
+                <span>Yazı ve arayüz boyutu</span>
+                <select id="textSizePreference">
+                  <option value="normal">Normal</option>
+                  <option value="large">Büyük</option>
+                  <option value="xlarge">Çok büyük</option>
+                </select>
+              </label>
+              <label class="setting-toggle" for="highContrastEnabled">
+                <span><strong>Yüksek kontrast</strong><small>Metin ve kenarlıkları daha belirgin göster</small></span>
+                <input id="highContrastEnabled" type="checkbox" />
+              </label>
+              <label class="setting-toggle" for="reducedMotionEnabled">
+                <span><strong>Hareketleri azalt</strong><small>Animasyon ve geçişleri devre dışı bırak</small></span>
+                <input id="reducedMotionEnabled" type="checkbox" />
+              </label>
             </div>
           </article>
           <article class="tool-card install-card">
@@ -969,7 +999,7 @@
             </div>
           </article>
         </div>
-        <p class="data-note">Ödev, ders notu, sınav ve devamsızlık kayıtların bu cihazda tutulur. Bildirim programın Cloudflare'a yalnızca bildirim göndermek amacıyla eşitlenir.</p>
+        <p class="data-note">Kişisel kayıtların bu cihazda tutulur. Bulut yedekleme açıksa yalnızca cihazında şifrelenen veri Cloudflare'a gönderilir.</p>
       </div>
     </dialog>
 

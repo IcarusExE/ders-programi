@@ -97,6 +97,33 @@ html[data-theme="dark"][data-palette="berry"] {
 * { box-sizing: border-box; }
 
 html { height: 100%; scroll-behavior: smooth; }
+html[data-text-size="large"] { zoom: 1.1; }
+html[data-text-size="xlarge"] { zoom: 1.2; }
+
+html[data-theme="light"][data-high-contrast="true"] {
+  --muted: #34465e;
+  --line: rgba(10, 32, 62, .42);
+  --card: #ffffff;
+  --focus-ring: #ffbf00;
+}
+html[data-theme="dark"][data-high-contrast="true"] {
+  --ink: #ffffff;
+  --muted: #e0e9f5;
+  --paper: #020a14;
+  --card: #0a2547;
+  --line: rgba(255, 255, 255, .48);
+  --focus-ring: #ffd84d;
+}
+
+html[data-reduced-motion="true"] { scroll-behavior: auto; }
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+  animation-duration: .001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .001ms !important;
+  scroll-behavior: auto !important;
+}
 
 body {
   margin: 0;
@@ -1006,6 +1033,11 @@ html[data-theme="dark"] .theme-icon .sun-icon { display: block; }
 .cloud-backup-status { min-height: 18px; margin: 0; color: var(--muted); font-size: 10px; }
 .cloud-sync-setting { width: 100%; }
 .cloud-backup-actions { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+.danger-button { min-height: var(--control-height); padding: 10px 15px; border: 1px solid rgba(180, 42, 42, .35); border-radius: var(--control-radius); color: #a42626; background: rgba(180, 42, 42, .07); cursor: pointer; font-weight: 700; transition: var(--control-transition); }
+.danger-button:hover { background: rgba(180, 42, 42, .14); }
+.danger-button:disabled { opacity: .45; cursor: not-allowed; }
+.accessibility-card { grid-column: 1 / -1; }
+.accessibility-settings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; width: 100%; }
 .appearance-preferences-card { grid-column: 1 / -1; min-height: 0 !important; }
 .appearance-preferences-card > p { margin-bottom: 18px; }
 .palette-picker { width: 100%; margin: 0; padding: 0; border: 0; }
@@ -1213,6 +1245,7 @@ html[data-theme="dark"] .setting-toggle,
 html[data-theme="dark"] .setting-select { background: rgba(var(--accent-rgb), .08); }
 html[data-theme="dark"] .setting-select select { background: var(--dark-field); }
 html[data-theme="dark"] .cloud-backup-code input { background: var(--dark-field); }
+html[data-theme="dark"] .danger-button { color: #ffb3b3; border-color: rgba(255, 130, 130, .42); }
 html[data-theme="dark"] .date-input-control { background: var(--dark-field); }
 html[data-theme="dark"] .date-picker { background: var(--dark-dialog); }
 html[data-theme="dark"] .calendar-header button { background: var(--dark-field); }
@@ -1361,6 +1394,7 @@ html[data-theme="dark"] .update-banner { background: var(--dark-card); }
   .tool-card { min-height: 220px; }
   .settings-content { padding: 21px 18px; }
   .notification-setting { grid-template-columns: 1fr; }
+  .accessibility-settings { grid-template-columns: 1fr; }
   .assignment-card { grid-template-columns: 34px minmax(0, 1fr); }
   .assignment-actions { grid-column: 2; justify-self: start; }
   .today-section, .week-section, .menu-section, .assignments-section, .notes-section, .grades-section, .attendance-section, .statistics-section { padding-bottom: 92px; }

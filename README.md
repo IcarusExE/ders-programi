@@ -40,6 +40,7 @@
 | Açık/koyu tema ve renk paletleri | Devamsızlık ve risk takibi |
 | Çevrimdışı PWA ve sürüm güncelleme bildirimi | Ders bazlı istatistikler |
 | Ders ve ödev bildirimleri | JSON ve otomatik şifreli bulut senkronizasyonu |
+| Büyük yazı, yüksek kontrast ve azaltılmış hareket | Çakışma korumalı cihazlar arası yedekleme |
 
 İlk kullanımda İngilizce muafiyet tercihi sorulur. Muaf öğrenciler Temel Yabancı Dil dersini programdan ve bildirimlerden gizleyebilir; tercih daha sonra Ayarlar bölümünden değiştirilebilir.
 
@@ -157,7 +158,7 @@ npm run db:migrate:remote
 npm run deploy
 ```
 
-Yedek uygulamadan çıkmadan önce AES-GCM ile şifrelenir. Worker yalnızca şifreli veriyi saklar; kurtarma kodu sunucuya gönderilmez. İlk bulut yedeğinden sonra ödev, not, devamsızlık ve tercih değişiklikleri kısa bir gecikmeyle otomatik eşitlenir. Kodu kaybeden kullanıcı yedeği geri açamaz.
+Yedek uygulamadan çıkmadan önce AES-GCM ile şifrelenir. Worker yalnızca şifreli veriyi saklar; kurtarma kodu sunucuya gönderilmez. İlk bulut yedeğinden sonra ödev, not, devamsızlık ve tercih değişiklikleri kısa bir gecikmeyle otomatik eşitlenir. İki cihazda farklı değişiklik algılanırsa otomatik yazma durdurulur ve kullanıcıdan hangi kopyayı koruyacağı istenir. Ayarlardan cihaz bağlantısı kesilebilir veya bulut yedeği kalıcı olarak silinebilir. Kodu kaybeden kullanıcı yedeği geri açamaz.
 
 </details>
 

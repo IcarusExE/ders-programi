@@ -48,6 +48,9 @@ class ProjectTests(unittest.TestCase):
             "restoreCloudBackupButton",
             "copyCloudBackupCodeButton",
             "cloudAutoSyncEnabled",
+            "checkCloudBackupButton",
+            "disconnectCloudBackupButton",
+            "deleteCloudBackupButton",
         }
         for control_id in control_ids:
             self.assertIn(f'id="{control_id}"', html)
@@ -63,6 +66,18 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('type: "SKIP_WAITING"', javascript)
         self.assertIn('event.data?.type === "SKIP_WAITING"', service_worker)
         self.assertNotIn('.then(() => self.skipWaiting())', service_worker)
+
+    def test_accessibility_preferences_are_wired(self):
+        html = (ROOT / "index.html").read_text(encoding="utf-8")
+        javascript = (ROOT / "app.js").read_text(encoding="utf-8")
+        theme_init = (ROOT / "theme-init.js").read_text(encoding="utf-8")
+        styles = (ROOT / "styles.css").read_text(encoding="utf-8")
+        for control_id in ("textSizePreference", "highContrastEnabled", "reducedMotionEnabled"):
+            self.assertIn(f'id="{control_id}"', html)
+            self.assertIn(f'#{control_id}', javascript)
+        self.assertIn("prefers-reduced-motion: reduce", theme_init)
+        self.assertIn('data-high-contrast="true"', styles)
+        self.assertIn('data-reduced-motion="true"', styles)
 
     def test_onboarding_starts_without_a_selected_answer(self):
         html = (ROOT / "index.html").read_text(encoding="utf-8")
