@@ -39,7 +39,7 @@
 | Günlük öğle ve akşam menüsü | Sınav sonucu ve hedef final hesabı |
 | Açık/koyu tema ve altı renk paleti | Devamsızlık ve risk takibi |
 | Çevrimdışı PWA ve sürüm güncelleme bildirimi | Ders bazlı istatistikler |
-| Ders ve ödev bildirimleri | JSON ve otomatik şifreli bulut senkronizasyonu |
+| Ders ve ödev bildirimleri | Kodla eşleşen cihazlar arasında canlı senkronizasyon |
 | Büyük yazı, yüksek kontrast ve azaltılmış hareket | Çakışma korumalı cihazlar arası yedekleme |
 
 İlk kullanımda İngilizce muafiyet tercihi sorulur. Muaf öğrenciler Temel Yabancı Dil dersini programdan ve bildirimlerden gizleyebilir; tercih daha sonra Ayarlar bölümünden değiştirilebilir.
@@ -148,9 +148,9 @@ Arka plan bildirimleri için `worker/` klasöründe Cloudflare Workers, D1 ve Cr
 
 VAPID özel anahtarını repoya ekleme. Anahtarlar değiştirilirse mevcut cihazların yeniden abone olması gerekir.
 
-### Bulut yedeklemeyi etkinleştirme
+### Canlı cihaz eşitlemeyi etkinleştirme
 
-Bulut yedekleme aynı Worker ve D1 veritabanını kullanır. `worker/schema.sql` güncel şema ile uzak veritabanına uygulandıktan sonra Worker'ı yeniden yayınla:
+Canlı eşitleme aynı Worker ve D1 veritabanını kullanır. `worker/schema.sql` güncel şema ile uzak veritabanına uygulandıktan sonra Worker'ı yeniden yayınla:
 
 ```bash
 cd worker
@@ -158,7 +158,7 @@ npm run db:migrate:remote
 npm run deploy
 ```
 
-Yedek uygulamadan çıkmadan önce AES-GCM ile şifrelenir. Worker yalnızca şifreli veriyi saklar; kurtarma kodu sunucuya gönderilmez. İlk bulut yedeğinden sonra ödev, not, devamsızlık ve tercih değişiklikleri kısa bir gecikmeyle otomatik eşitlenir. İki cihazda farklı değişiklik algılanırsa otomatik yazma durdurulur ve kullanıcıdan hangi kopyayı koruyacağı istenir. Ayarlardan cihaz bağlantısı kesilebilir veya bulut yedeği kalıcı olarak silinebilir. Kodu kaybeden kullanıcı yedeği geri açamaz.
+Veri uygulamadan çıkmadan önce AES-GCM ile şifrelenir. Worker yalnızca şifreli içeriği saklar; eşleştirme kodunun kendisi sunucuya gönderilmez. Bir cihazda oluşturulan kod diğer cihazlara girildikten sonra ödev, not, devamsızlık ve tercihler birkaç saniye içinde iki yönlü eşitlenir ve açık ekranlar yenileme gerektirmeden güncellenir. Aynı anda yapılan değişiklikler kayıt kimliği ve güncelleme zamanına göre birleştirilir; silinen kayıtlar yeniden oluşmasın diye şifreli eşitleme bilgisinde işaretlenir. Ayarlardan cihaz bağlantısı kesilebilir veya bulut kaydı kalıcı olarak silinebilir.
 
 </details>
 

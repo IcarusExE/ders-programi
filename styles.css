@@ -1095,9 +1095,15 @@ html[data-theme="dark"] .theme-icon .sun-icon { display: block; }
 .cloud-backup-code span { color: var(--muted); font-size: 10px; font-weight: 700; }
 .cloud-backup-code input { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: var(--card); font: 500 11px/1.3 "DM Sans", sans-serif; }
 .cloud-backup-code input:focus { outline: 2px solid rgba(var(--accent-rgb), .25); border-color: var(--wine); }
+.cloud-backup-code input[readonly] { color: var(--muted); background: rgba(var(--accent-rgb), .045); }
 .cloud-backup-status { min-height: 18px; margin: 0; color: var(--muted); font-size: 10px; }
 .cloud-sync-setting { width: 100%; }
 .cloud-backup-actions { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+.cloud-backup-actions [hidden], .cloud-sync-details[hidden] { display: none !important; }
+.cloud-sync-details { width: 100%; margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--line); }
+.cloud-sync-details summary { color: var(--muted); cursor: pointer; font-size: 10px; font-weight: 700; }
+.cloud-sync-details p { margin: 10px 0; font-size: 10px; }
+.cloud-sync-details .danger-button { min-height: 38px; margin-top: 0; padding-block: 7px; font-size: 11px; }
 .danger-button { min-height: var(--control-height); padding: 10px 15px; border: 1px solid rgba(180, 42, 42, .35); border-radius: var(--control-radius); color: #a42626; background: rgba(180, 42, 42, .07); cursor: pointer; font-weight: 700; transition: var(--control-transition); }
 .danger-button:hover { background: rgba(180, 42, 42, .14); }
 .danger-button:disabled { opacity: .45; cursor: not-allowed; }

@@ -45,16 +45,23 @@ class ProjectTests(unittest.TestCase):
             "cloudBackupCode",
             "cloudBackupStatus",
             "saveCloudBackupButton",
-            "restoreCloudBackupButton",
             "copyCloudBackupCodeButton",
             "cloudAutoSyncEnabled",
-            "checkCloudBackupButton",
             "disconnectCloudBackupButton",
             "deleteCloudBackupButton",
         }
         for control_id in control_ids:
             self.assertIn(f'id="{control_id}"', html)
             self.assertIn(f'#{control_id}', javascript)
+
+    def test_cloud_sync_is_live_and_automatic(self):
+        html = (ROOT / "index.html").read_text(encoding="utf-8")
+        javascript = (ROOT / "app.js").read_text(encoding="utf-8")
+        self.assertNotIn('id="restoreCloudBackupButton"', html)
+        self.assertNotIn('id="checkCloudBackupButton"', html)
+        self.assertIn("setInterval(() => syncCloudNow", javascript)
+        self.assertIn("applyAppBackupLive(remoteBackup)", javascript)
+        self.assertIn("mergeAppBackups(backupToUpload, remoteBackup)", javascript)
 
     def test_pwa_update_prompt_is_wired(self):
         html = (ROOT / "index.html").read_text(encoding="utf-8")
