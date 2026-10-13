@@ -33,6 +33,12 @@ const state = {
   palette: "classic",
   englishExempt: false,
   englishPreferenceSet: false,
+  homePreferences: {
+    introVisible: true,
+    summaryVisible: true,
+    menuVisible: true,
+    order: "summary-first",
+  },
 };
 
 const elements = {
@@ -52,6 +58,15 @@ const elements = {
   homeLunchMenu: document.querySelector("#homeLunchMenu"),
   homeDinnerMenu: document.querySelector("#homeDinnerMenu"),
   openMenuButton: document.querySelector("#openMenuButton"),
+  openStatisticsButton: document.querySelector("#openStatisticsButton"),
+  homeAcademicSummary: document.querySelector("#homeAcademicSummary"),
+  homeMenuPreview: document.querySelector(".home-menu-preview"),
+  hero: document.querySelector(".hero"),
+  heroCopy: document.querySelector(".hero-copy"),
+  homePendingAssignments: document.querySelector("#homePendingAssignments"),
+  homeNextAssignment: document.querySelector("#homeNextAssignment"),
+  homeRiskCourses: document.querySelector("#homeRiskCourses"),
+  homeGradeAverage: document.querySelector("#homeGradeAverage"),
   menuTitle: document.querySelector("#menuTitle"),
   menuUpdatedAt: document.querySelector("#menuUpdatedAt"),
   menuSelectedDay: document.querySelector("#menuSelectedDay"),
@@ -180,6 +195,10 @@ const elements = {
   textSizePreference: document.querySelector("#textSizePreference"),
   highContrastEnabled: document.querySelector("#highContrastEnabled"),
   reducedMotionEnabled: document.querySelector("#reducedMotionEnabled"),
+  homeIntroVisible: document.querySelector("#homeIntroVisible"),
+  homeSummaryVisible: document.querySelector("#homeSummaryVisible"),
+  homeMenuVisible: document.querySelector("#homeMenuVisible"),
+  homeSectionOrder: document.querySelector("#homeSectionOrder"),
   updateBanner: document.querySelector("#updateBanner"),
   applyUpdateButton: document.querySelector("#applyUpdateButton"),
   dismissUpdateButton: document.querySelector("#dismissUpdateButton"),
@@ -217,6 +236,7 @@ const OFFLINE_QUEUE_KEY = "ders-pusulasi-offline-queue";
 const TEXT_SIZE_KEY = "ders-pusulasi-text-size";
 const HIGH_CONTRAST_KEY = "ders-pusulasi-high-contrast";
 const REDUCED_MOTION_KEY = "ders-pusulasi-reduced-motion";
+const HOME_PREFERENCES_KEY = "ders-pusulasi-home-preferences";
 const CLOUD_BACKUP_CODE_PREFIX = "DP1";
 const PALETTES = new Set(["classic", "forest", "berry", "sunset", "violet", "ocean"]);
 const THEME_COLORS = {
@@ -553,6 +573,58 @@ function loadPersonalPreferences() {
     state.englishPreferenceSet = savedEnglishPreference === "1" || savedEnglishPreference === "0";
     state.englishExempt = savedEnglishPreference === "1";
   } catch (_) {}
+}
+
+function sanitizeHomePreferences(value) {
+  const saved = value && typeof value === "object" ? value : {};
+  return {
+    introVisible: saved.introVisible !== false,
+    summaryVisible: saved.summaryVisible !== false,
+    menuVisible: saved.menuVisible !== false,
+    order: saved.order === "menu-first" ? "menu-first" : "summary-first",
+  };
+}
+
+function loadHomePreferences() {
+  try {
+    state.homePreferences = sanitizeHomePreferences(JSON.parse(localStorage.getItem(HOME_PREFERENCES_KEY) || "null"));
+  } catch (_) {
+    state.homePreferences = sanitizeHomePreferences(null);
+  }
+}
+
+function renderHomePreferences() {
+  const preferences = state.homePreferences;
+  elements.homeIntroVisible.checked = preferences.introVisible;
+  elements.homeSummaryVisible.checked = preferences.summaryVisible;
+  elements.homeMenuVisible.checked = preferences.menuVisible;
+  elements.homeSectionOrder.value = preferences.order;
+  elements.heroCopy.hidden = !preferences.introVisible;
+  elements.homeAcademicSummary.hidden = !preferences.summaryVisible;
+  elements.homeMenuPreview.hidden = !preferences.menuVisible;
+  elements.hero.classList.toggle("without-intro", !preferences.introVisible);
+  elements.hero.dataset.sectionOrder = preferences.order;
+}
+
+function saveHomePreferences() {
+  try {
+    localStorage.setItem(HOME_PREFERENCES_KEY, JSON.stringify(state.homePreferences));
+    recordLocalDataChange();
+  } catch (_) {
+    showToast("Ana sayfa tercihleri kaydedilemedi.");
+  }
+}
+
+function handleHomePreferenceChange() {
+  state.homePreferences = sanitizeHomePreferences({
+    introVisible: elements.homeIntroVisible.checked,
+    summaryVisible: elements.homeSummaryVisible.checked,
+    menuVisible: elements.homeMenuVisible.checked,
+    order: elements.homeSectionOrder.value,
+  });
+  renderHomePreferences();
+  saveHomePreferences();
+  showToast("Ana sayfa düzeni güncellendi.");
 }
 
 function renderAccessibilityPreferences() {
@@ -1019,6 +1091,7 @@ function saveAssignments() {
   try {
     localStorage.setItem(ASSIGNMENTS_KEY, JSON.stringify(state.assignments));
     recordLocalDataChange();
+    renderHomeSummary();
   } catch (_) {
     showToast("Ödevler tarayıcıya kaydedilemedi.");
   }
@@ -1598,6 +1671,7 @@ function saveGrades() {
     localStorage.setItem(GRADES_KEY, JSON.stringify(state.gradeRecords));
     localStorage.setItem(GRADE_LOG_KEY, JSON.stringify(state.gradeLog));
     recordLocalDataChange();
+    renderHomeSummary();
   } catch (_) {
     showToast("Not kayıtları tarayıcıya kaydedilemedi.");
   }
@@ -1905,6 +1979,7 @@ function saveAttendance() {
   try {
     localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(state.attendanceRecords));
     recordLocalDataChange();
+    renderHomeSummary();
   } catch (_) {
     showToast("Devamsızlık kayıtları tarayıcıya kaydedilemedi.");
   }
@@ -2103,7 +2178,28 @@ function createMetricCard(value, label, detail, tone = "") {
   return card;
 }
 
+function renderHomeSummary() {
+  const pendingAssignments = state.assignments
+    .filter((item) => !item.completed)
+    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+  const nextAssignment = pendingAssignments[0];
+  const riskyCourses = visibleAttendanceRecords().filter((record) => attendanceStatus(record).ratio >= 0.75).length;
+  const completedGrades = state.gradeRecords
+    .map((record) => calculateGrade(record))
+    .filter((result) => result.hasFinal && result.weightsValid);
+  const gradeAverage = completedGrades.length
+    ? completedGrades.reduce((sum, result) => sum + result.average, 0) / completedGrades.length
+    : null;
+  elements.homePendingAssignments.textContent = String(pendingAssignments.length);
+  elements.homeNextAssignment.textContent = nextAssignment
+    ? `${nextAssignment.title} · ${formatAssignmentDate(nextAssignment.dueDate)}`
+    : "Yaklaşan teslim yok";
+  elements.homeRiskCourses.textContent = String(riskyCourses);
+  elements.homeGradeAverage.textContent = gradeAverage === null ? "—" : formatScore(gradeAverage);
+}
+
 function renderStatistics() {
+  renderHomeSummary();
   const assignmentCompleted = state.assignments.filter((item) => item.completed).length;
   const assignmentRate = state.assignments.length ? Math.round((assignmentCompleted / state.assignments.length) * 100) : 0;
   const gradeResults = state.gradeRecords.map((record) => calculateGrade(record)).filter((result) => result.hasFinal && result.weightsValid);
@@ -2211,6 +2307,7 @@ function createAppBackup() {
       textSize: document.documentElement.dataset.textSize || "normal",
       highContrast: document.documentElement.dataset.highContrast === "true",
       reducedMotion: document.documentElement.dataset.reducedMotion === "true",
+      homePreferences: state.homePreferences,
     },
     deleted: loadSyncTombstones(),
   };
@@ -2233,6 +2330,7 @@ function normalizeAppBackup(backup) {
     textSize = "normal",
     highContrast = false,
     reducedMotion = false,
+    homePreferences = null,
   } = backup.data;
   if (![assignments, grades, gradeLog, attendance].every(Array.isArray)) throw new Error("Yedekteki kayıt yapısı geçersiz.");
   if (!Array.isArray(courseNotes)) throw new Error("Yedekteki ders notları geçersiz.");
@@ -2253,6 +2351,7 @@ function normalizeAppBackup(backup) {
       textSize: ["normal", "large", "xlarge"].includes(textSize) ? textSize : "normal",
       highContrast: highContrast === true,
       reducedMotion: reducedMotion === true,
+      homePreferences: sanitizeHomePreferences(homePreferences),
     },
     deleted: sanitizeSyncTombstones(backup.deleted),
   };
@@ -2286,6 +2385,7 @@ function persistAppBackup(backup) {
   localStorage.setItem(TEXT_SIZE_KEY, data.textSize);
   localStorage.setItem(HIGH_CONTRAST_KEY, data.highContrast ? "1" : "0");
   localStorage.setItem(REDUCED_MOTION_KEY, data.reducedMotion ? "1" : "0");
+  localStorage.setItem(HOME_PREFERENCES_KEY, JSON.stringify(data.homePreferences));
   localStorage.setItem(SYNC_TOMBSTONES_KEY, JSON.stringify(normalized.deleted));
   return normalized;
 }
@@ -2299,6 +2399,7 @@ function applyAppBackupLive(backup) {
   state.attendanceRecords = data.attendance;
   state.notes = data.courseNotes;
   state.notificationPreferences = data.notificationPreferences;
+  state.homePreferences = data.homePreferences;
   state.englishExempt = data.englishExempt;
   state.englishPreferenceSet = true;
   applyPalette(data.palette, false);
@@ -2306,6 +2407,7 @@ function applyAppBackupLive(backup) {
   applyAccessibilityPreferences({ textSize: data.textSize, highContrast: data.highContrast, reducedMotion: data.reducedMotion }, false);
   renderEnglishPreference();
   renderNotificationPreferences();
+  renderHomePreferences();
   if (state.schedule) {
     renderFocus(state.now);
     renderToday(state.now);
@@ -3145,6 +3247,7 @@ async function init() {
 elements.notificationButton.addEventListener("click", handleNotificationButton);
 elements.themeButton.addEventListener("click", toggleTheme);
 elements.openMenuButton.addEventListener("click", () => switchView("menu"));
+elements.openStatisticsButton.addEventListener("click", () => switchView("statistics"));
 elements.previousMenuDay.addEventListener("click", () => stepMenuDate(-1));
 elements.nextMenuDay.addEventListener("click", () => stepMenuDate(1));
 elements.menuTodayButton.addEventListener("click", () => {
@@ -3156,6 +3259,7 @@ elements.settingsButton.addEventListener("click", () => {
   renderPaletteOptions();
   renderEnglishPreference();
   renderAccessibilityPreferences();
+  renderHomePreferences();
   elements.settingsDialog.showModal();
   document.querySelector("#settingsDialogTitle").focus({ preventScroll: true });
 });
@@ -3245,6 +3349,12 @@ elements.cloudBackupCode.addEventListener("input", () => {
   elements.highContrastEnabled,
   elements.reducedMotionEnabled,
 ].forEach((control) => control.addEventListener("change", handleAccessibilityPreferenceChange));
+[
+  elements.homeIntroVisible,
+  elements.homeSummaryVisible,
+  elements.homeMenuVisible,
+  elements.homeSectionOrder,
+].forEach((control) => control.addEventListener("change", handleHomePreferenceChange));
 elements.installAppButton.addEventListener("click", installApp);
 elements.applyUpdateButton.addEventListener("click", applyPwaUpdate);
 elements.dismissUpdateButton.addEventListener("click", () => {
@@ -3342,6 +3452,7 @@ try {
   sidebarCollapsed = localStorage.getItem(SIDEBAR_KEY) === "1";
 } catch (_) {}
 loadPersonalPreferences();
+loadHomePreferences();
 loadCloudBackupCode();
 applySidebarState(sidebarCollapsed, false);
 switchView(initialView || "home", false);
@@ -3349,6 +3460,7 @@ applyPalette(state.palette, false);
 applyTheme(document.documentElement.dataset.theme, false);
 renderEnglishPreference();
 renderAccessibilityPreferences();
+renderHomePreferences();
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.addEventListener("controllerchange", () => {

@@ -162,6 +162,24 @@
             </div>
           </div>
 
+          <section class="home-academic-summary" id="homeAcademicSummary" aria-labelledby="homeSummaryTitle">
+            <div class="home-summary-heading">
+              <div>
+                <p class="section-overline">AKADEMİK ÖZET</p>
+                <h2 id="homeSummaryTitle">Kısaca durumun</h2>
+              </div>
+              <button class="menu-link-button" id="openStatisticsButton" type="button">
+                <span>Tüm istatistikler</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
+              </button>
+            </div>
+            <div class="home-summary-grid">
+              <article><strong id="homePendingAssignments">0</strong><span>Bekleyen ödev</span><small id="homeNextAssignment">Yaklaşan teslim yok</small></article>
+              <article><strong id="homeRiskCourses">0</strong><span>Riskli ders</span><small>Devamsızlık durumuna göre</small></article>
+              <article><strong id="homeGradeAverage">—</strong><span>Not ortalaması</span><small>Finali girilmiş dersler</small></article>
+            </div>
+          </section>
+
           <section class="home-menu-preview" aria-labelledby="homeMenuTitle">
             <div class="home-menu-heading">
               <div>
@@ -922,6 +940,34 @@
               <p>Bulut kaydını silmek tüm bağlı cihazların eşitlemesini durdurur. Bu cihazdaki veriler korunur.</p>
               <button class="danger-button" id="deleteCloudBackupButton" type="button" disabled>Bulut kaydını sil</button>
             </details>
+          </article>
+          <article class="tool-card home-preferences-card">
+            <span class="tool-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5M16 13h1M8 16h4" /></svg>
+            </span>
+            <h3>Ana sayfa düzeni</h3>
+            <p>Ana sayfada görmek istediğin bölümleri ve sıralarını belirle.</p>
+            <div class="home-preference-settings">
+              <label class="setting-toggle" for="homeIntroVisible">
+                <span><strong>Karşılama başlığı</strong><small>“Derslerin, tek bakışta” alanını göster</small></span>
+                <input id="homeIntroVisible" type="checkbox" checked />
+              </label>
+              <label class="setting-toggle" for="homeSummaryVisible">
+                <span><strong>Akademik özet</strong><small>Ödev, not ve devamsızlık özetini göster</small></span>
+                <input id="homeSummaryVisible" type="checkbox" checked />
+              </label>
+              <label class="setting-toggle" for="homeMenuVisible">
+                <span><strong>Yemek menüsü</strong><small>Günün öğle ve akşam menüsünü göster</small></span>
+                <input id="homeMenuVisible" type="checkbox" checked />
+              </label>
+              <label class="setting-select" for="homeSectionOrder">
+                <span>Bölüm sırası</span>
+                <select id="homeSectionOrder">
+                  <option value="summary-first">Önce akademik özet</option>
+                  <option value="menu-first">Önce yemek menüsü</option>
+                </select>
+              </label>
+            </div>
           </article>
           <article class="tool-card accessibility-card">
             <span class="tool-icon" aria-hidden="true">

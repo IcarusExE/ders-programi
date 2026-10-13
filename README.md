@@ -40,7 +40,8 @@
 | Açık/koyu tema ve altı renk paleti | Devamsızlık ve risk takibi |
 | Çevrimdışı PWA ve sürüm güncelleme bildirimi | Ders bazlı istatistikler |
 | Ders ve ödev bildirimleri | Kodla eşleşen cihazlar arasında canlı senkronizasyon |
-| Büyük yazı, yüksek kontrast ve azaltılmış hareket | Çakışma korumalı cihazlar arası yedekleme |
+| Büyük yazı, yüksek kontrast ve azaltılmış hareket | Çakışma korumalı cihazlar arası eşitleme |
+| Kişiselleştirilebilir ana sayfa | Kalıcı çevrimdışı işlem kuyruğu |
 
 İlk kullanımda İngilizce muafiyet tercihi sorulur. Muaf öğrenciler Temel Yabancı Dil dersini programdan ve bildirimlerden gizleyebilir; tercih daha sonra Ayarlar bölümünden değiştirilebilir.
 

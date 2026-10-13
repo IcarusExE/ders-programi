@@ -73,6 +73,21 @@ class ProjectTests(unittest.TestCase):
         self.assertIn("clearOfflineQueue", javascript)
         self.assertIn('window.addEventListener("offline", renderSyncStatus)', javascript)
 
+    def test_home_personalization_is_wired(self):
+        html = (ROOT / "index.html").read_text(encoding="utf-8")
+        javascript = (ROOT / "app.js").read_text(encoding="utf-8")
+        for control_id in (
+            "homeAcademicSummary",
+            "homeIntroVisible",
+            "homeSummaryVisible",
+            "homeMenuVisible",
+            "homeSectionOrder",
+        ):
+            self.assertIn(f'id="{control_id}"', html)
+            self.assertIn(f'#{control_id}', javascript)
+        self.assertIn("HOME_PREFERENCES_KEY", javascript)
+        self.assertIn("renderHomeSummary", javascript)
+
     def test_pwa_update_prompt_is_wired(self):
         html = (ROOT / "index.html").read_text(encoding="utf-8")
         javascript = (ROOT / "app.js").read_text(encoding="utf-8")
