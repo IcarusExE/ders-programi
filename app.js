@@ -2429,6 +2429,7 @@ function mergeAppBackups(localBackup, remoteBackup) {
 function setCloudBackupBusy(busy) {
   const linked = Boolean(elements.cloudBackupCode.value.trim());
   elements.saveCloudBackupButton.disabled = busy;
+  elements.saveCloudBackupButton.textContent = busy ? "Bağlanıyor…" : "Eşitlemeyi başlat";
   elements.copyCloudBackupCodeButton.disabled = busy || !linked;
   elements.disconnectCloudBackupButton.disabled = busy || !linked;
   elements.deleteCloudBackupButton.disabled = busy || !linked;
@@ -2447,8 +2448,21 @@ async function readCloudResponse(response) {
   return result;
 }
 
+async function fetchCloud(url, options = {}) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 12000);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error?.name === "AbortError") throw new Error("Eşitleme servisi zamanında yanıt vermedi. Tekrar dene.");
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
 async function fetchCloudBackup(credential) {
-  const response = await fetch(`${cloudBackupApi()}/backups/${encodeURIComponent(credential.id)}`, {
+  const response = await fetchCloud(`${cloudBackupApi()}/backups/${encodeURIComponent(credential.id)}`, {
     headers: { "x-backup-token": await cloudAuthToken(credential.key) },
     cache: "no-store",
   });
@@ -2495,7 +2509,7 @@ function recordLocalDataChange() {
 
 async function uploadCloudBackup(backup, credential) {
   const encrypted = await encryptCloudBackup(backup, credential.key);
-  const response = await fetch(`${cloudBackupApi()}/backups/${encodeURIComponent(credential.id)}`, {
+  const response = await fetchCloud(`${cloudBackupApi()}/backups/${encodeURIComponent(credential.id)}`, {
     method: "PUT",
     headers: { "content-type": "application/json", "x-backup-token": await cloudAuthToken(credential.key) },
     body: JSON.stringify(encrypted),
@@ -2585,20 +2599,20 @@ async function connectCloudSync() {
     const credential = typedCode ? parseCloudCredential(typedCode) : createCloudCredential();
     const remote = typedCode ? await fetchCloudBackup(credential) : null;
     if (typedCode && !remote) throw new Error("Bu eşleştirme koduna ait kayıt bulunamadı.");
+    let updatedAt;
     if (remote) {
       const backup = await decryptCloudBackup(remote.payload, credential.key);
       applyAppBackupLive(backup);
+      updatedAt = remote.updatedAt;
+    } else {
+      const result = await uploadCloudBackup(createAppBackup(), credential);
+      updatedAt = result.updatedAt;
     }
     localStorage.setItem(CLOUD_BACKUP_CODE_KEY, credential.code);
     localStorage.setItem(CLOUD_AUTO_SYNC_KEY, "1");
     elements.cloudBackupCode.value = credential.code;
     setCloudLinkedState(true);
-    if (remote) {
-      markCloudSynced(remote.updatedAt);
-    } else {
-      localStorage.setItem(LOCAL_DATA_CHANGED_AT_KEY, new Date().toISOString());
-      await syncCloudNow();
-    }
+    markCloudSynced(updatedAt);
     startCloudLiveSync();
     showToast(typedCode ? "Cihaz bağlandı. Değişiklikler artık canlı eşitlenecek." : "Eşitleme açıldı. Kodu diğer cihazlarında kullanabilirsin.");
   } catch (error) {
@@ -2634,7 +2648,7 @@ async function deleteCloudBackup() {
   elements.cloudBackupStatus.textContent = "Bulut yedeği siliniyor…";
   try {
     const credential = parseCloudCredential(elements.cloudBackupCode.value);
-    const response = await fetch(`${cloudBackupApi()}/backups/${encodeURIComponent(credential.id)}`, {
+    const response = await fetchCloud(`${cloudBackupApi()}/backups/${encodeURIComponent(credential.id)}`, {
       method: "DELETE",
       headers: { "x-backup-token": await cloudAuthToken(credential.key) },
     });
