@@ -1,4 +1,4 @@
-const CACHE_NAME = "ders-pusulasi-v54";
+const CACHE_NAME = "ders-pusulasi-v55";
 const ASSETS = [
   "./",
   "./index.html",

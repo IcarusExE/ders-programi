@@ -67,7 +67,8 @@ class ProjectTests(unittest.TestCase):
         styles = (ROOT / "styles.css").read_text(encoding="utf-8")
         self.assertIn('class="tool-card install-card"', html)
         self.assertNotIn('class="tool-card compact-tool-card install-card"', html)
-        self.assertIn(".settings-tool-grid .install-card { grid-column: 1 / -1; min-height: 0 !important; }", styles)
+        self.assertIn(".settings-tool-grid .install-card { min-height: 0 !important; }", styles)
+        self.assertNotIn(".settings-tool-grid .install-card { grid-column: 1 / -1", styles)
 
     def test_cloud_sync_is_live_and_automatic(self):
         html = (ROOT / "index.html").read_text(encoding="utf-8")

@@ -1144,7 +1144,7 @@ html[data-theme="dark"] .theme-icon .sun-icon { display: block; }
 .accessibility-settings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; width: 100%; }
 .home-preferences-card { grid-column: 1 / -1; min-height: 0 !important; }
 .home-preference-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; width: 100%; }
-.settings-tool-grid .install-card { grid-column: 1 / -1; min-height: 0 !important; }
+.settings-tool-grid .install-card { min-height: 0 !important; }
 .appearance-preferences-card { grid-column: 1 / -1; min-height: 0 !important; }
 .appearance-preferences-card > p { margin-bottom: 18px; }
 .palette-picker { width: 100%; margin: 0; padding: 0; border: 0; }
