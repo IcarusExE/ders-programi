@@ -1793,6 +1793,11 @@ html[data-theme="dark"] .bottom-nav-list { background: color-mix(in srgb, var(--
   .dialog-actions > * { flex: 1; }
   .compact-tool-card { grid-template-columns: 46px minmax(0, 1fr); }
   .compact-tool-card > button { grid-column: 1 / -1; grid-row: auto; width: 100%; margin-top: 10px; }
+  .settings-tool-grid .install-card { grid-template-columns: 46px minmax(0, 1fr); grid-template-rows: auto auto; }
+  .settings-tool-grid .install-card .tool-icon { grid-row: 1; }
+  .settings-tool-grid .install-card h3 { align-self: center; }
+  .settings-tool-grid .install-card p { display: none; }
+  .settings-tool-grid .install-card > button { grid-column: 1 / -1; grid-row: 2; width: 100%; margin-top: 9px; white-space: nowrap; }
   .updated-at { display: none; }
   .day-tabs {
     display: grid;

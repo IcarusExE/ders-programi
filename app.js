@@ -2939,7 +2939,7 @@ function updateInstallButton() {
     return;
   }
   elements.installAppButton.disabled = true;
-  elements.installAppButton.textContent = "Tarayıcı menüsünden ekle";
+  elements.installAppButton.textContent = "Ana ekrana ekle";
   elements.installDescription.textContent = "Kurulum düğmesi görünmüyorsa tarayıcı menüsündeki “Ana ekrana ekle” seçeneğini kullan.";
 }
 
