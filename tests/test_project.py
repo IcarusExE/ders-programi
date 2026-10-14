@@ -62,13 +62,12 @@ class ProjectTests(unittest.TestCase):
         self.assertRegex(styles, r"\.cloud-backup-code input\s*\{[^}]*min-width:\s*0")
         self.assertRegex(styles, r"\.setting-select select\s*\{[^}]*min-width:\s*0")
 
-    def test_mobile_install_card_matches_regular_cards(self):
+    def test_install_control_lives_in_accessibility_card(self):
         html = (ROOT / "index.html").read_text(encoding="utf-8")
         styles = (ROOT / "styles.css").read_text(encoding="utf-8")
-        self.assertIn('class="tool-card install-card"', html)
-        self.assertNotIn('class="tool-card compact-tool-card install-card"', html)
-        self.assertIn(".settings-tool-grid .install-card { min-height: 0 !important; }", styles)
-        self.assertNotIn(".settings-tool-grid .install-card { grid-column: 1 / -1", styles)
+        self.assertIn('class="setting-action install-setting"', html)
+        self.assertNotIn('class="tool-card install-card"', html)
+        self.assertIn(".install-setting { grid-column: 1 / -1; }", styles)
 
     def test_cloud_sync_is_live_and_automatic(self):
         html = (ROOT / "index.html").read_text(encoding="utf-8")

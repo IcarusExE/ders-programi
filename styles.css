@@ -1142,9 +1142,14 @@ html[data-theme="dark"] .theme-icon .sun-icon { display: block; }
 .danger-button:disabled { opacity: .45; cursor: not-allowed; }
 .accessibility-card { grid-column: 1 / -1; }
 .accessibility-settings { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; width: 100%; }
+.setting-action { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-width: 0; min-height: 58px; padding: 11px 13px; border: 1px solid var(--line); border-radius: 13px; background: rgba(var(--accent-rgb), .04); }
+.setting-action span, .setting-action strong, .setting-action small { display: block; }
+.setting-action strong { font-size: 12px; }
+.setting-action small { margin-top: 4px; color: var(--muted); font-size: 9px; font-weight: 400; }
+.setting-action .primary-button { flex: 0 0 auto; min-height: 38px; margin: 0; padding: 8px 13px; font-size: 11px; }
+.install-setting { grid-column: 1 / -1; }
 .home-preferences-card { grid-column: 1 / -1; min-height: 0 !important; }
 .home-preference-settings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; width: 100%; }
-.settings-tool-grid .install-card { min-height: 0 !important; }
 .appearance-preferences-card { grid-column: 1 / -1; min-height: 0 !important; }
 .appearance-preferences-card > p { margin-bottom: 18px; }
 .palette-picker { width: 100%; margin: 0; padding: 0; border: 0; }
@@ -1369,7 +1374,8 @@ html[data-theme="dark"] .form-field select { background: var(--dark-field); }
 html[data-theme="dark"] .search-control input,
 html[data-theme="dark"] .compact-select select { background: var(--dark-field); }
 html[data-theme="dark"] .setting-toggle,
-html[data-theme="dark"] .setting-select { background: rgba(var(--accent-rgb), .08); }
+html[data-theme="dark"] .setting-select,
+html[data-theme="dark"] .setting-action { background: rgba(var(--accent-rgb), .08); }
 html[data-theme="dark"] .setting-select select { background: var(--dark-field); }
 html[data-theme="dark"] .cloud-backup-code input { background: var(--dark-field); }
 html[data-theme="dark"] .danger-button { color: #ffb3b3; border-color: rgba(255, 130, 130, .42); }
@@ -1698,6 +1704,8 @@ html[data-theme="dark"] .bottom-nav-list { background: color-mix(in srgb, var(--
   .settings-content .setting-select { align-items: stretch; flex-direction: column; }
   .settings-content .setting-select select { width: 100%; }
   .settings-content .setting-toggle > span { min-width: 0; overflow-wrap: anywhere; }
+  .setting-action { align-items: stretch; flex-direction: column; }
+  .setting-action .primary-button { width: 100%; }
   .cloud-backup-actions > button { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
   .brand small { display: none; }
   .palette-option { flex-direction: column; justify-content: center; gap: 6px; min-height: 68px; padding-inline: 5px; }
