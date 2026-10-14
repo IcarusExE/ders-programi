@@ -795,6 +795,11 @@ function toggleSidebar() {
   applySidebarState(!elements.sidebarNav.classList.contains("collapsed"));
 }
 
+function useReducedInterfaceMotion() {
+  return document.documentElement.dataset.reducedMotion === "true"
+    || document.documentElement.dataset.platform === "android";
+}
+
 function switchView(view, updateHistory = true) {
   if (view === "tracking") view = "attendance";
   if (!(view in VIEW_INDEX)) view = "home";
@@ -821,7 +826,7 @@ function switchView(view, updateHistory = true) {
       const centeredPosition = activeButton.offsetLeft - (elements.bottomNav.clientWidth - activeButton.offsetWidth) / 2;
       elements.bottomNav.scrollTo({
         left: Math.max(0, centeredPosition),
-        behavior: updateHistory ? "smooth" : "auto",
+        behavior: updateHistory && !useReducedInterfaceMotion() ? "smooth" : "auto",
       });
     });
   }
@@ -1059,7 +1064,7 @@ function renderMenuTabs() {
   });
   window.requestAnimationFrame(() => {
     const selected = elements.menuDateTabs.querySelector(".active");
-    selected?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    selected?.scrollIntoView({ behavior: useReducedInterfaceMotion() ? "auto" : "smooth", block: "nearest", inline: "center" });
   });
 }
 

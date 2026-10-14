@@ -1,5 +1,8 @@
 (() => {
   try {
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    document.documentElement.dataset.platform = isAndroid ? "android" : "default";
+    document.documentElement.dataset.displayMode = matchMedia("(display-mode: standalone)").matches ? "standalone" : "browser";
     const savedTheme = localStorage.getItem("ders-pusulasi-theme");
     const theme = savedTheme === "dark" || savedTheme === "light"
       ? savedTheme

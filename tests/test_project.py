@@ -111,6 +111,15 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('data-high-contrast="true"', styles)
         self.assertIn('data-reduced-motion="true"', styles)
 
+    def test_android_rendering_uses_lightweight_effects(self):
+        javascript = (ROOT / "app.js").read_text(encoding="utf-8")
+        theme_init = (ROOT / "theme-init.js").read_text(encoding="utf-8")
+        styles = (ROOT / "styles.css").read_text(encoding="utf-8")
+        self.assertIn("/Android/i.test(navigator.userAgent)", theme_init)
+        self.assertIn('data-platform="android"', styles)
+        self.assertIn("backdrop-filter: none", styles)
+        self.assertIn("useReducedInterfaceMotion", javascript)
+
     def test_color_palettes_are_available_everywhere(self):
         html = (ROOT / "index.html").read_text(encoding="utf-8")
         javascript = (ROOT / "app.js").read_text(encoding="utf-8")
