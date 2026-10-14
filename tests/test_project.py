@@ -54,6 +54,14 @@ class ProjectTests(unittest.TestCase):
             self.assertIn(f'id="{control_id}"', html)
             self.assertIn(f'#{control_id}', javascript)
 
+    def test_mobile_sync_field_cannot_expand_settings(self):
+        styles = (ROOT / "styles.css").read_text(encoding="utf-8")
+        self.assertRegex(styles, r"\.settings-dialog\s*\{[^}]*overflow-x:\s*hidden")
+        self.assertRegex(styles, r"\.settings-content\s*\{[^}]*overflow-x:\s*hidden")
+        self.assertRegex(styles, r"\.cloud-backup-card\s*\{[^}]*min-width:\s*0")
+        self.assertRegex(styles, r"\.cloud-backup-code input\s*\{[^}]*min-width:\s*0")
+        self.assertRegex(styles, r"\.setting-select select\s*\{[^}]*min-width:\s*0")
+
     def test_cloud_sync_is_live_and_automatic(self):
         html = (ROOT / "index.html").read_text(encoding="utf-8")
         javascript = (ROOT / "app.js").read_text(encoding="utf-8")
