@@ -861,14 +861,13 @@
       </form>
     </dialog>
 
-    <dialog class="assignment-dialog settings-dialog" id="settingsDialog" aria-labelledby="settingsDialogTitle">
-      <div class="assignment-form settings-content">
-        <div class="dialog-heading">
+    <section class="view-panel settings-section" id="settingsView" role="tabpanel" aria-labelledby="settingsButton" tabindex="0" hidden>
+      <div class="settings-content">
+        <div class="section-heading settings-page-heading">
           <div>
             <p class="section-overline">VERİ VE UYGULAMA</p>
             <h2 id="settingsDialogTitle" tabindex="-1">Ayarlar</h2>
           </div>
-          <button class="dialog-close" id="closeSettingsDialog" type="button" aria-label="Ayarları kapat">×</button>
         </div>
         <div class="tool-grid settings-tool-grid">
           <article class="tool-card appearance-preferences-card">
@@ -1050,7 +1049,7 @@
         </div>
         <p class="data-note">Kişisel kayıtların bu cihazda tutulur. Bulut yedekleme açıksa yalnızca cihazında şifrelenen veri Cloudflare'a gönderilir.</p>
       </div>
-    </dialog>
+    </section>
 
     <dialog class="assignment-dialog onboarding-dialog" id="englishPreferenceDialog" aria-labelledby="englishPreferenceTitle" aria-describedby="englishPreferenceDescription">
       <div class="assignment-form onboarding-content">

@@ -90,8 +90,7 @@ const elements = {
   settingsButton: document.querySelector("#settingsButton"),
   syncStatusButton: document.querySelector("#syncStatusButton"),
   syncStatusLabel: document.querySelector("#syncStatusLabel"),
-  settingsDialog: document.querySelector("#settingsDialog"),
-  closeSettingsDialog: document.querySelector("#closeSettingsDialog"),
+  settingsView: document.querySelector("#settingsView"),
   toast: document.querySelector("#toast"),
   days: document.querySelector("#daysValue"),
   hours: document.querySelector("#hoursValue"),
@@ -219,7 +218,9 @@ const elements = {
   saveProgramPreferenceButton: document.querySelector("#saveProgramPreferenceButton"),
 };
 
-const VIEW_INDEX = { home: 0, today: 1, week: 2, menu: 3, assignments: 4, notes: 5, grades: 6, attendance: 7, statistics: 8 };
+document.querySelector(".app-main").append(elements.settingsView);
+
+const VIEW_INDEX = { home: 0, today: 1, week: 2, menu: 3, assignments: 4, notes: 5, grades: 6, attendance: 7, statistics: 8, settings: 9 };
 const THEME_KEY = "ders-pusulasi-theme";
 const PALETTE_KEY = "ders-pusulasi-palette";
 const ENGLISH_EXEMPT_KEY = "ders-pusulasi-english-exempt";
@@ -819,6 +820,8 @@ function switchView(view, updateHistory = true) {
   });
 
   elements.bottomNav.dataset.active = VIEW_INDEX[view];
+  elements.settingsButton.classList.toggle("active", view === "settings");
+  elements.settingsButton.setAttribute("aria-pressed", String(view === "settings"));
   if (window.matchMedia("(max-width: 1050px)").matches) {
     const activeButton = elements.navButtons.find((button) => button.dataset.view === view);
     window.requestAnimationFrame(() => {
@@ -837,6 +840,14 @@ function switchView(view, updateHistory = true) {
   if (view === "grades") renderGrades();
   if (view === "attendance") renderAttendance();
   if (view === "statistics") renderStatistics();
+  if (view === "settings") {
+    updateInstallButton();
+    renderNotificationPreferences();
+    renderPaletteOptions();
+    renderEnglishPreference();
+    renderAccessibilityPreferences();
+    renderHomePreferences();
+  }
   if (updateHistory && location.hash !== `#${view}`) {
     history.pushState({ view }, "", `#${view}`);
   }
@@ -3311,23 +3322,10 @@ elements.nextMenuDay.addEventListener("click", () => stepMenuDate(1));
 elements.menuTodayButton.addEventListener("click", () => {
   if (state.menu) selectMenuDate(findInitialMenuDate(new Date()));
 });
-elements.settingsButton.addEventListener("click", () => {
-  updateInstallButton();
-  renderNotificationPreferences();
-  renderPaletteOptions();
-  renderEnglishPreference();
-  renderAccessibilityPreferences();
-  renderHomePreferences();
-  elements.settingsDialog.showModal();
-  document.querySelector("#settingsDialogTitle").focus({ preventScroll: true });
-});
+elements.settingsButton.addEventListener("click", () => switchView("settings"));
 elements.syncStatusButton.addEventListener("click", () => {
-  elements.settingsButton.click();
+  switchView("settings");
   window.requestAnimationFrame(() => document.querySelector(".cloud-backup-card").scrollIntoView({ block: "center" }));
-});
-elements.closeSettingsDialog.addEventListener("click", () => elements.settingsDialog.close());
-elements.settingsDialog.addEventListener("click", (event) => {
-  if (event.target === elements.settingsDialog) elements.settingsDialog.close();
 });
 elements.addAssignmentButton.addEventListener("click", () => openAssignmentDialog());
 elements.closeAssignmentDialog.addEventListener("click", closeAssignmentDialog);

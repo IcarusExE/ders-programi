@@ -56,7 +56,7 @@ class ProjectTests(unittest.TestCase):
 
     def test_mobile_sync_field_cannot_expand_settings(self):
         styles = (ROOT / "styles.css").read_text(encoding="utf-8")
-        self.assertRegex(styles, r"\.settings-dialog\s*\{[^}]*overflow-x:\s*hidden")
+        self.assertRegex(styles, r"\.settings-section\s*\{[^}]*overflow-x:\s*hidden")
         self.assertRegex(styles, r"\.settings-content\s*\{[^}]*overflow-x:\s*hidden")
         self.assertRegex(styles, r"\.cloud-backup-card\s*\{[^}]*min-width:\s*0")
         self.assertRegex(styles, r"\.cloud-backup-code input\s*\{[^}]*min-width:\s*0")
@@ -155,11 +155,15 @@ class ProjectTests(unittest.TestCase):
             self.assertIn(f'id="{control_id}"', html)
             self.assertIn(f'#{control_id}', javascript)
 
-    def test_settings_starts_without_focusing_close_button(self):
+    def test_settings_is_a_regular_application_view(self):
         html = (ROOT / "index.html").read_text(encoding="utf-8")
         javascript = (ROOT / "app.js").read_text(encoding="utf-8")
+        self.assertIn('id="settingsView"', html)
+        self.assertNotIn('id="settingsDialog"', html)
+        self.assertNotIn('id="closeSettingsDialog"', html)
         self.assertIn('id="settingsDialogTitle" tabindex="-1"', html)
-        self.assertIn('document.querySelector("#settingsDialogTitle").focus', javascript)
+        self.assertIn('switchView("settings")', javascript)
+        self.assertNotIn("settingsDialog.showModal", javascript)
 
     def test_schedule_data(self):
         schedule = json.loads((ROOT / "schedule.json").read_text(encoding="utf-8"))
