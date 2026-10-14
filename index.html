@@ -910,6 +910,15 @@
                 </button>
               </div>
             </fieldset>
+            <label class="setting-select department-setting" for="departmentSelect">
+              <span>Bölüm</span>
+              <select id="departmentSelect" aria-label="Bölüm seç">
+                <option value="computer-programming">Bilgisayar Programcılığı</option>
+                <option value="electronics-technology">Elektronik Teknolojisi</option>
+                <option value="renewable-energy">Yenilenebilir Enerji Teknikerliği</option>
+                <option value="electric-energy">Elektrik Enerjisi Üretim, İletim ve Dağıtımı</option>
+              </select>
+            </label>
             <label class="setting-toggle english-course-setting" for="englishCourseVisible">
               <span><strong>İngilizce dersini göster</strong><small>Muafsan kapatarak programdan ve bildirimlerden çıkarabilirsin</small></span>
               <input id="englishCourseVisible" type="checkbox" checked />
@@ -1057,18 +1066,22 @@
           <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5" /><path d="m16 16 2 2 3-4" /></svg>
         </span>
         <p class="section-overline">PROGRAMINI KİŞİSELLEŞTİR</p>
-        <h2 id="englishPreferenceTitle" tabindex="-1">İngilizceden muaf mısın?</h2>
-        <p id="englishPreferenceDescription">Seçimine göre Temel Yabancı Dil dersi programında ve ders bildirimlerinde gösterilecek.</p>
-        <div class="onboarding-actions">
-          <button class="secondary-button english-preference-button" type="button" data-exempt="false">
-            <strong>Dersi alıyorum</strong>
-            <span>Programda göster</span>
-          </button>
-          <button class="primary-button english-preference-button" type="button" data-exempt="true">
-            <strong>Muafım</strong>
-            <span>Programdan gizle</span>
-          </button>
-        </div>
+        <h2 id="englishPreferenceTitle" tabindex="-1">Programını seç</h2>
+        <p id="englishPreferenceDescription">Bölümünü seç ve İngilizce muafiyet durumunu işaretle. Daha sonra Ayarlar'dan değiştirebilirsin.</p>
+        <label class="form-field onboarding-department" for="onboardingDepartmentSelect">
+          <span>Bölüm</span>
+          <select id="onboardingDepartmentSelect" required>
+            <option value="computer-programming">Bilgisayar Programcılığı</option>
+            <option value="electronics-technology">Elektronik Teknolojisi</option>
+            <option value="renewable-energy">Yenilenebilir Enerji Teknikerliği</option>
+            <option value="electric-energy">Elektrik Enerjisi Üretim, İletim ve Dağıtımı</option>
+          </select>
+        </label>
+        <label class="setting-toggle onboarding-exemption" for="onboardingEnglishExempt">
+          <span><strong>İngilizceden muafım</strong><small>Temel Yabancı Dil dersini programdan ve bildirimlerden gizle</small></span>
+          <input id="onboardingEnglishExempt" type="checkbox" />
+        </label>
+        <button class="primary-button onboarding-save-button" id="saveProgramPreferenceButton" type="button">Programı kaydet</button>
       </div>
     </dialog>
 

@@ -127,6 +127,9 @@ class ProjectTests(unittest.TestCase):
         javascript = (ROOT / "app.js").read_text(encoding="utf-8")
         self.assertIn('id="englishPreferenceTitle" tabindex="-1"', html)
         self.assertIn('document.querySelector("#englishPreferenceTitle").focus', javascript)
+        for control_id in ("onboardingDepartmentSelect", "onboardingEnglishExempt", "saveProgramPreferenceButton", "departmentSelect"):
+            self.assertIn(f'id="{control_id}"', html)
+            self.assertIn(f'#{control_id}', javascript)
 
     def test_settings_starts_without_focusing_close_button(self):
         html = (ROOT / "index.html").read_text(encoding="utf-8")
@@ -137,15 +140,20 @@ class ProjectTests(unittest.TestCase):
     def test_schedule_data(self):
         schedule = json.loads((ROOT / "schedule.json").read_text(encoding="utf-8"))
         self.assertEqual(schedule["timezone"], "Europe/Istanbul")
-        self.assertTrue(schedule["courses"])
+        self.assertEqual(len(schedule["departments"]), 4)
+        self.assertIn(schedule["defaultDepartment"], {department["id"] for department in schedule["departments"]})
         time_pattern = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d$")
-        for course in schedule["courses"]:
-            self.assertIn(course["day"], range(7))
-            self.assertRegex(course["start"], time_pattern)
-            self.assertRegex(course["end"], time_pattern)
-            self.assertLess(course["start"], course["end"])
-            for field in ("code", "name", "room", "instructor"):
-                self.assertTrue(str(course[field]).strip(), f"Empty course field: {field}")
+        for department in schedule["departments"]:
+            self.assertTrue(department["id"])
+            self.assertTrue(department["name"])
+            self.assertTrue(department["courses"])
+            for course in department["courses"]:
+                self.assertIn(course["day"], range(7))
+                self.assertRegex(course["start"], time_pattern)
+                self.assertRegex(course["end"], time_pattern)
+                self.assertLess(course["start"], course["end"])
+                for field in ("name", "room", "instructor"):
+                    self.assertTrue(str(course[field]).strip(), f"Empty course field: {field}")
 
     def test_menu_data(self):
         menu = json.loads((ROOT / "menu.json").read_text(encoding="utf-8"))

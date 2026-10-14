@@ -3,6 +3,8 @@ const WEEK_DAYS = [1, 2, 3, 4, 5];
 
 const state = {
   schedule: null,
+  scheduleCatalog: null,
+  departmentId: "computer-programming",
   menu: null,
   selectedMenuDate: "",
   selectedDay: new Date().getDay() || 1,
@@ -210,14 +212,18 @@ const elements = {
   assignmentReminderMinutes: document.querySelector("#assignmentReminderMinutes"),
   paletteOptions: [...document.querySelectorAll(".palette-option")],
   englishCourseVisible: document.querySelector("#englishCourseVisible"),
+  departmentSelect: document.querySelector("#departmentSelect"),
   englishPreferenceDialog: document.querySelector("#englishPreferenceDialog"),
-  englishPreferenceButtons: [...document.querySelectorAll(".english-preference-button")],
+  onboardingDepartmentSelect: document.querySelector("#onboardingDepartmentSelect"),
+  onboardingEnglishExempt: document.querySelector("#onboardingEnglishExempt"),
+  saveProgramPreferenceButton: document.querySelector("#saveProgramPreferenceButton"),
 };
 
 const VIEW_INDEX = { home: 0, today: 1, week: 2, menu: 3, assignments: 4, notes: 5, grades: 6, attendance: 7, statistics: 8 };
 const THEME_KEY = "ders-pusulasi-theme";
 const PALETTE_KEY = "ders-pusulasi-palette";
 const ENGLISH_EXEMPT_KEY = "ders-pusulasi-english-exempt";
+const DEPARTMENT_KEY = "ders-pusulasi-department";
 const SIDEBAR_KEY = "ders-pusulasi-sidebar-collapsed";
 const ASSIGNMENTS_KEY = "ders-pusulasi-assignments";
 const GRADES_KEY = "ders-pusulasi-grades";
@@ -301,11 +307,11 @@ function escapeHtml(value) {
 }
 
 function sanitizeSchedule(rawSchedule) {
-  if (!rawSchedule || typeof rawSchedule !== "object" || !Array.isArray(rawSchedule.courses)) {
+  if (!rawSchedule || typeof rawSchedule !== "object") {
     throw new Error("Program biçimi geçersiz");
   }
   const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
-  const courses = rawSchedule.courses.slice(0, 100).flatMap((course) => {
+  const sanitizeCourses = (items) => (Array.isArray(items) ? items : []).slice(0, 150).flatMap((course) => {
     const day = boundedInteger(course?.day, 0, 6);
     const start = cleanText(course?.start, 5);
     const end = cleanText(course?.end, 5);
@@ -321,14 +327,25 @@ function sanitizeSchedule(rawSchedule) {
       instructor: cleanText(course?.instructor, 160),
     }];
   });
-  if (!courses.length) throw new Error("Programda geçerli ders bulunamadı");
+  const rawDepartments = Array.isArray(rawSchedule.departments)
+    ? rawSchedule.departments
+    : [{ id: "computer-programming", name: rawSchedule.department, classLevel: rawSchedule.classLevel, courses: rawSchedule.courses }];
+  const identifiers = new Set();
+  const departments = rawDepartments.slice(0, 20).flatMap((department) => {
+    const id = cleanText(department?.id, 80);
+    const name = cleanText(department?.name, 160);
+    const courses = sanitizeCourses(department?.courses);
+    if (!id || identifiers.has(id) || !name || !courses.length) return [];
+    identifiers.add(id);
+    return [{ id, name, classLevel: cleanText(department?.classLevel, 80) || "1. Sınıf", courses }];
+  });
+  if (!departments.length) throw new Error("Programda geçerli bölüm bulunamadı");
   return {
     school: cleanText(rawSchedule.school, 160) || "Nallıhan Meslek Yüksekokulu",
-    department: cleanText(rawSchedule.department, 160) || "Bilgisayar Programcılığı",
-    classLevel: cleanText(rawSchedule.classLevel, 80),
     timezone: cleanText(rawSchedule.timezone, 80) || "Europe/Istanbul",
     updatedAt: cleanText(rawSchedule.updatedAt, 80),
-    courses,
+    defaultDepartment: identifiers.has(rawSchedule.defaultDepartment) ? rawSchedule.defaultDepartment : departments[0].id,
+    departments,
   };
 }
 
@@ -572,6 +589,7 @@ function loadPersonalPreferences() {
     const savedEnglishPreference = localStorage.getItem(ENGLISH_EXEMPT_KEY);
     state.englishPreferenceSet = savedEnglishPreference === "1" || savedEnglishPreference === "0";
     state.englishExempt = savedEnglishPreference === "1";
+    state.departmentId = cleanText(localStorage.getItem(DEPARTMENT_KEY), 80) || "computer-programming";
   } catch (_) {}
 }
 
@@ -662,6 +680,29 @@ function handleAccessibilityPreferenceChange() {
 
 function renderEnglishPreference() {
   elements.englishCourseVisible.checked = !state.englishExempt;
+  elements.departmentSelect.value = state.departmentId;
+  elements.onboardingDepartmentSelect.value = state.departmentId;
+  elements.onboardingEnglishExempt.checked = state.englishExempt;
+}
+
+function applySelectedDepartment() {
+  if (!state.scheduleCatalog) return;
+  const department = state.scheduleCatalog.departments.find((item) => item.id === state.departmentId)
+    || state.scheduleCatalog.departments.find((item) => item.id === state.scheduleCatalog.defaultDepartment)
+    || state.scheduleCatalog.departments[0];
+  state.departmentId = department.id;
+  state.schedule = {
+    school: state.scheduleCatalog.school,
+    timezone: state.scheduleCatalog.timezone,
+    updatedAt: state.scheduleCatalog.updatedAt,
+    department: department.name,
+    classLevel: department.classLevel,
+    courses: department.courses,
+  };
+  elements.departmentSelect.value = department.id;
+  elements.onboardingDepartmentSelect.value = department.id;
+  document.querySelector(".hero-description").textContent = `${state.schedule.school} · ${state.schedule.department} · ${state.schedule.classLevel}`;
+  elements.updatedAt.textContent = state.schedule.updatedAt ? `Son güncelleme: ${state.schedule.updatedAt}` : "";
 }
 
 function isEnglishCourse(course) {
@@ -676,32 +717,36 @@ function visibleScheduleCourses() {
 }
 
 function visibleAttendanceRecords() {
-  return state.englishExempt
-    ? state.attendanceRecords.filter((record) => !isEnglishCourse(record))
-    : state.attendanceRecords;
+  const courseNames = new Set(visibleScheduleCourses().map((course) => course.name));
+  return state.attendanceRecords.filter((record) => courseNames.has(record.course));
 }
 
-async function setEnglishExemption(exempt, { notify = true } = {}) {
+async function setProgramPreference(departmentId, exempt, { notify = true } = {}) {
+  const validDepartment = state.scheduleCatalog?.departments.some((item) => item.id === departmentId)
+    ? departmentId
+    : state.scheduleCatalog?.defaultDepartment || "computer-programming";
+  state.departmentId = validDepartment;
   state.englishExempt = Boolean(exempt);
   state.englishPreferenceSet = true;
   try {
+    localStorage.setItem(DEPARTMENT_KEY, state.departmentId);
     localStorage.setItem(ENGLISH_EXEMPT_KEY, state.englishExempt ? "1" : "0");
     recordLocalDataChange();
   } catch (_) {
-    showToast("İngilizce tercihi kaydedilemedi.");
+    showToast("Program tercihi kaydedilemedi.");
   }
+  applySelectedDepartment();
   renderEnglishPreference();
-  if (state.schedule) {
-    renderFocus(state.now);
-    renderToday(state.now);
-    renderWeek();
-    populateCourseOptions();
-    synchroniseAttendance();
-    renderAttendance();
-    renderStatistics();
-    await refreshPushSchedule();
-  }
-  if (notify) showToast(state.englishExempt ? "İngilizce dersi programdan gizlendi." : "İngilizce dersi programa eklendi.");
+  renderFocus(state.now);
+  renderToday(state.now);
+  renderTabs();
+  renderWeek();
+  populateCourseOptions();
+  synchroniseAttendance();
+  renderAttendance();
+  renderStatistics();
+  await refreshPushSchedule();
+  if (notify) showToast(`${state.schedule.department} programı yüklendi.`);
 }
 
 function applyTheme(theme, remember = true) {
@@ -2304,6 +2349,7 @@ function createAppBackup() {
       theme: document.documentElement.dataset.theme || "light",
       palette: state.palette,
       englishExempt: state.englishExempt,
+      departmentId: state.departmentId,
       textSize: document.documentElement.dataset.textSize || "normal",
       highContrast: document.documentElement.dataset.highContrast === "true",
       reducedMotion: document.documentElement.dataset.reducedMotion === "true",
@@ -2327,6 +2373,7 @@ function normalizeAppBackup(backup) {
     theme,
     palette,
     englishExempt,
+    departmentId = "computer-programming",
     textSize = "normal",
     highContrast = false,
     reducedMotion = false,
@@ -2348,6 +2395,7 @@ function normalizeAppBackup(backup) {
       theme: theme === "dark" ? "dark" : "light",
       palette: PALETTES.has(palette) ? palette : "classic",
       englishExempt: typeof englishExempt === "boolean" ? englishExempt : false,
+      departmentId: cleanText(departmentId, 80) || "computer-programming",
       textSize: ["normal", "large", "xlarge"].includes(textSize) ? textSize : "normal",
       highContrast: highContrast === true,
       reducedMotion: reducedMotion === true,
@@ -2382,6 +2430,7 @@ function persistAppBackup(backup) {
   localStorage.setItem(THEME_KEY, data.theme);
   localStorage.setItem(PALETTE_KEY, data.palette);
   localStorage.setItem(ENGLISH_EXEMPT_KEY, data.englishExempt ? "1" : "0");
+  localStorage.setItem(DEPARTMENT_KEY, data.departmentId);
   localStorage.setItem(TEXT_SIZE_KEY, data.textSize);
   localStorage.setItem(HIGH_CONTRAST_KEY, data.highContrast ? "1" : "0");
   localStorage.setItem(REDUCED_MOTION_KEY, data.reducedMotion ? "1" : "0");
@@ -2401,7 +2450,9 @@ function applyAppBackupLive(backup) {
   state.notificationPreferences = data.notificationPreferences;
   state.homePreferences = data.homePreferences;
   state.englishExempt = data.englishExempt;
+  state.departmentId = data.departmentId;
   state.englishPreferenceSet = true;
+  applySelectedDepartment();
   applyPalette(data.palette, false);
   applyTheme(data.theme, false);
   applyAccessibilityPreferences({ textSize: data.textSize, highContrast: data.highContrast, reducedMotion: data.reducedMotion }, false);
@@ -3202,12 +3253,14 @@ async function init() {
   try {
     const response = await fetch("schedule.json", { cache: "no-store" });
     if (!response.ok) throw new Error("Program dosyası okunamadı");
-    state.schedule = sanitizeSchedule(await response.json());
+    state.scheduleCatalog = sanitizeSchedule(await response.json());
+    if (!state.scheduleCatalog.departments.some((item) => item.id === state.departmentId)) {
+      state.departmentId = state.scheduleCatalog.defaultDepartment;
+    }
+    applySelectedDepartment();
 
     const today = new Date().getDay();
     state.selectedDay = WEEK_DAYS.includes(today) ? today : 1;
-    document.querySelector(".hero-description").textContent = `${state.schedule.school} · ${state.schedule.department} · ${state.schedule.classLevel}`;
-    elements.updatedAt.textContent = state.schedule.updatedAt ? `Son güncelleme: ${state.schedule.updatedAt}` : "";
     renderToday(state.now);
     renderTabs();
     renderWeek();
@@ -3367,14 +3420,15 @@ elements.paletteOptions.forEach((button) => {
   });
 });
 elements.englishCourseVisible.addEventListener("change", () => {
-  setEnglishExemption(!elements.englishCourseVisible.checked);
+  setProgramPreference(elements.departmentSelect.value, !elements.englishCourseVisible.checked);
 });
-elements.englishPreferenceButtons.forEach((button) => {
-  button.addEventListener("click", async () => {
-    await setEnglishExemption(button.dataset.exempt === "true", { notify: false });
-    elements.englishPreferenceDialog.close();
-    showToast(state.englishExempt ? "İngilizce dersi programdan gizlendi." : "İngilizce dersi programında gösterilecek.");
-  });
+elements.departmentSelect.addEventListener("change", () => {
+  setProgramPreference(elements.departmentSelect.value, !elements.englishCourseVisible.checked);
+});
+elements.saveProgramPreferenceButton.addEventListener("click", async () => {
+  await setProgramPreference(elements.onboardingDepartmentSelect.value, elements.onboardingEnglishExempt.checked, { notify: false });
+  elements.englishPreferenceDialog.close();
+  showToast(`${state.schedule.department} programı hazırlandı.`);
 });
 elements.englishPreferenceDialog.addEventListener("cancel", (event) => event.preventDefault());
 [

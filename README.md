@@ -42,8 +42,9 @@
 | Ders ve ödev bildirimleri | Kodla eşleşen cihazlar arasında canlı senkronizasyon |
 | Büyük yazı, yüksek kontrast ve azaltılmış hareket | Çakışma korumalı cihazlar arası eşitleme |
 | Kişiselleştirilebilir ana sayfa | Kalıcı çevrimdışı işlem kuyruğu |
+| Dört bölüm için seçilebilir ders programı | İngilizce muafiyet filtresi |
 
-İlk kullanımda İngilizce muafiyet tercihi sorulur. Muaf öğrenciler Temel Yabancı Dil dersini programdan ve bildirimlerden gizleyebilir; tercih daha sonra Ayarlar bölümünden değiştirilebilir.
+İlk kullanımda bölüm ve İngilizce muafiyet tercihi birlikte sorulur. Bilgisayar Programcılığı, Elektronik Teknolojisi, Yenilenebilir Enerji Teknikerliği ve Elektrik Enerjisi Üretim, İletim ve Dağıtımı programları desteklenir. Muaf öğrenciler Temel Yabancı Dil dersini programdan ve bildirimlerden gizleyebilir; tercihler daha sonra Ayarlar bölümünden değiştirilebilir.
 
 Uygulama framework kullanmadan hazırlanmıştır. Kişisel kayıtlar varsayılan olarak tarayıcının `localStorage` alanında tutulur. Bulut yedekleme açılırsa yalnızca tarayıcıda şifrelenen veri Worker'a gönderilir.
 
@@ -63,17 +64,23 @@ Ardından [http://localhost:8000](http://localhost:8000) adresini aç. Uygulama 
 
 ### Ders programı
 
-Dersler [`schedule.json`](schedule.json) içindeki `courses` listesinde tutulur:
+Dersler [`schedule.json`](schedule.json) içindeki `departments` listesinde bölüm bazında tutulur:
 
 ```json
 {
-  "day": 1,
-  "start": "09:00",
-  "end": "10:40",
-  "code": "BPR101",
-  "name": "Programlama Temelleri",
-  "room": "Bilgisayar Laboratuvarı",
-  "instructor": "Öğr. Gör. Ad Soyad"
+  "id": "computer-programming",
+  "name": "Bilgisayar Programcılığı",
+  "classLevel": "1. Sınıf",
+  "courses": [
+    {
+      "day": 1,
+      "start": "10:00",
+      "end": "12:00",
+      "name": "Web Tasarım Temelleri",
+      "room": "Bilgisayar Laboratuvarı 1",
+      "instructor": "Öğr. Gör. Ad Soyad"
+    }
+  ]
 }
 ```
 

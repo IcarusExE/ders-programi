@@ -1,99 +1,405 @@
 {
   "school": "Nallıhan Meslek Yüksekokulu",
-  "department": "Bilgisayar Programcılığı",
-  "classLevel": "1. Sınıf",
   "timezone": "Europe/Istanbul",
-  "updatedAt": "8 Ekim 2026",
-  "courses": [
+  "updatedAt": "14 Ekim 2026",
+  "defaultDepartment": "computer-programming",
+  "departments": [
     {
-      "day": 1,
-      "start": "10:00",
-      "end": "12:00",
-      "code": "NBP119",
-      "name": "Web Tasarım Temelleri",
-      "room": "Bilgisayar Laboratuvarı 1",
-      "instructor": "Öğr. Gör. Dr. Ufuk TANYERİ"
+      "id": "computer-programming",
+      "name": "Bilgisayar Programcılığı",
+      "classLevel": "1. Sınıf",
+      "courses": [
+        {
+          "day": 1,
+          "start": "10:00",
+          "end": "12:00",
+          "code": "NBP119",
+          "name": "Web Tasarım Temelleri",
+          "room": "Bilgisayar Laboratuvarı 1",
+          "instructor": "Öğr. Gör. Dr. Ufuk TANYERİ"
+        },
+        {
+          "day": 1,
+          "start": "13:30",
+          "end": "15:30",
+          "code": "NBP119",
+          "name": "Web Tasarım Temelleri",
+          "room": "Bilgisayar Laboratuvarı 1",
+          "instructor": "Öğr. Gör. Dr. Ufuk TANYERİ"
+        },
+        {
+          "day": 2,
+          "start": "13:30",
+          "end": "17:30",
+          "code": "YDİ101",
+          "name": "Temel Yabancı Dil (İngilizce)",
+          "room": "Ek Bina-Derslik 6",
+          "instructor": "Öğr. Gör. Öznur AKHAN AŞIK"
+        },
+        {
+          "day": 2,
+          "start": "17:30",
+          "end": "19:30",
+          "code": "TDİ107",
+          "name": "Türk Dili 1",
+          "room": "Ek Bina-Derslik 6",
+          "instructor": "Öğr. Gör. Oğuz Kağan ŞALLI"
+        },
+        {
+          "day": 3,
+          "start": "09:00",
+          "end": "12:00",
+          "code": "NBP129",
+          "name": "Temel Matematik",
+          "room": "Derslik 1",
+          "instructor": "Öğr. Gör. Esra YILDIRIM"
+        },
+        {
+          "day": 3,
+          "start": "13:30",
+          "end": "17:30",
+          "code": "NBP127",
+          "name": "Bilgisayar Donanımı ve Ağ",
+          "room": "Bilgisayar Laboratuvarı 2",
+          "instructor": "Öğr. Gör. Salih ERDURUCAN"
+        },
+        {
+          "day": 4,
+          "start": "13:30",
+          "end": "17:30",
+          "code": "NBP131",
+          "name": "Bilgisayar Programlama 1",
+          "room": "Bilgisayar Laboratuvarı 1",
+          "instructor": "Öğr. Gör. Güney UĞURLU"
+        },
+        {
+          "day": 5,
+          "start": "09:00",
+          "end": "11:00",
+          "code": "ATA115",
+          "name": "Atatürk İlkeleri ve İnkılap Tarihi 1",
+          "room": "Ek Bina-Derslik 6",
+          "instructor": "Öğr. Gör. Miraç DEMİRBAŞ"
+        },
+        {
+          "day": 5,
+          "start": "11:00",
+          "end": "13:00",
+          "code": "NBP133",
+          "name": "Grafik ve Animasyon",
+          "room": "Bilgisayar Laboratuvarı 1",
+          "instructor": "Öğr. Gör. Salih ERDURUCAN"
+        },
+        {
+          "day": 5,
+          "start": "13:30",
+          "end": "14:30",
+          "code": "NBP133",
+          "name": "Grafik ve Animasyon",
+          "room": "Bilgisayar Laboratuvarı 1",
+          "instructor": "Öğr. Gör. Salih ERDURUCAN"
+        }
+      ]
     },
     {
-      "day": 1,
-      "start": "13:30",
-      "end": "15:30",
-      "code": "NBP119",
-      "name": "Web Tasarım Temelleri",
-      "room": "Bilgisayar Laboratuvarı 1",
-      "instructor": "Öğr. Gör. Dr. Ufuk TANYERİ"
+      "id": "electronics-technology",
+      "name": "Elektronik Teknolojisi",
+      "classLevel": "1. Sınıf",
+      "courses": [
+        {
+          "day": 1,
+          "start": "09:00",
+          "end": "13:00",
+          "code": "YDİ101",
+          "name": "Temel Yabancı Dil (İngilizce)",
+          "room": "Ek Bina-Derslik 6",
+          "instructor": "Öğr. Gör. Öznur AKHAN AŞIK"
+        },
+        {
+          "day": 1,
+          "start": "13:30",
+          "end": "17:30",
+          "code": "",
+          "name": "Temel Elektronik",
+          "room": "Elektronik Laboratuvarı",
+          "instructor": "İ.Y."
+        },
+        {
+          "day": 1,
+          "start": "17:30",
+          "end": "19:30",
+          "code": "TDİ107",
+          "name": "Türk Dili 1",
+          "room": "Ek Bina-Derslik 6",
+          "instructor": "Öğr. Gör. Oğuz Kağan ŞALLI"
+        },
+        {
+          "day": 2,
+          "start": "09:00",
+          "end": "13:00",
+          "code": "",
+          "name": "Ölçme Tekniği",
+          "room": "Elektronik Laboratuvarı",
+          "instructor": "H.K."
+        },
+        {
+          "day": 2,
+          "start": "13:30",
+          "end": "17:30",
+          "code": "",
+          "name": "Temel Elektronik",
+          "room": "Derslik 1",
+          "instructor": "İ.Y."
+        },
+        {
+          "day": 2,
+          "start": "17:30",
+          "end": "19:30",
+          "code": "ATA115",
+          "name": "Atatürk İlkeleri ve İnkılap Tarihi 1",
+          "room": "Ek Bina-Derslik 6",
+          "instructor": "Öğr. Gör. Miraç DEMİRBAŞ"
+        },
+        {
+          "day": 3,
+          "start": "09:00",
+          "end": "12:00",
+          "code": "",
+          "name": "Matematik",
+          "room": "Derslik 2",
+          "instructor": "S.D."
+        },
+        {
+          "day": 3,
+          "start": "13:30",
+          "end": "17:30",
+          "code": "",
+          "name": "Doğru Akım Devre Analizi",
+          "room": "Derslik 1",
+          "instructor": "T.D."
+        },
+        {
+          "day": 4,
+          "start": "09:00",
+          "end": "13:00",
+          "code": "",
+          "name": "Sayısal Elektronik",
+          "room": "Derslik 2",
+          "instructor": "E.A."
+        },
+        {
+          "day": 4,
+          "start": "13:30",
+          "end": "17:30",
+          "code": "",
+          "name": "Ölçme Tekniği",
+          "room": "Elektronik Laboratuvarı",
+          "instructor": "H.K."
+        },
+        {
+          "day": 5,
+          "start": "15:30",
+          "end": "17:30",
+          "code": "",
+          "name": "Bilgi ve İletişim Teknolojileri 1",
+          "room": "Bilgisayar Laboratuvarı 2",
+          "instructor": "G.U."
+        }
+      ]
     },
     {
-      "day": 2,
-      "start": "13:30",
-      "end": "17:30",
-      "code": "YDİ101",
-      "name": "Temel Yabancı Dil (İngilizce)",
-      "room": "Ek Bina-Derslik 6",
-      "instructor": "Öğr. Gör. Öznur AKHAN AŞIK"
+      "id": "renewable-energy",
+      "name": "Yenilenebilir Enerji Teknikerliği",
+      "classLevel": "1. Sınıf",
+      "courses": [
+        {
+          "day": 1,
+          "start": "13:30",
+          "end": "17:30",
+          "code": "YDİ101",
+          "name": "Temel Yabancı Dil (İngilizce)",
+          "room": "Ek Bina-Derslik 6",
+          "instructor": "Öğr. Gör. Öznur AKHAN AŞIK"
+        },
+        {
+          "day": 2,
+          "start": "09:00",
+          "end": "13:00",
+          "code": "",
+          "name": "Isı Bilimleri 1",
+          "room": "Ek Bina-Derslik 5",
+          "instructor": "R.N.K."
+        },
+        {
+          "day": 2,
+          "start": "13:30",
+          "end": "17:30",
+          "code": "",
+          "name": "Yenilenebilir Enerji Teknolojileri",
+          "room": "Ek Bina-Derslik 5",
+          "instructor": "R.N.K."
+        },
+        {
+          "day": 3,
+          "start": "09:00",
+          "end": "13:00",
+          "code": "",
+          "name": "Elektrik Elektronik Ölçme",
+          "room": "Ek Bina-Derslik 3",
+          "instructor": "H.K."
+        },
+        {
+          "day": 3,
+          "start": "13:30",
+          "end": "17:30",
+          "code": "",
+          "name": "Matematik",
+          "room": "Ek Bina-Derslik 3",
+          "instructor": "S.D."
+        },
+        {
+          "day": 4,
+          "start": "09:00",
+          "end": "12:00",
+          "code": "",
+          "name": "Doğru Akım Devre Analizi",
+          "room": "Ek Bina-Derslik 3",
+          "instructor": "T.D."
+        },
+        {
+          "day": 4,
+          "start": "13:30",
+          "end": "17:30",
+          "code": "",
+          "name": "Yenilenebilir Enerji Teknolojileri",
+          "room": "Ek Bina-Derslik 3",
+          "instructor": "R.N.K."
+        },
+        {
+          "day": 4,
+          "start": "17:30",
+          "end": "19:30",
+          "code": "TDİ107",
+          "name": "Türk Dili 1",
+          "room": "Ek Bina-Derslik 6",
+          "instructor": "Öğr. Gör. Oğuz Kağan ŞALLI"
+        },
+        {
+          "day": 5,
+          "start": "09:00",
+          "end": "11:00",
+          "code": "",
+          "name": "Bilgi ve İletişim Teknolojileri 1",
+          "room": "Bilgisayar Laboratuvarı 1",
+          "instructor": "S.E."
+        },
+        {
+          "day": 5,
+          "start": "11:00",
+          "end": "13:00",
+          "code": "ATA115",
+          "name": "Atatürk İlkeleri ve İnkılap Tarihi 1",
+          "room": "Ek Bina-Derslik 6",
+          "instructor": "Öğr. Gör. Miraç DEMİRBAŞ"
+        },
+        {
+          "day": 5,
+          "start": "13:30",
+          "end": "17:30",
+          "code": "",
+          "name": "Teknolojinin Bilimsel İlkeleri",
+          "room": "Ek Bina-Derslik 3",
+          "instructor": "K.Y."
+        }
+      ]
     },
     {
-      "day": 2,
-      "start": "17:30",
-      "end": "19:30",
-      "code": "TDİ107",
-      "name": "Türk Dili 1",
-      "room": "Ek Bina-Derslik 6",
-      "instructor": "Öğr. Gör. Oğuz Kağan ŞALLI"
-    },
-    {
-      "day": 3,
-      "start": "09:00",
-      "end": "12:00",
-      "code": "NBP129",
-      "name": "Temel Matematik",
-      "room": "Derslik 1",
-      "instructor": "Öğr. Gör. Esra YILDIRIM"
-    },
-    {
-      "day": 3,
-      "start": "13:30",
-      "end": "17:30",
-      "code": "NBP127",
-      "name": "Bilgisayar Donanımı ve Ağ",
-      "room": "Bilgisayar Laboratuvarı 2",
-      "instructor": "Öğr. Gör. Salih ERDURUCAN"
-    },
-    {
-      "day": 4,
-      "start": "13:30",
-      "end": "17:30",
-      "code": "NBP131",
-      "name": "Bilgisayar Programlama 1",
-      "room": "Bilgisayar Laboratuvarı 1",
-      "instructor": "Öğr. Gör. Güney UĞURLU"
-    },
-    {
-      "day": 5,
-      "start": "09:00",
-      "end": "11:00",
-      "code": "ATA115",
-      "name": "Atatürk İlkeleri ve İnkılap Tarihi 1",
-      "room": "Ek Bina-Derslik 6",
-      "instructor": "Öğr. Gör. Miraç DEMİRBAŞ"
-    },
-    {
-      "day": 5,
-      "start": "11:00",
-      "end": "13:00",
-      "code": "NBP133",
-      "name": "Grafik ve Animasyon",
-      "room": "Bilgisayar Laboratuvarı 1",
-      "instructor": "Öğr. Gör. Salih ERDURUCAN"
-    },
-    {
-      "day": 5,
-      "start": "13:30",
-      "end": "14:30",
-      "code": "NBP133",
-      "name": "Grafik ve Animasyon",
-      "room": "Bilgisayar Laboratuvarı 1",
-      "instructor": "Öğr. Gör. Salih ERDURUCAN"
+      "id": "electric-energy",
+      "name": "Elektrik Enerjisi Üretim, İletim ve Dağıtımı",
+      "classLevel": "1. Sınıf",
+      "courses": [
+        {
+          "day": 1,
+          "start": "13:30",
+          "end": "17:30",
+          "code": "YDİ101",
+          "name": "Temel Yabancı Dil (İngilizce)",
+          "room": "Ek Bina-Derslik 6",
+          "instructor": "Öğr. Gör. Öznur AKHAN AŞIK"
+        },
+        {
+          "day": 2,
+          "start": "09:00",
+          "end": "13:00",
+          "code": "",
+          "name": "Temel Elektronik",
+          "room": "Ek Bina-Derslik 4",
+          "instructor": "İ.Y."
+        },
+        {
+          "day": 3,
+          "start": "09:00",
+          "end": "13:00",
+          "code": "",
+          "name": "Elektrik Enerjisi Üretim, İletim ve Dağıtımı",
+          "room": "Ek Bina-Derslik 7",
+          "instructor": "İ.Y."
+        },
+        {
+          "day": 3,
+          "start": "13:30",
+          "end": "17:30",
+          "code": "",
+          "name": "Matematik",
+          "room": "Ek Bina-Derslik 4",
+          "instructor": "E.Y."
+        },
+        {
+          "day": 3,
+          "start": "17:30",
+          "end": "19:30",
+          "code": "TDİ107",
+          "name": "Türk Dili 1",
+          "room": "Ek Bina-Derslik 6",
+          "instructor": "Öğr. Gör. Oğuz Kağan ŞALLI"
+        },
+        {
+          "day": 4,
+          "start": "09:00",
+          "end": "13:00",
+          "code": "",
+          "name": "Elektrik Elektronik Ölçme",
+          "room": "Elektronik Laboratuvarı",
+          "instructor": "H.K."
+        },
+        {
+          "day": 4,
+          "start": "13:30",
+          "end": "17:30",
+          "code": "",
+          "name": "Doğru Akım Devre Analizi",
+          "room": "Ek Bina-Derslik 4",
+          "instructor": "T.D."
+        },
+        {
+          "day": 4,
+          "start": "17:30",
+          "end": "19:30",
+          "code": "ATA115",
+          "name": "Atatürk İlkeleri ve İnkılap Tarihi 1",
+          "room": "Ek Bina-Derslik 6",
+          "instructor": "Öğr. Gör. Miraç DEMİRBAŞ"
+        },
+        {
+          "day": 5,
+          "start": "09:00",
+          "end": "11:00",
+          "code": "",
+          "name": "Bilgi ve İletişim Teknolojileri 1",
+          "room": "Bilgisayar Laboratuvarı 2",
+          "instructor": "G.U."
+        }
+      ]
     }
   ]
 }
