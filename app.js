@@ -35,6 +35,8 @@ const state = {
   palette: "classic",
   englishExempt: false,
   englishPreferenceSet: false,
+  scheduleOverrides: {},
+  editingManualCourse: null,
   homePreferences: {
     introVisible: true,
     summaryVisible: true,
@@ -216,6 +218,15 @@ const elements = {
   onboardingDepartmentSelect: document.querySelector("#onboardingDepartmentSelect"),
   onboardingEnglishExempt: document.querySelector("#onboardingEnglishExempt"),
   saveProgramPreferenceButton: document.querySelector("#saveProgramPreferenceButton"),
+  manualCourseDay: document.querySelector("#manualCourseDay"),
+  manualCourseStart: document.querySelector("#manualCourseStart"),
+  manualCourseEnd: document.querySelector("#manualCourseEnd"),
+  manualCourseName: document.querySelector("#manualCourseName"),
+  manualCourseRoom: document.querySelector("#manualCourseRoom"),
+  manualCourseInstructor: document.querySelector("#manualCourseInstructor"),
+  saveManualCourseButton: document.querySelector("#saveManualCourseButton"),
+  cancelManualCourseButton: document.querySelector("#cancelManualCourseButton"),
+  manualCourseList: document.querySelector("#manualCourseList"),
 };
 
 document.querySelector(".app-main").append(elements.settingsView);
@@ -225,6 +236,7 @@ const THEME_KEY = "ders-pusulasi-theme";
 const PALETTE_KEY = "ders-pusulasi-palette";
 const ENGLISH_EXEMPT_KEY = "ders-pusulasi-english-exempt";
 const DEPARTMENT_KEY = "ders-pusulasi-department";
+const SCHEDULE_OVERRIDES_KEY = "ders-pusulasi-schedule-overrides";
 const SIDEBAR_KEY = "ders-pusulasi-sidebar-collapsed";
 const ASSIGNMENTS_KEY = "ders-pusulasi-assignments";
 const GRADES_KEY = "ders-pusulasi-grades";
@@ -591,7 +603,43 @@ function loadPersonalPreferences() {
     state.englishPreferenceSet = savedEnglishPreference === "1" || savedEnglishPreference === "0";
     state.englishExempt = savedEnglishPreference === "1";
     state.departmentId = cleanText(localStorage.getItem(DEPARTMENT_KEY), 80) || "computer-programming";
+    state.scheduleOverrides = sanitizeScheduleOverrides(JSON.parse(localStorage.getItem(SCHEDULE_OVERRIDES_KEY) || "{}"));
   } catch (_) {}
+}
+
+function sanitizeManualCourse(item) {
+  const day = boundedInteger(item?.day, 0, 6);
+  const start = cleanText(item?.start, 5);
+  const end = cleanText(item?.end, 5);
+  const name = cleanText(item?.name, 160);
+  if (day === null || !/^([01]\d|2[0-3]):[0-5]\d$/.test(start) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(end) || start >= end || !name) return null;
+  return { id: cleanText(item?.id, 100) || globalThis.crypto?.randomUUID?.() || `manual-${Date.now()}`, day, start, end, code: cleanText(item?.code, 40), name, room: cleanText(item?.room, 120), instructor: cleanText(item?.instructor, 160) };
+}
+
+function sanitizeScheduleOverrides(value) {
+  const result = {};
+  if (!value || typeof value !== "object") return result;
+  Object.entries(value).forEach(([departmentId, courses]) => {
+    if (!Array.isArray(courses)) return;
+    const clean = courses.map(sanitizeManualCourse).filter(Boolean).slice(0, 150);
+    if (clean.length) result[cleanText(departmentId, 80)] = clean;
+  });
+  return result;
+}
+
+function saveScheduleOverrides() {
+  try {
+    localStorage.setItem(SCHEDULE_OVERRIDES_KEY, JSON.stringify(state.scheduleOverrides));
+    recordLocalDataChange();
+  } catch (_) { showToast("Manuel program kaydedilemedi."); }
+}
+
+function scheduleCoursesForDepartment(department) {
+  const courses = state.scheduleOverrides[department.id] || department.courses;
+  return courses.map((course, index) => ({
+    ...course,
+    id: course.id || `${department.id}-${course.day}-${course.start}-${course.name}-${index}`,
+  }));
 }
 
 function sanitizeHomePreferences(value) {
@@ -698,12 +746,101 @@ function applySelectedDepartment() {
     updatedAt: state.scheduleCatalog.updatedAt,
     department: department.name,
     classLevel: department.classLevel,
-    courses: department.courses,
+    courses: scheduleCoursesForDepartment(department),
   };
   elements.departmentSelect.value = department.id;
   elements.onboardingDepartmentSelect.value = department.id;
   document.querySelector(".hero-description").textContent = `${state.schedule.school} · ${state.schedule.department} · ${state.schedule.classLevel}`;
   elements.updatedAt.textContent = state.schedule.updatedAt ? `Son güncelleme: ${state.schedule.updatedAt}` : "";
+}
+
+function resetManualCourseForm() {
+  state.editingManualCourse = null;
+  elements.manualCourseDay.value = "1";
+  elements.manualCourseStart.value = "09:00";
+  elements.manualCourseEnd.value = "10:00";
+  elements.manualCourseName.value = "";
+  elements.manualCourseRoom.value = "";
+  elements.manualCourseInstructor.value = "";
+  elements.saveManualCourseButton.textContent = "Dersi ekle";
+  elements.cancelManualCourseButton.hidden = true;
+}
+
+function renderManualCourseList() {
+  const courses = state.schedule?.courses || [];
+  elements.manualCourseList.replaceChildren();
+  if (!courses.length) return;
+  courses.slice().sort((a, b) => a.day - b.day || a.start.localeCompare(b.start)).forEach((course) => {
+    const row = document.createElement("div");
+    row.className = "manual-course-row";
+    const info = document.createElement("div");
+    const title = document.createElement("strong");
+    title.textContent = `${DAY_NAMES[course.day]} · ${course.start}–${course.end}`;
+    const detail = document.createElement("span");
+    detail.textContent = `${course.name}${course.room ? ` · ${course.room}` : ""}`;
+    info.append(title, detail);
+    const actions = document.createElement("div");
+    const edit = document.createElement("button");
+    edit.className = "secondary-button";
+    edit.type = "button";
+    edit.textContent = "Düzenle";
+    edit.addEventListener("click", () => {
+      state.editingManualCourse = course.id;
+      elements.manualCourseDay.value = String(course.day);
+      elements.manualCourseStart.value = course.start;
+      elements.manualCourseEnd.value = course.end;
+      elements.manualCourseName.value = course.name;
+      elements.manualCourseRoom.value = course.room;
+      elements.manualCourseInstructor.value = course.instructor;
+      elements.saveManualCourseButton.textContent = "Dersi güncelle";
+      elements.cancelManualCourseButton.hidden = false;
+    });
+    const remove = document.createElement("button");
+    remove.className = "danger-button";
+    remove.type = "button";
+    remove.textContent = "Sil";
+    remove.addEventListener("click", () => {
+      if (!window.confirm(`${course.name} dersini programdan kaldırmak istiyor musun?`)) return;
+      const departmentCourses = state.scheduleOverrides[state.departmentId] || state.schedule.courses;
+      state.scheduleOverrides[state.departmentId] = departmentCourses.filter((item) => item.id !== course.id);
+      saveScheduleOverrides();
+      applySelectedDepartment();
+      renderManualCourseList();
+      renderAllScheduleViews();
+    });
+    actions.append(edit, remove);
+    row.append(info, actions);
+    elements.manualCourseList.append(row);
+  });
+}
+
+function renderAllScheduleViews() {
+  renderFocus(state.now); renderToday(state.now); renderTabs(); renderWeek(); populateCourseOptions(); synchroniseAttendance(); renderAttendance(); renderStatistics();
+  refreshPushSchedule();
+}
+
+function saveManualCourse() {
+  const course = sanitizeManualCourse({
+    id: state.editingManualCourse,
+    day: Number(elements.manualCourseDay.value),
+    start: elements.manualCourseStart.value,
+    end: elements.manualCourseEnd.value,
+    name: elements.manualCourseName.value,
+    room: elements.manualCourseRoom.value,
+    instructor: elements.manualCourseInstructor.value,
+  });
+  if (!course) { showToast("Ders bilgilerini kontrol et."); return; }
+  const current = (state.scheduleOverrides[state.departmentId] || state.schedule?.courses || []).slice();
+  const index = current.findIndex((item) => item.id === course.id);
+  if (index >= 0) current[index] = course;
+  else current.push(course);
+  state.scheduleOverrides[state.departmentId] = current;
+  saveScheduleOverrides();
+  applySelectedDepartment();
+  renderManualCourseList();
+  renderAllScheduleViews();
+  resetManualCourseForm();
+  showToast(index >= 0 ? "Ders güncellendi." : "Ders programa eklendi.");
 }
 
 function isEnglishCourse(course) {
@@ -746,6 +883,7 @@ async function setProgramPreference(departmentId, exempt, { notify = true } = {}
   synchroniseAttendance();
   renderAttendance();
   renderStatistics();
+  renderManualCourseList();
   await refreshPushSchedule();
   if (notify) showToast(`${state.schedule.department} programı yüklendi.`);
 }
@@ -847,6 +985,7 @@ function switchView(view, updateHistory = true) {
     renderEnglishPreference();
     renderAccessibilityPreferences();
     renderHomePreferences();
+    renderManualCourseList();
   }
   if (updateHistory && location.hash !== `#${view}`) {
     history.pushState({ view }, "", `#${view}`);
@@ -2366,6 +2505,7 @@ function createAppBackup() {
       palette: state.palette,
       englishExempt: state.englishExempt,
       departmentId: state.departmentId,
+      scheduleOverrides: state.scheduleOverrides,
       textSize: document.documentElement.dataset.textSize || "normal",
       highContrast: document.documentElement.dataset.highContrast === "true",
       reducedMotion: document.documentElement.dataset.reducedMotion === "true",
@@ -2390,6 +2530,7 @@ function normalizeAppBackup(backup) {
     palette,
     englishExempt,
     departmentId = "computer-programming",
+    scheduleOverrides = {},
     textSize = "normal",
     highContrast = false,
     reducedMotion = false,
@@ -2412,6 +2553,7 @@ function normalizeAppBackup(backup) {
       palette: PALETTES.has(palette) ? palette : "classic",
       englishExempt: typeof englishExempt === "boolean" ? englishExempt : false,
       departmentId: cleanText(departmentId, 80) || "computer-programming",
+      scheduleOverrides: sanitizeScheduleOverrides(scheduleOverrides),
       textSize: ["normal", "large", "xlarge"].includes(textSize) ? textSize : "normal",
       highContrast: highContrast === true,
       reducedMotion: reducedMotion === true,
@@ -2447,6 +2589,7 @@ function persistAppBackup(backup) {
   localStorage.setItem(PALETTE_KEY, data.palette);
   localStorage.setItem(ENGLISH_EXEMPT_KEY, data.englishExempt ? "1" : "0");
   localStorage.setItem(DEPARTMENT_KEY, data.departmentId);
+  localStorage.setItem(SCHEDULE_OVERRIDES_KEY, JSON.stringify(data.scheduleOverrides));
   localStorage.setItem(TEXT_SIZE_KEY, data.textSize);
   localStorage.setItem(HIGH_CONTRAST_KEY, data.highContrast ? "1" : "0");
   localStorage.setItem(REDUCED_MOTION_KEY, data.reducedMotion ? "1" : "0");
@@ -2467,6 +2610,7 @@ function applyAppBackupLive(backup) {
   state.homePreferences = data.homePreferences;
   state.englishExempt = data.englishExempt;
   state.departmentId = data.departmentId;
+  state.scheduleOverrides = data.scheduleOverrides;
   state.englishPreferenceSet = true;
   applySelectedDepartment();
   applyPalette(data.palette, false);
@@ -3317,6 +3461,8 @@ elements.notificationButton.addEventListener("click", handleNotificationButton);
 elements.themeButton.addEventListener("click", toggleTheme);
 elements.openMenuButton.addEventListener("click", () => switchView("menu"));
 elements.openStatisticsButton.addEventListener("click", () => switchView("statistics"));
+elements.saveManualCourseButton.addEventListener("click", saveManualCourse);
+elements.cancelManualCourseButton.addEventListener("click", resetManualCourseForm);
 elements.previousMenuDay.addEventListener("click", () => stepMenuDate(-1));
 elements.nextMenuDay.addEventListener("click", () => stepMenuDate(1));
 elements.menuTodayButton.addEventListener("click", () => {

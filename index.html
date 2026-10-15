@@ -922,6 +922,23 @@
               <input id="englishCourseVisible" type="checkbox" checked />
             </label>
           </article>
+          <article class="tool-card schedule-editor-card">
+            <span class="tool-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h8M8 17h4" /></svg>
+            </span>
+            <h3>Programını düzenle</h3>
+            <p>Bu cihaz ve eşleştirilmiş cihazlar için seçili bölümün derslerini manuel olarak düzenle. Genel program dosyası değişmez.</p>
+            <div class="schedule-editor-form">
+              <label class="setting-select" for="manualCourseDay"><span>Gün</span><select id="manualCourseDay"><option value="1">Pazartesi</option><option value="2">Salı</option><option value="3">Çarşamba</option><option value="4">Perşembe</option><option value="5">Cuma</option><option value="6">Cumartesi</option><option value="0">Pazar</option></select></label>
+              <label class="setting-select" for="manualCourseStart"><span>Başlangıç</span><input id="manualCourseStart" type="time" value="09:00" /></label>
+              <label class="setting-select" for="manualCourseEnd"><span>Bitiş</span><input id="manualCourseEnd" type="time" value="10:00" /></label>
+              <label class="setting-select manual-course-wide" for="manualCourseName"><span>Ders adı</span><input id="manualCourseName" type="text" maxlength="160" placeholder="Örn. Matematik" /></label>
+              <label class="setting-select manual-course-wide" for="manualCourseRoom"><span>Derslik</span><input id="manualCourseRoom" type="text" maxlength="120" placeholder="İsteğe bağlı" /></label>
+              <label class="setting-select manual-course-wide" for="manualCourseInstructor"><span>Öğretim elemanı</span><input id="manualCourseInstructor" type="text" maxlength="160" placeholder="İsteğe bağlı" /></label>
+              <div class="manual-course-actions"><button class="primary-button" id="saveManualCourseButton" type="button">Dersi ekle</button><button class="secondary-button" id="cancelManualCourseButton" type="button" hidden>Vazgeç</button></div>
+            </div>
+            <div class="manual-course-list" id="manualCourseList" aria-live="polite"></div>
+          </article>
           <article class="tool-card cloud-backup-card">
             <span class="tool-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">

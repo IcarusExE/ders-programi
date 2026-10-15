@@ -78,6 +78,15 @@ class ProjectTests(unittest.TestCase):
         self.assertIn("applyAppBackupLive(remoteBackup)", javascript)
         self.assertIn("mergeAppBackups(backupToUpload, remoteBackup)", javascript)
 
+    def test_manual_schedule_editor_is_wired(self):
+        html = (ROOT / "index.html").read_text(encoding="utf-8")
+        javascript = (ROOT / "app.js").read_text(encoding="utf-8")
+        for control_id in ("manualCourseDay", "manualCourseStart", "manualCourseEnd", "manualCourseName", "saveManualCourseButton", "manualCourseList"):
+            self.assertIn(f'id="{control_id}"', html)
+            self.assertIn(f'#{control_id}', javascript)
+        self.assertIn("SCHEDULE_OVERRIDES_KEY", javascript)
+        self.assertIn("scheduleOverrides", javascript)
+
     def test_offline_queue_and_status_are_wired(self):
         html = (ROOT / "index.html").read_text(encoding="utf-8")
         javascript = (ROOT / "app.js").read_text(encoding="utf-8")
